@@ -1,0 +1,158 @@
+/* 전역 스타일 */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.admin-container,
+.admin-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 카테고리 탭 스타일 */
+.category-tabs {
+  margin-bottom: 20px;
+}
+
+/* 데이터 카드 스타일 */
+.data-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.data-card .ant-card-body {
+  flex: 1;
+}
+
+/* 페이지네이션 스타일 */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+/* 관리자 페이지 스타일 */
+.search-form,
+.filters-form {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+  .search-form,
+  .filters-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .search-form .ant-form-item,
+  .filters-form .ant-form-item {
+    margin-bottom: 8px;
+  }
+}
+
+.admin-table-view .ant-table-wrapper {
+  background: white;
+  padding: 16px;
+}
+
+.admin-table-view .ant-card {
+  display: none;  /* 관리자 페이지에서 카드 스타일 비활성화 */
+}
+
+
+/* 관리자 페이지 스타일 재정의 */
+.admin-container {
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+.ant-table-wrapper {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.ant-table {
+  margin: 0 !important;
+}
+
+.category-tabs .ant-tabs-tab {
+  border-radius: 20px !important;  /* 동그란 버튼 스타일 */
+  margin: 0 2px !important;  /* 탭 간격 축소 */
+  padding: 2px !important;  /* 내부 패딩 축소 */
+}
+
+/* 카테고리 탭 스타일 */
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="all"] .ant-tabs-tab-btn { background-color: #e6e6e6 !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="정치"] .ant-tabs-tab-btn { background-color: #bae7ff !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="경제"] .ant-tabs-tab-btn { background-color: #b7eb8f !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="사회"] .ant-tabs-tab-btn { background-color: #ffe58f !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="국제"] .ant-tabs-tab-btn { background-color: #efdbff !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="문화"] .ant-tabs-tab-btn { background-color: #ffadd2 !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="연예/스포츠"] .ant-tabs-tab-btn { background-color: #d9d9d9 !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="기타"] .ant-tabs-tab-btn { background-color: #f5f5f5 !important; }
+
+/* 호버 및 활성 상태 스타일 */
+.category-tabs .ant-tabs-nav .ant-tabs-tab:hover .ant-tabs-tab-btn,
+.category-tabs .ant-tabs-nav .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  opacity: 0.8;
+}
+
+.category-tabs .ant-tabs-tab-btn {
+  padding: 4px 12px !important;
+  border-radius: 20px !important;  /* 버튼 모서리 둥글게 */
+  min-width: 60px !important;  /* 최소 너비 설정 */
+  text-align: center !important;  /* 텍스트 중앙 정렬 */
+}
+
+/* 탭 네비게이션 여백 조정 */
+.category-tabs .ant-tabs-nav {
+  margin-bottom: 8px !important;
+  padding: 4px !important;
+}
+
+/* 테이블 내 링크 스타일 */
+.ant-table-wrapper .ant-table-tbody a {
+  color: #1a4b8c !important;
+  font-weight: 600 !important;  /* 글자 두께 추가 */
+}
+
+.ant-table-wrapper .ant-table-tbody a:hover {
+  opacity: 0.8;
+}
+
+/* 선택 체크박스 스타일 */
+.ant-table-wrapper .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #1a4b8c !important;
+  border-color: #1a4b8c !important;
+}
+
+/* 복사 버튼 스타일 */
+.ant-btn-default {
+  background-color: #1a4b8c !important;
+  color: white !important;
+  border: none !important;
+}
+
+.ant-btn-default:hover {
+  opacity: 0.9 !important;
+}
+
+.ant-btn-default:disabled {
+  background-color: #d9d9d9 !important;
+}
