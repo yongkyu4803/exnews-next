@@ -1,9 +1,13 @@
 import React from 'react';
-import { Table, Space, Button, Tag } from 'antd';
+import dynamic from 'next/dynamic';
+import { Table, Space, Button } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import { NewsItem } from '@/types';
 import { formatInTimeZone } from 'date-fns-tz';
+
+// 동적 임포트
+const Tag = dynamic(() => import('antd').then((antd) => antd.Tag), { ssr: false }) as any;
 
 interface DataTableProps {
   data: NewsItem[];
