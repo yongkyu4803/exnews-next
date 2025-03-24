@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
-import { Input, Button, Space, Form } from 'antd';
+import dynamic from 'next/dynamic';
 import { SearchOutlined } from '@ant-design/icons';
+
+// 동적 임포트
+const Input = dynamic(() => import('antd/lib/input'), { ssr: false }) as any;
+const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
+const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
+const Form = dynamic(() => import('antd/lib/form'), { ssr: false }) as any;
 
 interface SearchBarProps {
   onSearch: (searchTerm: string) => void;
@@ -19,13 +25,16 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
   };
 
   return (
-    <Form layout="inline" className="search-form">
-      <Space>
+    <Space className="search-form">
+      <Form layout="inline" 
+        style={{ display: 'flex', alignItems: 'center' }}
+        onFinish={handleSearch}
+      >
         <Form.Item>
           <Input
             placeholder="검색어를 입력하세요"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
             onPressEnter={handleSearch}
             prefix={<SearchOutlined />}
             allowClear
@@ -39,8 +48,8 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
         <Form.Item>
           <Button onClick={handleReset}>초기화</Button>
         </Form.Item>
-      </Space>
-    </Form>
+      </Form>
+    </Space>
   );
 };
 
