@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import VirtualNewsList from '@/components/mobile/VirtualNewsList';
 import { CopyOutlined } from '@ant-design/icons';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
+import { NewsItem, NewsResponse } from '@/types';
 
 // 동적으로 Ant Design 컴포넌트 임포트
 const Typography = dynamic(() => import('antd').then((antd) => antd.Typography), { ssr: false }) as any;
@@ -19,20 +20,6 @@ const NewsTable = dynamic(() => import('@/components/NewsTable'), {
   ssr: false,
   loading: () => <div style={{ height: '600px', width: '100%' }}>테이블 로딩 중...</div>
 });
-
-// 타입 정의
-interface NewsItem {
-  title: string;
-  original_link: string;
-  pub_date: string;
-  category: string;
-  [key: string]: any; // 추가 필드 허용
-}
-
-interface NewsResponse {
-  items: NewsItem[];
-  totalCount: number;
-}
 
 // 전체 컴포넌트를 클라이언트 사이드에서만 렌더링
 const HomePage = () => {
