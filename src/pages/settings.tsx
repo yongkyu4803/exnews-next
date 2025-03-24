@@ -3,7 +3,7 @@ import dynamic from 'next/dynamic';
 import styled from '@emotion/styled';
 
 // 동적으로 컴포넌트 로드
-const Layout = dynamic(() => import('@/components/Layout'), { ssr: true });
+const Layout = dynamic(() => import('@/components/Layout'), { ssr: false });
 const NotificationSettings = dynamic(() => import('@/components/NotificationSettings'), { ssr: false });
 
 // 동적 임포트
