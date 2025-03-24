@@ -1,5 +1,10 @@
 import React from 'react';
-import { Space, Select, DatePicker } from 'antd';
+import dynamic from 'next/dynamic';
+
+// 동적 임포트
+const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
+const Select = dynamic(() => import('antd/lib/select'), { ssr: false }) as any;
+const DatePicker = dynamic(() => import('antd/lib/date-picker'), { ssr: false }) as any;
 
 const { RangePicker } = DatePicker;
 const { Option } = Select;
