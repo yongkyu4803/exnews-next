@@ -6,6 +6,7 @@ import { useQuery } from 'react-query';
 import { fetchNewsItems, fetchCategories } from '@/lib/api';
 import SearchBar from '@/components/Admin/SearchBar';
 import Filters from '@/components/Admin/Filters';
+import { NewsItem } from '@/types';
 
 // 동적 임포트
 const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
@@ -112,7 +113,7 @@ export default function AdminPage() {
           { 
             title: '제목',
             dataIndex: 'title',
-            render: (text, record) => (
+            render: (text: string, record: NewsItem) => (
               <a href={record.original_link} target="_blank" rel="noopener noreferrer">
                 {text}
               </a>
@@ -127,13 +128,13 @@ export default function AdminPage() {
             title: '발행일',
             dataIndex: 'pub_date',
             width: 200,
-            render: (date) => new Date(date).toLocaleString('ko-KR')
+            render: (date: string) => new Date(date).toLocaleString('ko-KR')
           },
           {
             title: '작업',
             key: 'action',
             width: 120,
-            render: (_, record) => (
+            render: (_: unknown, record: NewsItem) => (
               <Space>
                 <Button 
                   icon={<EditOutlined />} 
@@ -158,7 +159,7 @@ export default function AdminPage() {
           total: data?.totalCount || 0,
           onChange: handlePageChange,
           showSizeChanger: true,
-          showTotal: (total) => `총 ${total}개 항목`
+          showTotal: (total: number) => `총 ${total}개 항목`
         }}
         loading={isLoading}
         style={{ background: 'white' }}
