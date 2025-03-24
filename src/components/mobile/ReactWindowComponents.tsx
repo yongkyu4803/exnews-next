@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { VariableSizeList as List } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import PullToRefresh from 'react-pull-to-refresh';
@@ -11,6 +11,7 @@ const ListContainer = styled.div`
   overflow: hidden;
   -webkit-overflow-scrolling: touch;
   -webkit-tap-highlight-color: transparent;
+  will-change: transform; /* 성능 최적화 */
 `;
 
 // 로딩 인디케이터
@@ -68,6 +69,7 @@ export default function ReactWindowComponents({
 }: ReactWindowComponentsProps) {
   const [listHeight, setListHeight] = useState(600); 
   const listRef = React.useRef<any>(null);
+  const lastItemsLength = useRef(items.length);
   
   // 스크롤 최적화를 위한 상태
   const [scrolling, setScrolling] = useState(false);
@@ -93,9 +95,19 @@ export default function ReactWindowComponents({
   // 아이템이 변경될 때 리스트 캐시 리셋
   useEffect(() => {
     if (listRef.current) {
-      listRef.current.resetAfterIndex(0);
+      // 아이템 길이가 변경된 경우에만 전체 리스트 리셋
+      if (items.length !== lastItemsLength.current) {
+        listRef.current.resetAfterIndex(0);
+        lastItemsLength.current = items.length;
+      } else {
+        // 같은 길이지만 내용이 변경된 경우 (선택 상태 등)
+        // 각 아이템을 개별적으로 업데이트
+        items.forEach((_, index) => {
+          listRef.current.resetAfterIndex(index, false);
+        });
+      }
     }
-  }, [items]);
+  }, [items, selectedItems]);
   
   const itemCount = hasMore ? items.length + 1 : items.length;
   const loadMoreItems = isLoading ? () => {} : onLoadMore;
@@ -111,24 +123,24 @@ export default function ReactWindowComponents({
     const descLength = item.description?.length || 0;
     
     // 기본 높이
-    let height = 180;
+    let height = 160; // 기본 높이 축소
     
     // 제목과 설명 길이에 따라 높이 조정
-    if (titleLength > 50) height += 24;
-    if (descLength > 100) height += 40;
-    if (descLength > 200) height += 40;
+    if (titleLength > 50) height += 20;
+    if (descLength > 100) height += 30;
+    if (descLength > 200) height += 30;
 
     // 버튼 영역과 여백을 위한 추가 공간
     height += 20;
     
     // 안전 마진 추가 (겹침 방지)
-    height += 16;
+    height += 12;
     
     return height;
   };
 
   // 스크롤 이벤트 핸들러
-  const handleScroll = useCallback(() => {
+  const handleScroll = useCallback(({ scrollOffset, scrollDirection }: { scrollOffset: number, scrollDirection: string }) => {
     setScrolling(true);
     
     // 기존 타임아웃 클리어
@@ -141,15 +153,44 @@ export default function ReactWindowComponents({
     scrollTimeout.current = window.setTimeout(() => {
       setScrolling(false);
       scrollTimeout.current = null;
-    }, 200);
-  }, []);
+      
+      // 스크롤이 멈추면 보이는 영역의 아이템들 강제 재계산
+      if (listRef.current) {
+        const visibleStartIndex = Math.floor(scrollOffset / 100); // 대략적 계산
+        const visibleEndIndex = Math.min(visibleStartIndex + 10, items.length - 1);
+        
+        for (let i = visibleStartIndex; i <= visibleEndIndex; i++) {
+          if (i >= 0 && i < items.length) {
+            listRef.current.resetAfterIndex(i, false);
+          }
+        }
+      }
+    }, 100);
+  }, [items.length]);
 
   interface RowProps {
     index: number;
     style: React.CSSProperties;
+    isScrolling?: boolean;
   }
 
-  const Row = ({ index, style }: RowProps) => {
+  const Row = ({ index, style, isScrolling }: RowProps) => {
+    const itemRef = useRef<HTMLDivElement>(null);
+    
+    // 아이템이 뷰포트에 표시되면 확인
+    useEffect(() => {
+      if (itemRef.current && !isScrolling) {
+        // 스크롤이 멈추면 비동기적으로 높이 재계산 트리거
+        const timer = setTimeout(() => {
+          if (listRef.current) {
+            listRef.current.resetAfterIndex(index, false);
+          }
+        }, 50);
+        
+        return () => clearTimeout(timer);
+      }
+    }, [index, isScrolling]);
+    
     if (!isItemLoaded(index)) {
       return (
         <div style={style}>
@@ -162,12 +203,15 @@ export default function ReactWindowComponents({
     const isSelected = selectedItems.includes(item.id);
     
     return (
-      <div style={{
-        ...style, 
-        padding: '8px 12px',
-        height: 'auto', // 높이를 자동으로 조정
-        paddingBottom: '16px' // 하단 여백 추가
-      }}>
+      <div 
+        ref={itemRef}
+        style={{
+          ...style, 
+          padding: '6px 10px',
+          height: 'auto', // 높이를 자동으로 조정
+        }}
+        data-index={index} // 디버깅용 인덱스 추가
+      >
         <NewsCard
           title={item.title}
           description={item.description || ''}
@@ -191,6 +235,12 @@ export default function ReactWindowComponents({
   const handleRefresh = async () => {
     try {
       await onRefresh();
+      // 새로고침 후 리스트 강제 리셋
+      if (listRef.current) {
+        setTimeout(() => {
+          listRef.current.resetAfterIndex(0);
+        }, 100);
+      }
       return Promise.resolve();
     } catch (error) {
       return Promise.reject(error);
@@ -210,7 +260,7 @@ export default function ReactWindowComponents({
           isItemLoaded={isItemLoaded}
           itemCount={itemCount}
           loadMoreItems={loadMoreItems}
-          threshold={3} // 미리 로드할 항목 수
+          threshold={5} // 미리 로드할 항목 수 증가
         >
           {({ onItemsRendered, ref }) => (
             <List
@@ -225,11 +275,14 @@ export default function ReactWindowComponents({
               onItemsRendered={onItemsRendered}
               onScroll={handleScroll}
               width="100%"
-              overscanCount={5} // 오버스캔으로 스크롤 성능 향상 (값 증가)
+              overscanCount={8} // 오버스캔 값 증가
               style={{ 
                 scrollbarWidth: 'none',
                 WebkitOverflowScrolling: 'touch',
-                paddingBottom: '50px' // 추가 하단 여백
+                paddingBottom: '50px', // 추가 하단 여백
+                willChange: 'transform',
+                position: 'relative',
+                zIndex: 1
               }}
               useIsScrolling={true} // 스크롤 상태 추적
             >

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import styled from '@emotion/styled';
 import { useRouter } from 'next/router';
@@ -6,7 +6,6 @@ import { cacheNews } from '@/utils/cacheUtils';
 import { saveRecentNews } from '@/utils/indexedDBUtils';
 import { NewsItem } from '@/types';
 import { formatDateToKorean } from '@/utils/dateUtils';
-import { saveForLater, isNewsAlreadySaved } from '@/utils/localStorage';
 import { trackEvent } from '@/utils/analytics';
 
 const Card = dynamic(() => import('antd/lib/card'), { ssr: false }) as any;
@@ -22,8 +21,8 @@ const Tag = dynamic(() => import('antd/lib/tag'), { ssr: false }) as any;
 const TouchCard = styled.div<{ isSelected?: boolean }>`
   position: relative;
   width: 100%;
-  margin: 0 0 10px 0;
-  padding: 16px;
+  margin: 0 0 8px 0;
+  padding: 12px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -31,10 +30,11 @@ const TouchCard = styled.div<{ isSelected?: boolean }>`
   cursor: pointer;
   border-left: ${(props) => (props.isSelected ? '4px solid #1890ff' : '4px solid transparent')};
   background-color: ${(props) => (props.isSelected ? '#f0f8ff' : '#fff')};
+  transition: background-color 0.2s ease;
 `;
 
 const CardTitle = styled.h3`
-  margin: 0 0 10px 0;
+  margin: 0 0 6px 0;
   font-size: 16px;
   font-weight: 600;
   overflow-wrap: break-word;
@@ -42,7 +42,7 @@ const CardTitle = styled.h3`
 `;
 
 const CardDescription = styled.p`
-  margin: 0 0 10px 0;
+  margin: 0 0 6px 0;
   font-size: 14px;
   color: #666;
   overflow-wrap: break-word;
@@ -57,7 +57,7 @@ const CardMeta = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 12px;
+  margin-top: 8px;
   width: 100%;
 `;
 
@@ -77,7 +77,7 @@ const CardCategory = styled.span`
 const ActionButtons = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin-top: 8px;
+  margin-top: 6px;
   gap: 8px;
 `;
 
@@ -95,30 +95,6 @@ const ActionButton = styled.button`
   
   &:hover {
     background-color: #f5f5f5;
-  }
-`;
-
-const SelectionButton = styled.button<{ isSelected?: boolean }>`
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  border: 1px solid ${(props) => (props.isSelected ? '#1890ff' : '#ddd')};
-  background-color: ${(props) => (props.isSelected ? '#1890ff' : 'white')};
-  color: ${(props) => (props.isSelected ? 'white' : '#666')};
-  font-size: 16px;
-  z-index: 10;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    border-color: #1890ff;
-    color: ${(props) => (props.isSelected ? 'white' : '#1890ff')};
   }
 `;
 
@@ -146,8 +122,45 @@ const NewsCard: React.FC<NewsCardProps> = ({
   onClick
 }) => {
   const router = useRouter();
-  const [isSaved, setIsSaved] = useState(() => isNewsAlreadySaved(id));
+  // const [isSaved, setIsSaved] = useState(() => isNewsAlreadySaved(id));
   
+  // 롱프레스 처리를 위한 상태와 타이머 참조
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [pressing, setPressing] = useState(false);
+  
+  // 롱프레스 시작 처리
+  const handlePressStart = useCallback((e: React.TouchEvent | React.MouseEvent) => {
+    e.preventDefault();
+    setPressing(true);
+    
+    longPressTimer.current = setTimeout(() => {
+      if (onSelect) {
+        onSelect(id, !isSelected);
+        // 진동 효과 추가 (지원하는 브라우저에서만)
+        if (navigator.vibrate) {
+          navigator.vibrate(50);
+        }
+      }
+      setPressing(false);
+    }, 500); // 0.5초 동안 누르면 롱프레스로 인식
+  }, [id, isSelected, onSelect]);
+  
+  // 롱프레스 종료 처리
+  const handlePressEnd = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    setPressing(false);
+  }, []);
+  
+  // 롱프레스 취소 (스크롤 시작 등)
+  const handlePressCancel = useCallback(() => {
+    handlePressEnd();
+  }, [handlePressEnd]);
+  
+  // 저장 기능 주석 처리
+  /*
   const handleSaveForLater = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     const newsItem = {
@@ -173,6 +186,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
       console.error('Failed to save news', error);
     }
   }, [id, title, description, date, category, original_link]);
+  */
   
   const handleShare = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -191,6 +205,9 @@ const NewsCard: React.FC<NewsCardProps> = ({
   }, [id, original_link, title, category]);
   
   const handleClick = useCallback(() => {
+    // 롱프레스 중이면 클릭 무시
+    if (pressing) return;
+    
     if (onClick) {
       onClick();
     } else {
@@ -202,25 +219,19 @@ const NewsCard: React.FC<NewsCardProps> = ({
       title,
       category,
     });
-  }, [id, original_link, onClick, title, category]);
-  
-  const handleSelect = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onSelect) {
-      onSelect(id, !isSelected);
-    }
-  }, [id, isSelected, onSelect]);
+  }, [id, original_link, onClick, title, category, pressing]);
 
   return (
-    <TouchCard onClick={handleClick} isSelected={isSelected}>
-      {onSelect && (
-        <SelectionButton
-          isSelected={isSelected}
-          onClick={handleSelect}
-        >
-          {isSelected ? '✓' : '+'}
-        </SelectionButton>
-      )}
+    <TouchCard 
+      onClick={handleClick} 
+      isSelected={isSelected}
+      onTouchStart={handlePressStart}
+      onTouchEnd={handlePressEnd}
+      onTouchCancel={handlePressCancel}
+      onMouseDown={handlePressStart}
+      onMouseUp={handlePressEnd}
+      onMouseLeave={handlePressCancel}
+    >
       <CardTitle>{title}</CardTitle>
       <CardDescription>{description}</CardDescription>
       <CardMeta>
@@ -234,12 +245,14 @@ const NewsCard: React.FC<NewsCardProps> = ({
           </svg>
           공유
         </ActionButton>
+        {/* 저장 기능 주석 처리
         <ActionButton onClick={handleSaveForLater} disabled={isSaved}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M19 21L12 16L5 21V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H17C17.5304 3 18.0391 3.21071 18.4142 3.58579C18.7893 3.96086 19 4.46957 19 5V21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
           {isSaved ? '저장됨' : '저장'}
         </ActionButton>
+        */}
       </ActionButtons>
     </TouchCard>
   );
