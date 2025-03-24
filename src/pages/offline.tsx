@@ -3,13 +3,14 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { getRecentNews } from '@/utils/indexedDBUtils';
 import styled from '@emotion/styled';
+import { OfflineNewsItem } from '@/types';
 
-const Typography = dynamic(() => import('antd').then((antd) => antd.Typography), { ssr: false });
-const List = dynamic(() => import('antd').then((antd) => antd.List), { ssr: false });
-const Card = dynamic(() => import('antd').then((antd) => antd.Card), { ssr: false });
-const Button = dynamic(() => import('antd').then((antd) => antd.Button), { ssr: false });
-const Empty = dynamic(() => import('antd').then((antd) => antd.Empty), { ssr: false });
-const Skeleton = dynamic(() => import('antd').then((antd) => antd.Skeleton), { ssr: false });
+const Typography = dynamic(() => import('antd').then((antd) => antd.Typography), { ssr: false }) as any;
+const List = dynamic(() => import('antd').then((antd) => antd.List), { ssr: false }) as any;
+const Card = dynamic(() => import('antd').then((antd) => antd.Card), { ssr: false }) as any;
+const Button = dynamic(() => import('antd').then((antd) => antd.Button), { ssr: false }) as any;
+const Empty = dynamic(() => import('antd').then((antd) => antd.Empty), { ssr: false }) as any;
+const Skeleton = dynamic(() => import('antd').then((antd) => antd.Skeleton), { ssr: false }) as any;
 
 const { Title, Text, Paragraph } = Typography;
 

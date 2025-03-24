@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import dynamic from 'next/dynamic';
 import styled from '@emotion/styled';
 import { useSwipeable } from 'react-swipeable';
 import { cacheNews } from '@/utils/cacheUtils';
 import { saveRecentNews } from '@/utils/indexedDBUtils';
+import { NewsItem } from '@/types';
+import { formatDateToKorean } from '@/utils/dateUtils';
 
-const Card = dynamic(() => import('antd').then((antd) => antd.Card), { ssr: false });
-const message = dynamic(() => import('antd').then((antd) => antd.message), { ssr: false });
+const Card = dynamic(() => import('antd').then((antd) => antd.Card), { ssr: false }) as any;
+const message = dynamic(() => import('antd').then((antd) => antd.message), { ssr: false }) as any;
+const Tag = dynamic(() => import('antd').then((antd) => antd.Tag), { ssr: false }) as any;
 
 const TouchCard = styled(Card)`
   margin-bottom: 16px;

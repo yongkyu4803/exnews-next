@@ -12,16 +12,19 @@ import {
   saveNotificationPreferences,
   sendTestNotification
 } from '@/utils/pushNotification';
+import { Categories } from '@/types';
 
 // 동적 임포트
-const Card = dynamic(() => import('antd').then((antd) => antd.Card), { ssr: false });
-const Switch = dynamic(() => import('antd').then((antd) => antd.Switch), { ssr: false });
-const Button = dynamic(() => import('antd').then((antd) => antd.Button), { ssr: false });
-const Typography = dynamic(() => import('antd').then((antd) => antd.Typography), { ssr: false });
-const Divider = dynamic(() => import('antd').then((antd) => antd.Divider), { ssr: false });
-const Checkbox = dynamic(() => import('antd').then((antd) => antd.Checkbox), { ssr: false });
-const Alert = dynamic(() => import('antd').then((antd) => antd.Alert), { ssr: false });
-const message = dynamic(() => import('antd').then((antd) => antd.message), { ssr: false });
+const Card = dynamic(() => import('antd').then((antd) => antd.Card), { ssr: false }) as any;
+const Switch = dynamic(() => import('antd').then((antd) => antd.Switch), { ssr: false }) as any;
+const Button = dynamic(() => import('antd').then((antd) => antd.Button), { ssr: false }) as any;
+const Typography = dynamic(() => import('antd').then((antd) => antd.Typography), { ssr: false }) as any;
+const Divider = dynamic(() => import('antd').then((antd) => antd.Divider), { ssr: false }) as any;
+const Checkbox = dynamic(() => import('antd').then((antd) => antd.Checkbox), { ssr: false }) as any;
+const Alert = dynamic(() => import('antd').then((antd) => antd.Alert), { ssr: false }) as any;
+const message = dynamic(() => import('antd').then((antd) => antd.message), { ssr: false }) as any;
+const Space = dynamic(() => import('antd').then((antd) => antd.Space), { ssr: false }) as any;
+const Tag = dynamic(() => import('antd').then((antd) => antd.Tag), { ssr: false }) as any;
 
 const { Title, Text, Paragraph } = Typography;
 
