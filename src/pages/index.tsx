@@ -1,49 +1,106 @@
-import React, { useState } from 'react';
-import { useQuery } from 'react-query';
-import { Typography, Space, Alert, Tabs, Button, message } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from 'react-query';
 import dynamic from 'next/dynamic';
-import { fetchNewsItems, fetchCategories } from '@/lib/api';
+// Remove unused import since LoadMoreButton component is not being used
+import VirtualNewsList from '@/components/mobile/VirtualNewsList';
 import { CopyOutlined } from '@ant-design/icons';
+import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 
-const { Title } = Typography;
+// 동적으로 Ant Design 컴포넌트 임포트
+const Typography = dynamic(() => import('antd').then((antd) => antd.Typography), { ssr: false });
+const Title = dynamic(() => import('antd').then((antd) => antd.Typography.Title), { ssr: false });
+const Space = dynamic(() => import('antd').then((antd) => antd.Space), { ssr: false });
+const Alert = dynamic(() => import('antd').then((antd) => antd.Alert), { ssr: false });
+const Tabs = dynamic(() => import('antd').then((antd) => antd.Tabs), { ssr: false });
+const Button = dynamic(() => import('antd').then((antd) => antd.Button), { ssr: false });
 
-// Table 컴포넌트를 클라이언트 사이드에서만 로드
-const Table = dynamic(() => import('antd').then((antd) => antd.Table), { 
-  ssr: false 
+// 테이블 컴포넌트를 동적으로 불러옴
+const NewsTable = dynamic(() => import('@/components/NewsTable'), { 
+  ssr: false,
+  loading: () => <div style={{ height: '600px', width: '100%' }}>테이블 로딩 중...</div>
 });
 
-interface NewsItemsResponse {
-  items: any[];
+// 타입 정의
+interface NewsItem {
+  title: string;
+  original_link: string;
+  pub_date: string;
+  category: string;
+  [key: string]: any; // 추가 필드 허용
+}
+
+interface NewsResponse {
+  items: NewsItem[];
   totalCount: number;
 }
 
-export default function HomePage() {
+// 전체 컴포넌트를 클라이언트 사이드에서만 렌더링
+const HomePage = () => {
+  const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [selectedRows, setSelectedRows] = useState<NewsItem[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+
+  // 클라이언트 사이드 마운트 체크
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // 미디어 쿼리 처리를 위한 useEffect
+  useEffect(() => {
+    // 클라이언트 사이드에서만 실행되도록 체크
+    if (typeof window !== 'undefined') {
+      const mediaQuery = window.matchMedia('(max-width: 768px)');
+      const handleResize = (e: MediaQueryListEvent | MediaQueryList) => {
+        setIsMobile(e.matches);
+      };
+
+      // Initial check
+      handleResize(mediaQuery);
+
+      // Add listener for window resize
+      mediaQuery.addEventListener('change', handleResize);
+
+      // Cleanup
+      return () => mediaQuery.removeEventListener('change', handleResize);
+    }
+  }, []);
 
   // Categories query
   const { data: categories = [] } = useQuery<string[], Error>(
     'categories',
-    fetchCategories
+    async () => {
+      const response = await fetch('/api/categories');
+      if (!response.ok) {
+        throw new Error('Failed to fetch categories');
+      }
+      return response.json();
+    },
+    {
+      enabled: isMounted // 클라이언트 사이드에서만 실행
+    }
   );
 
   // News items query
-  const { data, isLoading, error } = useQuery<NewsItemsResponse, Error>(
-    ['newsItems', page, pageSize, selectedCategory],
+  const { data, isLoading, error } = useQuery<NewsResponse, Error>(
+    ['newsItems', selectedCategory],
     async () => {
-      const result = await fetchNewsItems({ page, pageSize, category: selectedCategory });
-      console.log('API Response:', result.items); // 데이터 확인용 로그
+      const response = await fetch(`/api/news?all=true${selectedCategory ? `&category=${selectedCategory}` : ''}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch news items');
+      }
+      const result = await response.json();
+      console.log('API Response:', result.items.length); // 전체 아이템 수 로그
       return result;
     },
-    { keepPreviousData: true }
+    { 
+      keepPreviousData: true,
+      enabled: isMounted // 클라이언트 사이드에서만 실행
+    }
   );
-
-  const handlePageChange = (newPage: number, newPageSize: number) => {
-    setPage(newPage);
-    setPageSize(newPageSize);
-  };
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category === 'all' ? undefined : category);
@@ -52,7 +109,12 @@ export default function HomePage() {
 
   const handleCopyToClipboard = () => {
     if (selectedRows.length === 0) {
-      message.warning('선택된 기사가 없습니다.');
+      if (typeof window !== 'undefined') {
+        // 클라이언트 사이드에서만 실행
+        import('antd').then(({ message }) => {
+          message.warning('선택된 기사가 없습니다.');
+        });
+      }
       return;
     }
 
@@ -60,107 +122,132 @@ export default function HomePage() {
       .map(item => `${item.title}\n${item.original_link}\n${new Date(item.pub_date).toLocaleString('ko-KR')}\n`)
       .join('\n');
 
-    navigator.clipboard.writeText(textToCopy)
-      .then(() => message.success('클립보드에 복사되었습니다.'))
-      .catch(() => message.error('클립보드 복사에 실패했습니다.'));
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+          if (typeof window !== 'undefined') {
+            import('antd').then(({ message }) => {
+              message.success('클립보드에 복사되었습니다.');
+            });
+          }
+        })
+        .catch(() => {
+          if (typeof window !== 'undefined') {
+            import('antd').then(({ message }) => {
+              message.error('클립보드 복사에 실패했습니다.');
+            });
+          }
+        });
+    } else {
+      if (typeof window !== 'undefined') {
+        import('antd').then(({ message }) => {
+          message.error('클립보드 접근이 지원되지 않는 환경입니다.');
+        });
+      }
+    }
   };
 
-  // 선택된 키들을 관리하기 위한 state 추가
-  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+  // 안전하게 hasMore 계산
+  const hasMore = React.useMemo(() => {
+    // 모든 데이터를 한 번에 로드하므로 더 이상 로드할 데이터가 없음
+    return false;
+  }, [data]);
+
+  const handleRefresh = async () => {
+    const queryClient = useQueryClient();
+    await queryClient.invalidateQueries(['newsItems']);
+    return Promise.resolve();
+  };
+
+  // 서버 사이드 렌더링 시 로딩 UI 표시
+  if (!isMounted) {
+    return (
+      <div style={{ padding: '20px' }}>
+        <div style={{ height: '600px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div>로딩 중...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div style={{ padding: isMobile ? '16px' : '20px' }}>
       <Space direction="vertical" style={{ width: '100%' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title level={2}>🚨 단독 뉴스</Title>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          flexWrap: isMobile ? 'wrap' : 'nowrap',
+          gap: '12px'
+        }}>
+          <Title level={isMobile ? 3 : 2}>🚨 단독 뉴스</Title>
           <Button 
             icon={<CopyOutlined />} 
             onClick={handleCopyToClipboard}
             disabled={selectedRows.length === 0}
+            size={isMobile ? 'small' : 'middle'}
           >
             선택 기사 복사 ({selectedRows.length})
           </Button>
         </div>
-      
-      <Tabs
-        defaultActiveKey="all"
-        onChange={handleCategoryChange}
-        items={[
-          { key: 'all', label: '전체', className: 'tab-all' },
-          { key: '정치', label: '정치', className: 'tab-politics' },
-          { key: '경제', label: '경제', className: 'tab-economy' },
-          { key: '사회', label: '사회', className: 'tab-social' },
-          { key: '국제', label: '국제', className: 'tab-international' },
-          { key: '문화', label: '문화', className: 'tab-culture' },
-          { key: '연예/스포츠', label: '연예/스포츠', className: 'tab-entertainment' },
-          { key: '기타', label: '기타', className: 'tab-etc' }
-        ]}
-        style={{ 
-          marginBottom: '12px',
-          backgroundColor: '#ffffff',
-          padding: '8px',
-          borderRadius: '4px'
-        }}
-        className="category-tabs"
-      />
-      
-      {error && (
-        <Alert
-          message="데이터 로딩 오류"
-          description={error.message}
-          type="error"
-          showIcon
-          style={{ marginBottom: '16px' }}
+
+        <PwaInstallPrompt />
+
+        <Tabs
+          defaultActiveKey="all"
+          onChange={handleCategoryChange}
+          items={[
+            { key: 'all', label: '전체', className: 'tab-all' },
+            { key: '정치', label: '정치', className: 'tab-politics' },
+            { key: '경제', label: '경제', className: 'tab-economy' },
+            { key: '사회', label: '사회', className: 'tab-social' },
+            { key: '국제', label: '국제', className: 'tab-international' },
+            { key: '문화', label: '문화', className: 'tab-culture' },
+            { key: '연예/스포츠', label: '연예/스포츠', className: 'tab-entertainment' },
+            { key: '기타', label: '기타', className: 'tab-etc' }
+          ]}
+          style={{ 
+            marginBottom: '12px',
+            backgroundColor: '#ffffff',
+            padding: isMobile ? '4px' : '8px',
+            borderRadius: '4px'
+          }}
+          size={isMobile ? 'small' : 'middle'}
+          className="category-tabs"
         />
-      )}
-      
-      <Table 
-        size="small"
-        columns={[
-          { 
-            title: '제목',
-            dataIndex: 'title',
-            render: (text, record: any) => (
-              <a href={record.original_link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{ fontWeight: 600 }}  // 글자 두께 추가
-              >
-                {text}
-              </a>
-            )
-          },
-          { 
-            title: '카테고리',
-            dataIndex: 'category',
-            width: 100,
-          },
-          { 
-            title: '발행일',
-            dataIndex: 'pub_date',
-            width: 180,
-            render: (date) => {
-              const d = new Date(date);
-              return d.getFullYear() + '-' + 
-                     String(d.getMonth() + 1).padStart(2, '0') + '-' + 
-                     String(d.getDate()).padStart(2, '0') + ' ' + 
-                     String(d.getHours()).padStart(2, '0') + ':' + 
-                     String(d.getMinutes()).padStart(2, '0') + ':' + 
-                     String(d.getSeconds()).padStart(2, '0');
-            }
-          }
-        ]}
-        dataSource={data?.items || []}
-        rowKey={(record: any) => record.original_link}
-        rowSelection={{
-          onChange: (selectedRowKeys, selectedRows) => {
-            setSelectedKeys(selectedRowKeys);
-            setSelectedRows(selectedRows);
-          },
-          selectedRowKeys: selectedKeys,
-        }}
-      />
+
+        {error && (
+          <Alert
+            message="데이터 로딩 오류"
+            description={error.message}
+            type="error"
+            showIcon
+            style={{ marginBottom: '16px' }}
+          />
+        )}
+
+        {isMobile ? (
+          <VirtualNewsList
+            items={data?.items || []}
+            hasMore={false} // 모든 데이터를 한 번에 로드하므로 항상 false
+            isLoading={isLoading}
+            onLoadMore={() => {}} // 빈 함수로 대체
+            onRefresh={handleRefresh}
+          />
+        ) : (
+          <NewsTable 
+            items={data?.items || []}
+            selectedKeys={selectedKeys}
+            onSelectChange={(keys, rows) => {
+              setSelectedKeys(keys);
+              setSelectedRows(rows);
+            }}
+          />
+        )}
       </Space>
     </div>
   );
-}
+};
+
+// SSR 비활성화
+export default dynamic(() => Promise.resolve(HomePage), { ssr: false });

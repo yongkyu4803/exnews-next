@@ -52,6 +52,8 @@ body {
   margin-bottom: 16px;
 }
 
+@import './mobile/index.css';
+
 @media (max-width: 768px) {
   .search-form,
   .filters-form {

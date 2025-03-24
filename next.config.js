@@ -1,9 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextPWA = require('next-pwa')
 
+const isProd = process.env.NODE_ENV === 'production';
+
 const withPWA = nextPWA({
   dest: 'public',
-  disable: false,
+  disable: !isProd,
   register: true,
   skipWaiting: true,
   runtimeCaching: [
@@ -11,18 +13,25 @@ const withPWA = nextPWA({
       urlPattern: /^https?.*/,
       handler: 'NetworkFirst',
       options: {
-        cacheName: 'offlineCache',
+        cacheName: 'https-calls',
+        networkTimeoutSeconds: 15,
         expiration: {
-          maxEntries: 200
+          maxEntries: 150,
+          maxAgeSeconds: 30 * 24 * 60 * 60
+        },
+        cacheableResponse: {
+          statuses: [0, 200]
         }
       }
     }
-  ]
+  ],
+  fallbacks: {
+    document: '/offline'
+  }
 })
 
 const nextConfig = {
-  reactStrictMode: true,
-  // 문제가 되는 패키지들을 트랜스파일하도록 설정
+  reactStrictMode: false,
   transpilePackages: [
     'rc-util', 
     'rc-tree', 
@@ -34,7 +43,9 @@ const nextConfig = {
     '@rc-component',
     'rc-table'
   ],
-  // 기존 설정이 있다면 유지
+  images: {
+    unoptimized: true
+  }
 }
 
 module.exports = withPWA(nextConfig)
