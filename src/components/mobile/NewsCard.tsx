@@ -23,14 +23,41 @@ const TouchCard = styled.div<{ isSelected?: boolean }>`
   width: 100%;
   margin: 0 0 8px 0;
   padding: 12px;
-  background-color: #fff;
+  background-color: ${(props) => (props.isSelected ? '#e6f7ff' : '#fff')};
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: ${(props) => (props.isSelected ? '0 2px 8px rgba(24, 144, 255, 0.2)' : '0 2px 4px rgba(0, 0, 0, 0.05)')};
   overflow: hidden;
   cursor: pointer;
   border-left: ${(props) => (props.isSelected ? '4px solid #1890ff' : '4px solid transparent')};
-  background-color: ${(props) => (props.isSelected ? '#f0f8ff' : '#fff')};
-  transition: background-color 0.2s ease;
+  transition: all 0.2s ease;
+  
+  /* 선택 상태 표시 */
+  &::before {
+    content: '';
+    position: absolute;
+    top: ${(props) => (props.isSelected ? '0' : '-100%')};
+    right: 0;
+    width: 30px;
+    height: 30px;
+    background-color: #1890ff;
+    border-radius: 0 0 0 8px;
+    transform: translate(0, 0) rotate(0deg);
+    transition: top 0.3s ease;
+    z-index: 1;
+  }
+  
+  /* 체크 표시 아이콘 */
+  &::after {
+    content: '✓';
+    position: absolute;
+    top: ${(props) => (props.isSelected ? '2px' : '-100%')};
+    right: 8px;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 2;
+    transition: top 0.3s ease;
+  }
 `;
 
 const CardTitle = styled.h3`
@@ -39,6 +66,7 @@ const CardTitle = styled.h3`
   font-weight: 600;
   overflow-wrap: break-word;
   word-break: break-word;
+  padding-right: 24px; /* 오른쪽 상단 체크 마크를 위한 공간 확보 */
 `;
 
 const CardDescription = styled.p`
@@ -96,6 +124,16 @@ const ActionButton = styled.button`
   &:hover {
     background-color: #f5f5f5;
   }
+`;
+
+const SelectionMarkWrapper = styled.div<{ isSelected?: boolean }>`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  opacity: ${(props) => (props.isSelected ? '1' : '0')};
+  transition: opacity 0.2s ease;
 `;
 
 interface NewsCardProps {

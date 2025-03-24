@@ -48,6 +48,12 @@ const PullIndicator = styled.div`
   font-size: 14px;
 `;
 
+// react-window 컨테이너 스타일 추가
+const WindowListContainer = styled.div`
+  padding-top: 5px; /* 상단 여백 추가로 최상단 카드 사라짐 방지 */
+  margin-bottom: 50px;
+`;
+
 interface ReactWindowComponentsProps {
   items: any[];
   hasMore: boolean;
@@ -119,6 +125,8 @@ export default function ReactWindowComponents({
     
     // 설명이 길거나 제목이 길면 높이 증가
     const item = items[index];
+    if (!item) return 160; // 아이템이 없는 경우 기본 높이 반환
+    
     const titleLength = item.title?.length || 0;
     const descLength = item.description?.length || 0;
     
@@ -134,7 +142,7 @@ export default function ReactWindowComponents({
     height += 20;
     
     // 안전 마진 추가 (겹침 방지)
-    height += 12;
+    height += 24; // 마진 증가
     
     return height;
   };
@@ -149,23 +157,27 @@ export default function ReactWindowComponents({
       scrollTimeout.current = null;
     }
     
-    // 스크롤이 멈춘 후 200ms 후에 scrolling 상태를 false로 설정
+    // 스크롤이 멈춘 후에 scrolling 상태를 false로 설정
     scrollTimeout.current = window.setTimeout(() => {
       setScrolling(false);
       scrollTimeout.current = null;
       
       // 스크롤이 멈추면 보이는 영역의 아이템들 강제 재계산
       if (listRef.current) {
-        const visibleStartIndex = Math.floor(scrollOffset / 100); // 대략적 계산
-        const visibleEndIndex = Math.min(visibleStartIndex + 10, items.length - 1);
-        
-        for (let i = visibleStartIndex; i <= visibleEndIndex; i++) {
-          if (i >= 0 && i < items.length) {
-            listRef.current.resetAfterIndex(i, false);
+        try {
+          const visibleStartIndex = Math.max(0, Math.floor(scrollOffset / 100) - 1); // 한 항목 더 포함
+          const visibleEndIndex = Math.min(visibleStartIndex + 12, items.length - 1); // 더 많은 항목 포함
+          
+          for (let i = visibleStartIndex; i <= visibleEndIndex; i++) {
+            if (i >= 0 && i < items.length) {
+              listRef.current.resetAfterIndex(i, false);
+            }
           }
+        } catch (err) {
+          console.error('스크롤 아이템 재계산 오류:', err);
         }
       }
-    }, 100);
+    }, 150); // 시간 증가
   }, [items.length]);
 
   interface RowProps {
@@ -256,40 +268,50 @@ export default function ReactWindowComponents({
         releaseContent={<PullIndicator>↑ 놓아서 새로고침</PullIndicator>}
         refreshContent={<PullIndicator>새로고침 중...</PullIndicator>}
       >
-        <InfiniteLoader
-          isItemLoaded={isItemLoaded}
-          itemCount={itemCount}
-          loadMoreItems={loadMoreItems}
-          threshold={5} // 미리 로드할 항목 수 증가
-        >
-          {({ onItemsRendered, ref }) => (
-            <List
-              ref={(list) => {
-                // 두 개의 ref 합치기
-                listRef.current = list;
-                if (typeof ref === 'function') ref(list);
-              }}
-              height={listHeight}
-              itemCount={itemCount}
-              itemSize={getItemHeight}
-              onItemsRendered={onItemsRendered}
-              onScroll={handleScroll}
-              width="100%"
-              overscanCount={8} // 오버스캔 값 증가
-              style={{ 
-                scrollbarWidth: 'none',
-                WebkitOverflowScrolling: 'touch',
-                paddingBottom: '50px', // 추가 하단 여백
-                willChange: 'transform',
-                position: 'relative',
-                zIndex: 1
-              }}
-              useIsScrolling={true} // 스크롤 상태 추적
-            >
-              {Row}
-            </List>
-          )}
-        </InfiniteLoader>
+        <WindowListContainer>
+          <InfiniteLoader
+            isItemLoaded={isItemLoaded}
+            itemCount={itemCount}
+            loadMoreItems={loadMoreItems}
+            threshold={5} // 미리 로드할 항목 수 증가
+          >
+            {({ onItemsRendered, ref }) => (
+              <List
+                ref={(list) => {
+                  // 두 개의 ref 합치기
+                  listRef.current = list;
+                  if (typeof ref === 'function') ref(list);
+                }}
+                height={listHeight}
+                itemCount={itemCount}
+                itemSize={getItemHeight}
+                onItemsRendered={(props) => {
+                  // 보이는 아이템이 변경될 때 상단 아이템을 강제로 재계산
+                  if (listRef.current && props.visibleStartIndex === 0) {
+                    setTimeout(() => {
+                      listRef.current.resetAfterIndex(0, false);
+                    }, 50);
+                  }
+                  onItemsRendered(props);
+                }}
+                onScroll={handleScroll}
+                width="100%"
+                overscanCount={10} // 오버스캔 값 더 증가
+                style={{ 
+                  scrollbarWidth: 'none',
+                  WebkitOverflowScrolling: 'touch',
+                  paddingBottom: '60px', // 하단 여백 증가
+                  willChange: 'transform',
+                  position: 'relative',
+                  zIndex: 1
+                }}
+                useIsScrolling={true} // 스크롤 상태 추적
+              >
+                {Row}
+              </List>
+            )}
+          </InfiniteLoader>
+        </WindowListContainer>
       </PullToRefresh>
     </ListContainer>
   );
