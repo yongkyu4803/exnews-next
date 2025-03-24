@@ -1,6 +1,6 @@
 // NewsItem 정의 및 내보내기
 export interface NewsItem {
-  id?: number;
+  id?: number | string;
   title: string;
   original_link: string;
   pub_date: string;

@@ -103,18 +103,28 @@ export default function ReactWindowComponents({
   
   // 아이템 높이 계산 함수
   const getItemHeight = (index: number) => {
-    if (!isItemLoaded(index)) return 80; // 로딩 인디케이터 높이
+    if (!isItemLoaded(index)) return 100; // 로딩 인디케이터 높이
     
     // 설명이 길거나 제목이 길면 높이 증가
     const item = items[index];
-    const titleLength = item.title.length;
+    const titleLength = item.title?.length || 0;
     const descLength = item.description?.length || 0;
     
-    if (titleLength > 50 || descLength > 100) {
-      return 170; // 더 큰 높이
-    }
+    // 기본 높이
+    let height = 180;
     
-    return 150; // 기본 높이
+    // 제목과 설명 길이에 따라 높이 조정
+    if (titleLength > 50) height += 24;
+    if (descLength > 100) height += 40;
+    if (descLength > 200) height += 40;
+
+    // 버튼 영역과 여백을 위한 추가 공간
+    height += 20;
+    
+    // 안전 마진 추가 (겹침 방지)
+    height += 16;
+    
+    return height;
   };
 
   // 스크롤 이벤트 핸들러
@@ -152,7 +162,12 @@ export default function ReactWindowComponents({
     const isSelected = selectedItems.includes(item.id);
     
     return (
-      <div style={{...style, padding: '0 8px'}}>
+      <div style={{
+        ...style, 
+        padding: '8px 12px',
+        height: 'auto', // 높이를 자동으로 조정
+        paddingBottom: '16px' // 하단 여백 추가
+      }}>
         <NewsCard
           title={item.title}
           description={item.description || ''}
@@ -214,6 +229,7 @@ export default function ReactWindowComponents({
               style={{ 
                 scrollbarWidth: 'none',
                 WebkitOverflowScrolling: 'touch',
+                paddingBottom: '50px' // 추가 하단 여백
               }}
               useIsScrolling={true} // 스크롤 상태 추적
             >

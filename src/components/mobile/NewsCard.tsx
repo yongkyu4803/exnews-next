@@ -1,11 +1,13 @@
-import React, { useState, memo } from 'react';
+import React, { useState, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import styled from '@emotion/styled';
-import { useSwipeable } from 'react-swipeable';
+import { useRouter } from 'next/router';
 import { cacheNews } from '@/utils/cacheUtils';
 import { saveRecentNews } from '@/utils/indexedDBUtils';
 import { NewsItem } from '@/types';
 import { formatDateToKorean } from '@/utils/dateUtils';
+import { saveForLater, isNewsAlreadySaved } from '@/utils/localStorage';
+import { trackEvent } from '@/utils/analytics';
 
 const Card = dynamic(() => import('antd/lib/card'), { ssr: false }) as any;
 let message: any = { success: () => {}, error: () => {} };
@@ -17,60 +19,106 @@ if (typeof window !== 'undefined') {
 }
 const Tag = dynamic(() => import('antd/lib/tag'), { ssr: false }) as any;
 
-const TouchCard = styled(Card)`
-  margin-bottom: 16px;
-  border-radius: var(--card-border-radius, 16px);
-  background: #ffffff;
-  box-shadow: var(--card-shadow, 0 2px 12px rgba(0, 0, 0, 0.1));
-  transition: all 0.2s ease;
+const TouchCard = styled.div<{ isSelected?: boolean }>`
+  position: relative;
+  width: 100%;
+  margin: 0 0 10px 0;
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  cursor: pointer;
+  border-left: ${(props) => (props.isSelected ? '4px solid #1890ff' : '4px solid transparent')};
+  background-color: ${(props) => (props.isSelected ? '#f0f8ff' : '#fff')};
+`;
+
+const CardTitle = styled.h3`
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: break-word;
+  word-break: break-word;
+`;
+
+const CardDescription = styled.p`
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #666;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+const CardMeta = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  width: 100%;
+`;
+
+const CardDate = styled.span`
+  font-size: 12px;
+  color: #999;
+`;
+
+const CardCategory = styled.span`
+  font-size: 12px;
+  background-color: #f0f0f0;
+  color: #666;
+  padding: 2px 6px;
+  border-radius: 4px;
+`;
+
+const ActionButtons = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  gap: 8px;
+`;
+
+const ActionButton = styled.button`
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 13px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   
-  &:active {
-    transform: scale(0.98);
-    background: #f8f8f8;
+  &:hover {
+    background-color: #f5f5f5;
   }
+`;
 
-  .ant-card-body {
-    padding: 18px;
-  }
-
-  .news-title {
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: #1a1a1a;
-    line-height: 1.4;
-  }
-
-  .news-description {
-    font-size: 16px;
-    color: #444;
-    margin-bottom: 14px;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    line-height: 1.5;
-  }
-
-  .news-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 14px;
-    color: #666;
-
-    .category {
-      background: #f0f0f0;
-      padding: 6px 12px;
-      border-radius: 16px;
-      color: #555;
-      font-weight: 500;
-    }
-    
-    .date {
-      margin-left: 8px;
-    }
+const SelectionButton = styled.button<{ isSelected?: boolean }>`
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 1px solid ${(props) => (props.isSelected ? '#1890ff' : '#ddd')};
+  background-color: ${(props) => (props.isSelected ? '#1890ff' : 'white')};
+  color: ${(props) => (props.isSelected ? 'white' : '#666')};
+  font-size: 16px;
+  z-index: 10;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    border-color: #1890ff;
+    color: ${(props) => (props.isSelected ? 'white' : '#1890ff')};
   }
 `;
 
@@ -79,272 +127,122 @@ interface NewsCardProps {
   description: string;
   date: string;
   category: string;
-  original_link?: string;
-  id?: string;
-  onClick: () => void;
+  original_link: string;
+  id: string;
   isSelected?: boolean;
-  onSelect?: (id: string | number) => void;
+  onSelect?: (id: string, selected: boolean) => void;
+  onClick?: () => void;
 }
 
-const CardWrapper = styled.div<{ offset: number }>`
-  transform: translateX(${props => props.offset}px);
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-`;
-
-const ActionButton = styled.button<{ buttonType: 'share' | 'save' }>`
-  position: absolute;
-  top: 0;
-  ${({ buttonType }) => buttonType === 'share' ? 'right: -65px' : 'right: -130px'};
-  height: 100%;
-  width: 65px;
-  border: none;
-  color: white;
-  background: ${({ buttonType }) => buttonType === 'share' ? 'var(--primary-color, #1a4b8c)' : '#40a9ff'};
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  
-  &:active {
-    opacity: 0.85;
-  }
-  
-  /* 아이콘 */
-  &::before {
-    content: ${({ buttonType }) => buttonType === 'share' ? '"↗"' : '"✓"'};
-    font-size: 20px;
-    margin-bottom: 4px;
-  }
-`;
-
-export default function NewsCard({ 
-  title, 
-  description, 
-  date, 
-  category, 
-  original_link = '', 
-  id = `news-${Date.now()}`,
-  onClick,
+const NewsCard: React.FC<NewsCardProps> = ({
+  title,
+  description,
+  date,
+  category,
+  original_link,
+  id,
   isSelected = false,
-  onSelect
-}: NewsCardProps) {
-  const [offset, setOffset] = useState(0);
-  const [isSwiping, setIsSwiping] = useState(false);
-
-  // 뉴스 아이템 캐싱 처리 함수
-  const handleCache = async () => {
+  onSelect,
+  onClick
+}) => {
+  const router = useRouter();
+  const [isSaved, setIsSaved] = useState(() => isNewsAlreadySaved(id));
+  
+  const handleSaveForLater = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     const newsItem = {
-      id,
+      id: parseInt(id, 10) || Date.now(),
       title,
       description,
       pub_date: date,
       category,
-      original_link
+      original_link,
     };
     
-    await cacheNews(newsItem);
-  };
-
-  // 기존 onClick 함수 래핑하여 캐싱 기능 추가
-  const handleClick = () => {
-    // 스와이프 중에는 클릭 방지
-    if (isSwiping) return;
-    handleCache();
-    onClick();
-  };
-
-  const handlers = useSwipeable({
-    onSwiping: (e: { deltaX: number }) => {
-      setIsSwiping(true);
-      if (e.deltaX < 0) { // 왼쪽으로 스와이프
-        setOffset(Math.max(-130, e.deltaX));
-      } else if (e.deltaX > 0 && offset < 0) { // 오른쪽으로 스와이프 (닫기)
-        setOffset(Math.min(0, offset + Math.abs(e.deltaX) * 0.5));
-      }
-    },
-    onSwipedLeft: () => {
-      setOffset(-130); // 완전히 열기
-      setTimeout(() => setIsSwiping(false), 300);
-    },
-    onSwipedRight: () => {
-      setOffset(0); // 닫기
-      setTimeout(() => setIsSwiping(false), 300);
-    },
-    trackMouse: false, // 모바일에서는 마우스 이벤트 불필요
-    trackTouch: true,
-    delta: 10, // 조금 더 민감하게 스와이프 인식
-  });
-
-  const handleShare = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (typeof navigator !== 'undefined' && navigator.share) {
-      navigator.share({
-        title: title,
-        text: description,
-        url: original_link || (typeof window !== 'undefined' ? window.location.href : '')
-      }).catch(err => {
-        console.log('공유하기를 취소했거나 오류가 발생했습니다.', err);
+    try {
+      saveForLater(newsItem);
+      setIsSaved(true);
+      const msg = message.success('뉴스가 저장되었습니다.');
+      trackEvent('save_news', {
+        news_id: id,
+        title,
+        category,
       });
-    } else {
-      // 공유 API가 지원되지 않는 경우 링크 복사
-      if (typeof navigator !== 'undefined') {
-        navigator.clipboard.writeText(original_link || window.location.href);
-        // @ts-ignore
-        message.success('링크가 복사되었습니다.');
-      }
+    } catch (error) {
+      const msg = message.error('저장 중 오류가 발생했습니다');
+      console.error('Failed to save news', error);
     }
-    
-    // 스와이프 상태 초기화
-    setTimeout(() => setOffset(0), 300);
-  };
-
-  const handleSave = async (e: React.MouseEvent) => {
+  }, [id, title, description, date, category, original_link]);
+  
+  const handleShare = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      await handleCache();
-      if (typeof window !== 'undefined') {
-        // @ts-ignore
-        message.success('뉴스가 저장되었습니다.');
-      }
-    } catch (error) {
-      if (typeof window !== 'undefined') {
-        // @ts-ignore
-        message.error('뉴스 저장에 실패했습니다.');
-      }
-    }
-    
-    // 스와이프 상태 초기화 
-    setTimeout(() => setOffset(0), 300);
-  };
-
-  // 접근성 속성 추가
-  const cardProps = {
-    'aria-label': `뉴스: ${title}`,
-    role: 'article',
-    tabIndex: 0,
-    onKeyPress: (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        handleClick();
-      }
-    }
-  };
-
-  const copyToClipboard = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    const textToCopy = `${title}\n\n${description}\n\n원본 링크: ${original_link}`;
-    
-    navigator.clipboard.writeText(textToCopy)
-      .then(() => {
-        // @ts-ignore - message는 동적으로 로드되어 타입 에러가 발생할 수 있음
-        message.success('클립보드에 복사되었습니다');
-      })
-      .catch(() => {
-        // @ts-ignore
-        message.error('복사에 실패했습니다');
+      await navigator.clipboard.writeText(original_link);
+      const msg = message.success('링크가 복사되었습니다');
+      trackEvent('share_news', {
+        news_id: id,
+        title,
+        category,
       });
-  };
-
-  const handleCardClick = () => {
+    } catch (error) {
+      const msg = message.error('링크 복사 중 오류가 발생했습니다');
+      console.error('Failed to copy link', error);
+    }
+  }, [id, original_link, title, category]);
+  
+  const handleClick = useCallback(() => {
     if (onClick) {
       onClick();
+    } else {
+      window.open(original_link, '_blank', 'noopener,noreferrer');
     }
     
-    // IndexedDB에 최근 본 뉴스로 저장
-    const newsItem = {
-      id,
+    trackEvent('click_news', {
+      news_id: id,
       title,
-      description,
-      pub_date: new Date(date).toISOString(),
       category,
-      original_link
-    };
-    
-    // 두 저장소에 모두 저장 (IndexedDB와 localStorage)
-    saveRecentNews(newsItem).catch(err => console.error('뉴스 저장 실패:', err));
-    cacheNews(newsItem).catch(err => console.error('캐시 저장 실패:', err));
-    
-    // 조회 이벤트 기록 (분석용)
-    if (typeof window !== 'undefined' && 'gtag' in window) {
-      // @ts-ignore
-      window.gtag('event', 'view_item', {
-        items: [{ id, category }]
-      });
-    }
-  };
-
-  // 선택 핸들러 추가
-  const handleSelect = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 기사 클릭 이벤트 전파 중단
+    });
+  }, [id, original_link, onClick, title, category]);
+  
+  const handleSelect = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     if (onSelect) {
-      onSelect(id);
+      onSelect(id, !isSelected);
     }
-  };
+  }, [id, isSelected, onSelect]);
 
   return (
-    <div style={{ position: 'relative', overflow: 'hidden', touchAction: 'pan-y' }}>
-      <CardWrapper offset={offset} {...handlers}>
-        <TouchCard 
-          onClick={handleCardClick}
-          hoverable
-          {...cardProps}
-          style={{ 
-            borderLeft: isSelected ? '4px solid var(--primary-color, #1a4b8c)' : 'none',
-            background: isSelected ? '#f0f7ff' : '#ffffff' 
-          }}
+    <TouchCard onClick={handleClick} isSelected={isSelected}>
+      {onSelect && (
+        <SelectionButton
+          isSelected={isSelected}
+          onClick={handleSelect}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <h3 className="news-title">{title}</h3>
-            {onSelect && (
-              <button 
-                onClick={handleSelect}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  padding: '4px',
-                  marginLeft: '8px',
-                  borderRadius: '50%',
-                  cursor: 'pointer',
-                  color: isSelected ? 'var(--primary-color, #1a4b8c)' : '#999',
-                  fontWeight: 'bold',
-                  minWidth: '24px',
-                  minHeight: '24px',
-                  fontSize: '18px',
-                  lineHeight: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                aria-label={isSelected ? "선택 해제" : "선택"}
-              >
-                {isSelected ? '✓' : '+'}
-              </button>
-            )}
-          </div>
-          <p className="news-description">{description}</p>
-          <div className="news-meta">
-            <span className="category">{category}</span>
-            <span className="date">{date}</span>
-          </div>
-        </TouchCard>
-      </CardWrapper>
-      <ActionButton 
-        buttonType="share" 
-        onClick={handleShare}
-        aria-label="뉴스 공유하기"
-      >
-        공유
-      </ActionButton>
-      <ActionButton 
-        buttonType="save" 
-        onClick={handleSave}
-        aria-label="뉴스 저장하기"
-      >
-        저장
-      </ActionButton>
-    </div>
+          {isSelected ? '✓' : '+'}
+        </SelectionButton>
+      )}
+      <CardTitle>{title}</CardTitle>
+      <CardDescription>{description}</CardDescription>
+      <CardMeta>
+        <CardDate>{date}</CardDate>
+        <CardCategory>{category}</CardCategory>
+      </CardMeta>
+      <ActionButtons>
+        <ActionButton onClick={handleShare}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 5.12548 15.0077 5.24917 15.0227 5.37069L8.08261 9.26989C7.54305 8.48993 6.6582 8 5.66667 8C4.19391 8 3 9.19391 3 10.6667C3 12.1394 4.19391 13.3333 5.66667 13.3333C6.6582 13.3333 7.54305 12.8434 8.08261 12.0635L15.0227 15.9627C15.0077 16.0842 15 16.2079 15 16.3333C15 17.8061 16.1939 19 17.6667 19C19.1394 19 20.3333 17.8061 20.3333 16.3333C20.3333 14.8606 19.1394 13.6667 17.6667 13.6667C16.6751 13.6667 15.7903 14.1566 15.2507 14.9365L8.31065 11.0373C8.32565 10.9158 8.33333 10.7921 8.33333 10.6667C8.33333 10.5412 8.32565 10.4175 8.31065 10.2961L15.2507 6.3968C15.7903 7.17676 16.6751 7.66667 17.6667 7.66667" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          공유
+        </ActionButton>
+        <ActionButton onClick={handleSaveForLater} disabled={isSaved}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 21L12 16L5 21V5C5 4.46957 5.21071 3.96086 5.58579 3.58579C5.96086 3.21071 6.46957 3 7 3H17C17.5304 3 18.0391 3.21071 18.4142 3.58579C18.7893 3.96086 19 4.46957 19 5V21Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          {isSaved ? '저장됨' : '저장'}
+        </ActionButton>
+      </ActionButtons>
+    </TouchCard>
   );
-}
+};
+
+export default NewsCard;
