@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FixedSizeList as List } from 'react-window';
+import { VariableSizeList as List } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import PullToRefresh from 'react-pull-to-refresh';
 import NewsCard from './NewsCard';
@@ -62,6 +62,7 @@ export default function ReactWindowComponents({
   onRefresh 
 }: ReactWindowComponentsProps) {
   const [listHeight, setListHeight] = useState(600); 
+  const listRef = React.useRef<any>(null);
   
   // 메모이제이션된 리사이즈 핸들러
   const handleResize = useCallback(() => {
@@ -79,6 +80,13 @@ export default function ReactWindowComponents({
       return () => window.removeEventListener('resize', handleResize);
     }
   }, [handleResize]);
+
+  // 아이템이 변경될 때 리스트 캐시 리셋
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.resetAfterIndex(0);
+    }
+  }, [items]);
   
   const itemCount = hasMore ? items.length + 1 : items.length;
   const loadMoreItems = isLoading ? () => {} : onLoadMore;
@@ -161,11 +169,15 @@ export default function ReactWindowComponents({
         >
           {({ onItemsRendered, ref }) => (
             <List
+              ref={(list) => {
+                // 두 개의 ref 합치기
+                listRef.current = list;
+                if (typeof ref === 'function') ref(list);
+              }}
               height={listHeight}
               itemCount={itemCount}
               itemSize={getItemHeight}
               onItemsRendered={onItemsRendered}
-              ref={ref}
               width="100%"
               overscanCount={2} // 오버스캔으로 스크롤 성능 향상
               style={{ scrollbarWidth: 'none' }} // Firefox

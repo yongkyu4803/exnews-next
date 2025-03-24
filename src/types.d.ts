@@ -65,6 +65,7 @@ declare module 'antd' {
     children?: React.ReactNode;
     disabled?: boolean;
     className?: string;
+    style?: React.CSSProperties;
   }
 
   interface TabsProps {
@@ -239,7 +240,28 @@ declare module 'antd' {
 
 // react-swipeable 타입 확장
 declare module 'react-swipeable' {
-  interface SwipeableProps {
-    preventDefaultTouchmoveEvent?: boolean;
+  interface SwipeableHandlers {
+    onSwiping: (e: { deltaX: number; deltaY: number }) => void;
+    onSwipedLeft: () => void;
+    onSwipedRight: () => void;
+    onTouchStart?: React.EventHandler<React.TouchEvent>;
+    onTouchMove?: React.EventHandler<React.TouchEvent>;
+    onTouchEnd?: React.EventHandler<React.TouchEvent>;
   }
+  
+  interface SwipeableOptions {
+    delta?: number;
+    preventDefaultTouchmoveEvent?: boolean;
+    trackMouse?: boolean;
+    trackTouch?: boolean;
+    rotationAngle?: number;
+  }
+  
+  export function useSwipeable(options: SwipeableOptions & {
+    onSwiping?: (e: { deltaX: number; deltaY: number }) => void;
+    onSwipedLeft?: () => void;
+    onSwipedRight?: () => void;
+    onSwipedUp?: () => void;
+    onSwipedDown?: () => void;
+  }): SwipeableHandlers;
 } 
