@@ -2,7 +2,8 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 import { cacheNews } from '@/utils/cacheUtils';
 
-const Table = dynamic(() => import('antd').then((antd) => antd.Table), { ssr: false });
+// antd/lib/table에서 직접 가져오기
+const Table = dynamic(() => import('antd/lib/table'), { ssr: false }) as any;
 
 interface NewsItem {
   title: string;
@@ -31,7 +32,7 @@ export default function NewsTable({ items, selectedKeys, onSelectChange }: NewsT
         { 
           title: '제목',
           dataIndex: 'title',
-          render: (text, record: any) => (
+          render: (text: any, record: any) => (
             <a href={record.original_link} 
               target="_blank" 
               rel="noopener noreferrer"
@@ -51,7 +52,7 @@ export default function NewsTable({ items, selectedKeys, onSelectChange }: NewsT
           title: '발행일',
           dataIndex: 'pub_date',
           width: 180,
-          render: (date) => {
+          render: (date: any) => {
             const d = new Date(date);
             return d.getFullYear() + '-' + 
                   String(d.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -61,11 +62,11 @@ export default function NewsTable({ items, selectedKeys, onSelectChange }: NewsT
                   String(d.getSeconds()).padStart(2, '0');
           }
         }
-      ]}
+      ] as any}
       dataSource={items}
       rowKey={(record: any) => record.original_link}
       rowSelection={{
-        onChange: (selectedRowKeys, selectedRows: any[]) => {
+        onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
           onSelectChange(selectedRowKeys, selectedRows as NewsItem[]);
         },
         selectedRowKeys: selectedKeys,

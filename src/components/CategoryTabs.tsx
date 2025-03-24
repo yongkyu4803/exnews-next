@@ -1,8 +1,11 @@
 import React from 'react';
-import { Tabs } from 'antd';
+import dynamic from 'next/dynamic';
 import { useDispatch, useSelector } from 'react-redux';
 import { setSelectedCategory } from '@/store/slices/uiSlice';
 import { RootState } from '@/store';
+
+// 동적 임포트
+const Tabs = dynamic(() => import('antd/lib/tabs'), { ssr: false }) as any;
 
 const CategoryTabs: React.FC = () => {
   const dispatch = useDispatch();

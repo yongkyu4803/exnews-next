@@ -1,8 +1,12 @@
 import React from 'react';
-import { Pagination as AntPagination } from 'antd';
+import dynamic from 'next/dynamic';
+import styled from '@emotion/styled';
 import { useDispatch, useSelector } from 'react-redux';
 import { setCurrentPage } from '@/store/slices/uiSlice';
 import { RootState } from '@/store';
+
+// 동적 임포트
+const AntPagination = dynamic(() => import('antd/lib/pagination'), { ssr: false }) as any;
 
 const Pagination: React.FC = () => {
   const dispatch = useDispatch();

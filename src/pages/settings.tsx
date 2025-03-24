@@ -6,8 +6,9 @@ import styled from '@emotion/styled';
 const Layout = dynamic(() => import('@/components/Layout'), { ssr: true });
 const NotificationSettings = dynamic(() => import('@/components/NotificationSettings'), { ssr: false });
 
-const Typography = dynamic(() => import('antd').then((antd) => antd.Typography), { ssr: false });
-const Tabs = dynamic(() => import('antd').then((antd) => antd.Tabs), { ssr: false });
+// 동적 임포트
+const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
+const Tabs = dynamic(() => import('antd/lib/tabs'), { ssr: false }) as any;
 
 const { Title } = Typography;
 

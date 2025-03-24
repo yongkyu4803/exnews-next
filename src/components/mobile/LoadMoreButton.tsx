@@ -1,6 +1,9 @@
 import React from 'react';
-import { Button } from 'antd';
+import dynamic from 'next/dynamic';
 import styled from '@emotion/styled';
+
+// 동적 임포트
+const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
 
 const StyledButton = styled(Button)`
   width: 100%;

@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
-import { useRouter } from 'next/router';
-import { useQuery } from 'react-query';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
-// Remove the duplicate useRouter import
-// import { useRouter } from 'next/router';
+import { useRouter } from 'next/router';
+import { useQuery } from 'react-query';
 import { fetchNewsItems, fetchCategories } from '@/lib/api';
 import SearchBar from '@/components/Admin/SearchBar';
 import Filters from '@/components/Admin/Filters';
-import { Typography, Space, Spin, Alert, Table, Button } from 'antd';
+
+// 동적 임포트
+const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
+const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
+const Spin = dynamic(() => import('antd/lib/spin'), { ssr: false }) as any;
+const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
+const Table = dynamic(() => import('antd/lib/table'), { ssr: false }) as any;
+const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
 
 const { Title } = Typography;
 

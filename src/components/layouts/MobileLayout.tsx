@@ -1,8 +1,10 @@
 import React from 'react';
-import { Layout } from 'antd';
+import dynamic from 'next/dynamic';
 import styled from '@emotion/styled';
 import BottomNav from '@/components/mobile/BottomNav';
 
+// 동적 임포트
+const Layout = dynamic(() => import('antd/lib/layout'), { ssr: false }) as any;
 const { Header, Content, Footer } = Layout;
 
 const MobileContainer = styled(Layout)`

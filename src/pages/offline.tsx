@@ -5,12 +5,12 @@ import { getRecentNews } from '@/utils/indexedDBUtils';
 import styled from '@emotion/styled';
 import { OfflineNewsItem } from '@/types';
 
-const Typography = dynamic(() => import('antd').then((antd) => antd.Typography), { ssr: false }) as any;
-const List = dynamic(() => import('antd').then((antd) => antd.List), { ssr: false }) as any;
-const Card = dynamic(() => import('antd').then((antd) => antd.Card), { ssr: false }) as any;
-const Button = dynamic(() => import('antd').then((antd) => antd.Button), { ssr: false }) as any;
-const Empty = dynamic(() => import('antd').then((antd) => antd.Empty), { ssr: false }) as any;
-const Skeleton = dynamic(() => import('antd').then((antd) => antd.Skeleton), { ssr: false }) as any;
+const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
+const List = dynamic(() => import('antd/lib/list'), { ssr: false }) as any;
+const Card = dynamic(() => import('antd/lib/card'), { ssr: false }) as any;
+const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
+const Empty = dynamic(() => import('antd/lib/empty'), { ssr: false }) as any;
+const Skeleton = dynamic(() => import('antd/lib/skeleton'), { ssr: false }) as any;
 
 const { Title, Text, Paragraph } = Typography;
 

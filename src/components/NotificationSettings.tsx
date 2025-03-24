@@ -15,16 +15,15 @@ import {
 import { Categories } from '@/types';
 
 // 동적 임포트
-const Card = dynamic(() => import('antd').then((antd) => antd.Card), { ssr: false }) as any;
-const Switch = dynamic(() => import('antd').then((antd) => antd.Switch), { ssr: false }) as any;
-const Button = dynamic(() => import('antd').then((antd) => antd.Button), { ssr: false }) as any;
-const Typography = dynamic(() => import('antd').then((antd) => antd.Typography), { ssr: false }) as any;
-const Divider = dynamic(() => import('antd').then((antd) => antd.Divider), { ssr: false }) as any;
-const Checkbox = dynamic(() => import('antd').then((antd) => antd.Checkbox), { ssr: false }) as any;
-const Alert = dynamic(() => import('antd').then((antd) => antd.Alert), { ssr: false }) as any;
-const message = dynamic(() => import('antd').then((antd) => antd.message), { ssr: false }) as any;
-const Space = dynamic(() => import('antd').then((antd) => antd.Space), { ssr: false }) as any;
-const Tag = dynamic(() => import('antd').then((antd) => antd.Tag), { ssr: false }) as any;
+const Card = dynamic(() => import('antd/lib/card'), { ssr: false }) as any;
+const Switch = dynamic(() => import('antd/lib/switch'), { ssr: false }) as any;
+const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
+const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
+const Divider = dynamic(() => import('antd/lib/divider'), { ssr: false }) as any;
+const Checkbox = dynamic(() => import('antd/lib/checkbox'), { ssr: false }) as any;
+const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
+const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
+const Tag = dynamic(() => import('antd/lib/tag'), { ssr: false }) as any;
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -85,6 +84,7 @@ const NotificationSettings: React.FC = () => {
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [preferences, setPreferences] = useState(getNotificationPreferences());
+  const [isTestingNotification, setIsTestingNotification] = useState(false);
   
   useEffect(() => {
     // 브라우저 지원 확인

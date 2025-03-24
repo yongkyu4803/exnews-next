@@ -7,9 +7,9 @@ import { saveRecentNews } from '@/utils/indexedDBUtils';
 import { NewsItem } from '@/types';
 import { formatDateToKorean } from '@/utils/dateUtils';
 
-const Card = dynamic(() => import('antd').then((antd) => antd.Card), { ssr: false }) as any;
-const message = dynamic(() => import('antd').then((antd) => antd.message), { ssr: false }) as any;
-const Tag = dynamic(() => import('antd').then((antd) => antd.Tag), { ssr: false }) as any;
+const Card = dynamic(() => import('antd/lib/card'), { ssr: false }) as any;
+const message = dynamic(() => import('antd/lib/message'), { ssr: false }) as any;
+const Tag = dynamic(() => import('antd/lib/tag'), { ssr: false }) as any;
 
 const TouchCard = styled(Card)`
   margin-bottom: 16px;

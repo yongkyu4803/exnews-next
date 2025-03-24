@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import styled from '@emotion/styled';
 
-const Alert = dynamic(() => import('antd').then((antd) => antd.Alert), { ssr: false });
-const Button = dynamic(() => import('antd').then((antd) => antd.Button), { ssr: false });
-const Modal = dynamic(() => import('antd').then((antd) => antd.Modal), { ssr: false });
+// 동적 임포트 
+const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
+const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
+const Modal = dynamic(() => import('antd/lib/modal'), { ssr: false }) as any;
 
 const InstallPromptWrapper = styled.div`
   margin-bottom: 16px;
