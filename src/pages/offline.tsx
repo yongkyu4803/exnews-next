@@ -59,12 +59,22 @@ interface NewsItem {
   viewedAt?: string;
 }
 
-export default function OfflinePage() {
+function OfflinePage() {
   const [cachedNews, setCachedNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [networkStatus, setNetworkStatus] = useState<boolean>(navigator.onLine);
+  const [networkStatus, setNetworkStatus] = useState<boolean>(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
+    // 클라이언트 사이드에서만 navigator.onLine 확인
+    setNetworkStatus(navigator.onLine);
+  }, []);
+
+  useEffect(() => {
+    // 클라이언트 사이드에서만 실행
+    if (!isMounted) return;
+    
     const loadCachedNews = async () => {
       setLoading(true);
       try {
@@ -80,23 +90,32 @@ export default function OfflinePage() {
 
     loadCachedNews();
 
-    // 네트워크 상태 모니터링
+    // 네트워크 상태 이벤트 리스너 추가
     const handleOnline = () => setNetworkStatus(true);
     const handleOffline = () => setNetworkStatus(false);
-
+    
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-
+    
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, []);
+  }, [isMounted]);
 
   // 네트워크 연결 시 홈으로 이동
   const goToHome = () => {
     window.location.href = '/';
   };
+
+  // 서버 사이드 렌더링 시 로딩 UI 표시
+  if (!isMounted) {
+    return (
+      <OfflineContainer>
+        <Skeleton active paragraph={{ rows: 10 }} />
+      </OfflineContainer>
+    );
+  }
 
   return (
     <OfflineContainer>
@@ -171,3 +190,8 @@ export default function OfflinePage() {
     </OfflineContainer>
   );
 }
+
+// 이 페이지는 클라이언트 사이드에서만 렌더링
+export default dynamic(() => Promise.resolve(OfflinePage), {
+  ssr: false
+});
