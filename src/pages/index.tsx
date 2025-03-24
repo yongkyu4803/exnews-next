@@ -8,12 +8,12 @@ import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import { NewsItem, NewsResponse } from '@/types';
 
 // 동적으로 Ant Design 컴포넌트 임포트
-const Typography = dynamic(() => import('antd').then((antd) => antd.Typography), { ssr: false }) as any;
-const Title = dynamic(() => import('antd').then((antd) => antd.Typography.Title), { ssr: false }) as any;
-const Space = dynamic(() => import('antd').then((antd) => antd.Space), { ssr: false }) as any;
-const Alert = dynamic(() => import('antd').then((antd) => antd.Alert), { ssr: false }) as any;
-const Tabs = dynamic(() => import('antd').then((antd) => antd.Tabs), { ssr: false }) as any;
-const Button = dynamic(() => import('antd').then((antd) => antd.Button), { ssr: false }) as any;
+const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
+const Title = dynamic(() => import('antd/lib/typography/Title'), { ssr: false }) as any;
+const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
+const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
+const Tabs = dynamic(() => import('antd/lib/tabs'), { ssr: false }) as any;
+const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
 
 // 테이블 컴포넌트를 동적으로 불러옴
 const NewsTable = dynamic(() => import('@/components/NewsTable'), { 
@@ -98,8 +98,8 @@ const HomePage = () => {
     if (selectedRows.length === 0) {
       if (typeof window !== 'undefined') {
         // 클라이언트 사이드에서만 실행
-        import('antd').then(({ message }) => {
-          (message as any).warning('선택된 기사가 없습니다.');
+        import('antd/lib/message').then((message) => {
+          (message.default as any).warning('선택된 기사가 없습니다.');
         });
       }
       return;
@@ -113,22 +113,22 @@ const HomePage = () => {
       navigator.clipboard.writeText(textToCopy)
         .then(() => {
           if (typeof window !== 'undefined') {
-            import('antd').then(({ message }) => {
-              (message as any).success('클립보드에 복사되었습니다.');
+            import('antd/lib/message').then((message) => {
+              (message.default as any).success('클립보드에 복사되었습니다.');
             });
           }
         })
         .catch(() => {
           if (typeof window !== 'undefined') {
-            import('antd').then(({ message }) => {
-              (message as any).error('클립보드 복사에 실패했습니다.');
+            import('antd/lib/message').then((message) => {
+              (message.default as any).error('클립보드 복사에 실패했습니다.');
             });
           }
         });
     } else {
       if (typeof window !== 'undefined') {
-        import('antd').then(({ message }) => {
-          (message as any).error('클립보드 접근이 지원되지 않는 환경입니다.');
+        import('antd/lib/message').then((message) => {
+          (message.default as any).error('클립보드 접근이 지원되지 않는 환경입니다.');
         });
       }
     }

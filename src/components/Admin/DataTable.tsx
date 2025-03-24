@@ -1,13 +1,15 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
-import { Table, Space, Button } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import { NewsItem } from '@/types';
 import { formatInTimeZone } from 'date-fns-tz';
 
 // 동적 임포트
-const Tag = dynamic(() => import('antd').then((antd) => antd.Tag), { ssr: false }) as any;
+const Tag = dynamic(() => import('antd/lib/tag'), { ssr: false }) as any;
+const Table = dynamic(() => import('antd/lib/table'), { ssr: false }) as any;
+const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
+const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
 
 interface DataTableProps {
   data: NewsItem[];
@@ -131,7 +133,7 @@ const DataTable: React.FC<DataTableProps> = ({
         total: total,
         onChange: onPageChange,
         showSizeChanger: true,
-        showTotal: (total) => `총 ${total}개 항목`,
+        showTotal: (total: number) => `총 ${total}개 항목`,
       }}
       loading={loading}
       scroll={{ x: 1000 }}
