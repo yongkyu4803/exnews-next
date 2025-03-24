@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useQuery } from 'react-query';
 import dynamic from 'next/dynamic';
@@ -19,34 +19,48 @@ const Spin = dynamic(() => import('antd/lib/spin'), { ssr: false }) as any;
 const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
 
 // 컴포넌트 서브모듈
-const { Title } = Typography;
-// const { Option } = Select; // 더 이상 필요하지 않음
+const { Title, Text, Paragraph } = Typography;
+const { Option } = Select;
 const { TextArea } = Input;
 
-export default function AdminDetailPage() {
+// AdminDetailPage 컴포넌트
+function AdminDetailPage() {
   const router = useRouter();
   const { id } = router.query;
-  const [form] = Form.useForm();
+  const [formInstance, setFormInstance] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 클라이언트 사이드에서만 실행
+  useEffect(() => {
+    setIsMounted(true);
+    if (Form) {
+      setFormInstance(Form.useForm()[0]);
+    }
+  }, []);
 
   // 뉴스 아이템 상세 정보 가져오기
   const { data: newsItem, isLoading: isNewsLoading, error: newsError } = useQuery(
     ['newsItem', id],
     () => fetchNewsItemById(id as string),
     {
-      enabled: !!id,
+      enabled: !!id && isMounted,
       onSuccess: (data) => {
-        // 폼 초기값 설정
-        form.setFieldsValue({
-          ...data,
-          pub_date: data.pub_date ? new Date(data.pub_date) : null,
-        });
+        // 폼 초기값 설정 (formInstance가 존재할 때만)
+        if (formInstance) {
+          formInstance.setFieldsValue({
+            ...data,
+            pub_date: data.pub_date ? new Date(data.pub_date) : null,
+          });
+        }
       },
     }
   );
 
   // 카테고리 목록 가져오기
-  const { data: categories, isLoading: isCategoriesLoading } = useQuery('categories', fetchCategories);
+  const { data: categories, isLoading: isCategoriesLoading } = useQuery('categories', fetchCategories, {
+    enabled: isMounted
+  });
 
   const handleSubmit = async (values: any) => {
     setIsSubmitting(true);
@@ -80,29 +94,24 @@ export default function AdminDetailPage() {
     router.push('/admin');
   };
 
-  if (isNewsLoading || isCategoriesLoading) {
+  if (isNewsLoading || isCategoriesLoading || !formInstance) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Spin size="large" tip="로딩 중..." />
-      </div>
+      <Card style={{ maxWidth: 800, margin: '0 auto', marginTop: 20 }}>
+        <Spin tip="데이터 로딩 중..." />
+      </Card>
     );
   }
 
   if (newsError) {
     return (
-      <div style={{ padding: '20px' }}>
+      <Card style={{ maxWidth: 800, margin: '0 auto', marginTop: 20 }}>
         <Alert
-          message="에러 발생"
-          description="데이터를 불러오는 중 오류가 발생했습니다."
+          message="데이터 로딩 오류"
+          description={(newsError as Error).message}
           type="error"
           showIcon
         />
-        <div style={{ marginTop: '20px' }}>
-          <Button onClick={() => router.push('/admin')} icon={<ArrowLeftOutlined />}>
-            목록으로 돌아가기
-          </Button>
-        </div>
-      </div>
+      </Card>
     );
   }
 
@@ -118,7 +127,7 @@ export default function AdminDetailPage() {
         <Title level={3}>{id ? '뉴스 수정' : '새 뉴스 추가'}</Title>
 
         <Form
-          form={form}
+          form={formInstance}
           layout="vertical"
           onFinish={handleSubmit}
           initialValues={{
@@ -179,3 +188,8 @@ export default function AdminDetailPage() {
     </div>
   );
 }
+
+// 이 페이지는 클라이언트 사이드에서만 렌더링
+export default dynamic(() => Promise.resolve(AdminDetailPage), {
+  ssr: false
+});

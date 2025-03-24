@@ -21,8 +21,7 @@ const { Title } = Typography;
 // Keep the helper function
 const getErrorMessage = (error: unknown): string => {
   if (error instanceof Error) return error.message;
-  if (typeof error === 'string') return error;
-  return '알 수 없는 오류가 발생했습니다.';
+  return String(error);
 };
 
 // Define response types for better type safety
@@ -31,7 +30,8 @@ interface NewsItemsResponse {
   totalCount: number;
 }
 
-export default function AdminPage() {
+// AdminPage 컴포넌트
+function AdminPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [searchTerm, setSearchTerm] = useState('');
@@ -167,3 +167,8 @@ export default function AdminPage() {
     </div>
   );
 }
+
+// 페이지를 클라이언트 사이드에서만 렌더링
+export default dynamic(() => Promise.resolve(AdminPage), {
+  ssr: false
+});
