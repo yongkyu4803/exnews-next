@@ -23,40 +23,27 @@ const TouchCard = styled.div<{ isSelected?: boolean }>`
   width: 100%;
   margin: 0 0 8px 0;
   padding: 12px;
-  background-color: ${(props) => (props.isSelected ? '#e6f7ff' : '#fff')};
+  background-color: #fff;
   border-radius: 8px;
-  box-shadow: ${(props) => (props.isSelected ? '0 2px 8px rgba(24, 144, 255, 0.2)' : '0 2px 4px rgba(0, 0, 0, 0.05)')};
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   cursor: pointer;
   border-left: ${(props) => (props.isSelected ? '4px solid #1890ff' : '4px solid transparent')};
+  background-color: ${(props) => (props.isSelected ? '#e6f7ff' : '#fff')};
   transition: all 0.2s ease;
+  transform: ${(props) => (props.isSelected ? 'scale(1.01)' : 'scale(1)')};
+  box-shadow: ${(props) => (props.isSelected ? '0 4px 8px rgba(24, 144, 255, 0.15)' : '0 2px 4px rgba(0, 0, 0, 0.05)')};
   
-  /* 선택 상태 표시 */
-  &::before {
-    content: '';
-    position: absolute;
-    top: ${(props) => (props.isSelected ? '0' : '-100%')};
-    right: 0;
-    width: 30px;
-    height: 30px;
-    background-color: #1890ff;
-    border-radius: 0 0 0 8px;
-    transform: translate(0, 0) rotate(0deg);
-    transition: top 0.3s ease;
-    z-index: 1;
-  }
-  
-  /* 체크 표시 아이콘 */
   &::after {
-    content: '✓';
+    content: ${(props) => (props.isSelected ? '""' : 'none')};
     position: absolute;
-    top: ${(props) => (props.isSelected ? '2px' : '-100%')};
-    right: 8px;
-    color: white;
-    font-size: 14px;
-    font-weight: bold;
-    z-index: 2;
-    transition: top 0.3s ease;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 0 16px 16px 0;
+    border-color: transparent #1890ff transparent transparent;
   }
 `;
 
@@ -66,7 +53,7 @@ const CardTitle = styled.h3`
   font-weight: 600;
   overflow-wrap: break-word;
   word-break: break-word;
-  padding-right: 24px; /* 오른쪽 상단 체크 마크를 위한 공간 확보 */
+  color: ${(props: { isSelected?: boolean }) => (props.isSelected ? '#1890ff' : 'inherit')};
 `;
 
 const CardDescription = styled.p`
@@ -124,16 +111,6 @@ const ActionButton = styled.button`
   &:hover {
     background-color: #f5f5f5;
   }
-`;
-
-const SelectionMarkWrapper = styled.div<{ isSelected?: boolean }>`
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 20px;
-  height: 20px;
-  opacity: ${(props) => (props.isSelected ? '1' : '0')};
-  transition: opacity 0.2s ease;
 `;
 
 interface NewsCardProps {
@@ -270,12 +247,31 @@ const NewsCard: React.FC<NewsCardProps> = ({
       onMouseUp={handlePressEnd}
       onMouseLeave={handlePressCancel}
     >
-      <CardTitle>{title}</CardTitle>
+      <CardTitle isSelected={isSelected}>{title}</CardTitle>
       <CardDescription>{description}</CardDescription>
       <CardMeta>
         <CardDate>{date}</CardDate>
         <CardCategory>{category}</CardCategory>
       </CardMeta>
+      {isSelected && (
+        <div style={{
+          position: 'absolute',
+          top: '6px',
+          right: '6px',
+          width: '20px',
+          height: '20px',
+          background: '#1890ff',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'white',
+          fontSize: '14px',
+          fontWeight: 'bold'
+        }}>
+          ✓
+        </div>
+      )}
       <ActionButtons>
         <ActionButton onClick={handleShare}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
