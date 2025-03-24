@@ -102,6 +102,8 @@ interface VirtualNewsListProps {
   isLoading: boolean;
   onLoadMore: () => void;
   onRefresh: () => Promise<any>;
+  selectedKeys?: React.Key[];
+  onSelectChange?: (keys: React.Key[], rows: any[]) => void;
 }
 
 export default function VirtualNewsList({ 
@@ -109,13 +111,37 @@ export default function VirtualNewsList({
   hasMore, 
   isLoading, 
   onLoadMore,
-  onRefresh 
+  onRefresh,
+  selectedKeys = [],
+  onSelectChange
 }: VirtualNewsListProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // 아이템 선택 처리
+  const handleSelectItem = (id: string | number) => {
+    if (!onSelectChange) return;
+    
+    let newSelectedKeys: React.Key[];
+    const itemKey = id.toString();
+    
+    if (selectedKeys.includes(itemKey)) {
+      // 이미 선택된 항목이면 제거
+      newSelectedKeys = selectedKeys.filter(key => key !== itemKey);
+    } else {
+      // 선택되지 않은 항목이면 추가
+      newSelectedKeys = [...selectedKeys, itemKey];
+    }
+    
+    // 선택된 행 데이터 찾기
+    const selectedRows = items.filter(item => newSelectedKeys.includes(item.id.toString()));
+    
+    // 부모 컴포넌트에 선택 변경 알림
+    onSelectChange(newSelectedKeys, selectedRows);
+  };
 
   // 서버 사이드 렌더링 시 로딩 UI 표시
   if (!isMounted) {
@@ -140,6 +166,8 @@ export default function VirtualNewsList({
         isLoading={isLoading}
         onLoadMore={onLoadMore}
         onRefresh={onRefresh}
+        selectedItems={selectedKeys.map(key => key.toString())}
+        onSelectItem={handleSelectItem}
       />
     </ListContainer>
   );

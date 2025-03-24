@@ -82,6 +82,8 @@ interface NewsCardProps {
   original_link?: string;
   id?: string;
   onClick: () => void;
+  isSelected?: boolean;
+  onSelect?: (id: string | number) => void;
 }
 
 const CardWrapper = styled.div<{ offset: number }>`
@@ -125,7 +127,9 @@ export default function NewsCard({
   category, 
   original_link = '', 
   id = `news-${Date.now()}`,
-  onClick 
+  onClick,
+  isSelected = false,
+  onSelect
 }: NewsCardProps) {
   const [offset, setOffset] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
@@ -272,6 +276,14 @@ export default function NewsCard({
     }
   };
 
+  // 선택 핸들러 추가
+  const handleSelect = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 기사 클릭 이벤트 전파 중단
+    if (onSelect) {
+      onSelect(id);
+    }
+  };
+
   return (
     <div style={{ position: 'relative', overflow: 'hidden', touchAction: 'pan-y' }}>
       <CardWrapper offset={offset} {...handlers}>
@@ -279,8 +291,39 @@ export default function NewsCard({
           onClick={handleCardClick}
           hoverable
           {...cardProps}
+          style={{ 
+            borderLeft: isSelected ? '4px solid var(--primary-color, #1a4b8c)' : 'none',
+            background: isSelected ? '#f0f7ff' : '#ffffff' 
+          }}
         >
-          <h3 className="news-title">{title}</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <h3 className="news-title">{title}</h3>
+            {onSelect && (
+              <button 
+                onClick={handleSelect}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  padding: '4px',
+                  marginLeft: '8px',
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  color: isSelected ? 'var(--primary-color, #1a4b8c)' : '#999',
+                  fontWeight: 'bold',
+                  minWidth: '24px',
+                  minHeight: '24px',
+                  fontSize: '18px',
+                  lineHeight: 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                aria-label={isSelected ? "선택 해제" : "선택"}
+              >
+                {isSelected ? '✓' : '+'}
+              </button>
+            )}
+          </div>
           <p className="news-description">{description}</p>
           <div className="news-meta">
             <span className="category">{category}</span>

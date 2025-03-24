@@ -220,6 +220,11 @@ const HomePage = () => {
             isLoading={isLoading}
             onLoadMore={() => {}} // 빈 함수로 대체
             onRefresh={handleRefresh}
+            selectedKeys={selectedKeys}
+            onSelectChange={(keys, rows) => {
+              setSelectedKeys(keys);
+              setSelectedRows(rows);
+            }}
           />
         ) : (
           <NewsTable 

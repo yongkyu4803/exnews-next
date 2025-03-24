@@ -10,6 +10,7 @@ const ListContainer = styled.div`
   width: 100%;
   overflow: hidden;
   -webkit-overflow-scrolling: touch;
+  -webkit-tap-highlight-color: transparent;
 `;
 
 // 로딩 인디케이터
@@ -52,6 +53,8 @@ interface ReactWindowComponentsProps {
   isLoading: boolean;
   onLoadMore: () => void;
   onRefresh: () => Promise<any>;
+  selectedItems?: string[];
+  onSelectItem?: (id: string | number) => void;
 }
 
 export default function ReactWindowComponents({ 
@@ -59,10 +62,16 @@ export default function ReactWindowComponents({
   hasMore, 
   isLoading, 
   onLoadMore,
-  onRefresh 
+  onRefresh,
+  selectedItems = [],
+  onSelectItem
 }: ReactWindowComponentsProps) {
   const [listHeight, setListHeight] = useState(600); 
   const listRef = React.useRef<any>(null);
+  
+  // 스크롤 최적화를 위한 상태
+  const [scrolling, setScrolling] = useState(false);
+  const scrollTimeout = React.useRef<number | null>(null);
   
   // 메모이제이션된 리사이즈 핸들러
   const handleResize = useCallback(() => {
@@ -108,6 +117,23 @@ export default function ReactWindowComponents({
     return 150; // 기본 높이
   };
 
+  // 스크롤 이벤트 핸들러
+  const handleScroll = useCallback(() => {
+    setScrolling(true);
+    
+    // 기존 타임아웃 클리어
+    if (scrollTimeout.current !== null) {
+      window.clearTimeout(scrollTimeout.current);
+      scrollTimeout.current = null;
+    }
+    
+    // 스크롤이 멈춘 후 200ms 후에 scrolling 상태를 false로 설정
+    scrollTimeout.current = window.setTimeout(() => {
+      setScrolling(false);
+      scrollTimeout.current = null;
+    }, 200);
+  }, []);
+
   interface RowProps {
     index: number;
     style: React.CSSProperties;
@@ -123,6 +149,8 @@ export default function ReactWindowComponents({
     }
 
     const item = items[index];
+    const isSelected = selectedItems.includes(item.id);
+    
     return (
       <div style={{...style, padding: '0 8px'}}>
         <NewsCard
@@ -132,6 +160,8 @@ export default function ReactWindowComponents({
           category={item.category}
           original_link={item.original_link}
           id={item.id}
+          isSelected={isSelected}
+          onSelect={onSelectItem}
           onClick={() => {
             if (typeof window !== 'undefined') {
               window.open(item.original_link, '_blank', 'noopener,noreferrer');
@@ -178,9 +208,14 @@ export default function ReactWindowComponents({
               itemCount={itemCount}
               itemSize={getItemHeight}
               onItemsRendered={onItemsRendered}
+              onScroll={handleScroll}
               width="100%"
-              overscanCount={2} // 오버스캔으로 스크롤 성능 향상
-              style={{ scrollbarWidth: 'none' }} // Firefox
+              overscanCount={5} // 오버스캔으로 스크롤 성능 향상 (값 증가)
+              style={{ 
+                scrollbarWidth: 'none',
+                WebkitOverflowScrolling: 'touch',
+              }}
+              useIsScrolling={true} // 스크롤 상태 추적
             >
               {Row}
             </List>
