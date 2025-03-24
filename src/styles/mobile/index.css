@@ -3,35 +3,88 @@
   --mobile-padding: 16px;
   --mobile-header-height: 56px;
   --mobile-bottom-nav-height: 56px;
+  --primary-color: #1a4b8c;
+  --card-border-radius: 16px;
+  --min-touch-size: 44px; /* 최소 터치 영역 크기 */
+  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* 터치 영역 최적화 */
+/* 터치 영역 최적화 - 모든 클릭 가능한 요소에 적용 */
 button, 
 .ant-btn,
-.clickable {
-  min-height: 44px;
-  min-width: 44px;
+a,
+.clickable,
+[role="button"],
+input[type="checkbox"],
+input[type="radio"],
+.ant-switch,
+.ant-tabs-tab,
+select {
+  min-height: var(--min-touch-size);
+  min-width: var(--min-touch-size);
   padding: 12px;
+  /* 터치 피드백 효과 */
+  touch-action: manipulation;
+}
+
+/* 터치 상태 표시 */
+@media (hover: none) {
+  button:active,
+  .ant-btn:active,
+  a:active,
+  .clickable:active,
+  [role="button"]:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+    transition: all 0.1s ease-in-out;
+  }
 }
 
 /* 모바일 반응형 레이아웃 */
 @media (max-width: 768px) {
+  html, body {
+    font-size: 16px; /* 기본 폰트 크기 증가 */
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%; /* iOS에서 가로 모드 텍스트 크기 방지 */
+  }
+  
+  /* 안전한 영역 확보 */
+  body {
+    padding-bottom: calc(var(--mobile-bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  
   .container {
     padding: var(--mobile-padding);
   }
 
+  /* 더 큰 폰트와 간격 */
+  h1, h2, h3 {
+    line-height: 1.3;
+  }
+  
+  p {
+    line-height: 1.6;
+    margin-bottom: 1em;
+  }
+
   .ant-table {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .ant-card {
     margin-bottom: 16px;
+    border-radius: var(--card-border-radius);
+    box-shadow: var(--card-shadow);
   }
 
   /* 터치 스크롤 최적화 */
-  .news-list {
+  .news-list,
+  .scrollable-content {
     -webkit-overflow-scrolling: touch;
     padding: 16px;
+    scroll-padding: 16px;
+    scroll-behavior: smooth;
   }
 
   /* 터치 피드백 */
@@ -54,14 +107,15 @@ button,
   }
 
   .touch-feedback:active::after {
-    transform: scale(2) translate(-50%, -50%);
-    transition: transform 0.3s;
+    transform: scale(2.5) translate(-25%, -25%);
+    transition: transform 0.2s;
   }
 
   /* 모바일 탭 스크롤 최적화 */
   .category-tabs {
     .ant-tabs-nav {
       margin-bottom: 8px;
+      padding: 8px 0;
     }
   
     .ant-tabs-nav-list {
@@ -69,6 +123,7 @@ button,
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
+      scroll-snap-type: x mandatory;
       &::-webkit-scrollbar {
         display: none;
       }
@@ -76,17 +131,29 @@ button,
   
     .ant-tabs-tab {
       min-width: auto;
-      padding: 8px 16px;
-      margin: 0 4px;
+      padding: 10px 18px;
+      margin: 0 6px;
+      font-size: 16px;
       background: #f5f5f5;
-      border-radius: 16px;
+      border-radius: 24px;
+      scroll-snap-align: center;
       
       &.ant-tabs-tab-active {
-        background: #1a4b8c;
+        background: var(--primary-color);
         .ant-tabs-tab-btn {
           color: white;
+          font-weight: 600;
         }
       }
+    }
+  }
+  
+  /* 큰 화면 모바일 최적화 */
+  @media (min-width: 400px) {
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
     }
   }
 }
