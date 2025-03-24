@@ -1,8 +1,13 @@
 import React from 'react';
-import { Card, Typography, Space } from 'antd';
+import dynamic from 'next/dynamic';
 import { CalendarOutlined } from '@ant-design/icons';
 import { NewsItem } from '@/types';
 import ClipboardButton from '@/components/ClipboardButton';
+
+// 동적 임포트
+const Card = dynamic(() => import('antd/lib/card'), { ssr: false }) as any;
+const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
+const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
 
 const { Title, Text } = Typography;
 
