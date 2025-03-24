@@ -51,11 +51,21 @@ const DataTable: React.FC<DataTableProps> = ({
       dataIndex: 'category',
       key: 'category',
       width: 120,
-      render: (category: string) => (
-        <Tag color="blue" key={category}>
-          {category}
-        </Tag>
-      ),
+      render: (category: string) => {
+        return (
+          <span 
+            style={{
+              backgroundColor: '#1890ff', 
+              color: 'white',
+              padding: '4px 8px',
+              borderRadius: '4px',
+              fontSize: '12px'
+            }}
+          >
+            {category}
+          </span>
+        );
+      },
     },
     {
       title: '발행일',
