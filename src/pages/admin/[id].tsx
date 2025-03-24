@@ -20,7 +20,7 @@ const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
 
 // 컴포넌트 서브모듈
 const { Title } = Typography;
-const { Option } = Select;
+// const { Option } = Select; // 더 이상 필요하지 않음
 const { TextArea } = Input;
 
 export default function AdminDetailPage() {
@@ -149,13 +149,13 @@ export default function AdminDetailPage() {
             label="카테고리"
             rules={[{ required: true, message: '카테고리를 선택해주세요.' }]}
           >
-            <Select placeholder="카테고리 선택">
-              {categories?.map((category: string) => (
-                <Option key={category} value={category}>
-                  {category}
-                </Option>
-              ))}
-            </Select>
+            <Select 
+              placeholder="카테고리 선택"
+              options={categories?.map((category: string) => ({
+                value: category,
+                label: category
+              }))}
+            />
           </Form.Item>
 
           <Form.Item name="pub_date" label="발행일">

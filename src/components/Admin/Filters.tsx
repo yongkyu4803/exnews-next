@@ -7,7 +7,6 @@ const Select = dynamic(() => import('antd/lib/select'), { ssr: false }) as any;
 const DatePicker = dynamic(() => import('antd/lib/date-picker'), { ssr: false }) as any;
 
 const { RangePicker } = DatePicker;
-const { Option } = Select;
 
 interface FiltersProps {
   categories: string[];
@@ -20,6 +19,12 @@ const Filters: React.FC<FiltersProps> = ({
   onCategoryFilter,
   onDateFilter,
 }) => {
+  // Select 컴포넌트용 옵션 배열 생성
+  const selectOptions = [
+    { value: "", label: "전체" },
+    ...categories.map(category => ({ value: category, label: category }))
+  ];
+
   return (
     <Space>
       <Select
@@ -27,17 +32,11 @@ const Filters: React.FC<FiltersProps> = ({
         placeholder="카테고리 선택"
         onChange={onCategoryFilter}
         allowClear
-      >
-        <Option value="">전체</Option>
-        {categories.map((category) => (
-          <Option key={category} value={category}>
-            {category}
-          </Option>
-        ))}
-      </Select>
+        options={selectOptions}
+      />
 
       <RangePicker
-        onChange={(dates) => {
+        onChange={(dates: any) => {
           onDateFilter(
             dates
               ? [dates[0]?.toDate() || null, dates[1]?.toDate() || null]
