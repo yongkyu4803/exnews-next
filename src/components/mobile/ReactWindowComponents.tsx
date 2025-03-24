@@ -100,7 +100,12 @@ export default function ReactWindowComponents({
     return 150; // 기본 높이
   };
 
-  const Row = ({ index, style }: any) => {
+  interface RowProps {
+    index: number;
+    style: React.CSSProperties;
+  }
+
+  const Row = ({ index, style }: RowProps) => {
     if (!isItemLoaded(index)) {
       return (
         <div style={style}>

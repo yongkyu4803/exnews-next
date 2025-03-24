@@ -285,7 +285,7 @@ const NotificationSettings: React.FC = () => {
                 <Checkbox
                   key={category}
                   checked={enabled}
-                  onChange={e => handleCategoryChange(category, e.target.checked)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCategoryChange(category, e.target.checked)}
                   disabled={loading}
                 >
                   {category === 'all' ? '전체 카테고리' : category}
@@ -302,7 +302,7 @@ const NotificationSettings: React.FC = () => {
                 <Text type="secondary">7AM - 9AM</Text>
                 <Checkbox
                   checked={preferences.schedule.morning}
-                  onChange={e => handleScheduleChange('morning', e.target.checked)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleScheduleChange('morning', e.target.checked)}
                   style={{ marginTop: 10 }}
                 />
               </ScheduleItem>
@@ -312,7 +312,7 @@ const NotificationSettings: React.FC = () => {
                 <Text type="secondary">12PM - 2PM</Text>
                 <Checkbox
                   checked={preferences.schedule.afternoon}
-                  onChange={e => handleScheduleChange('afternoon', e.target.checked)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleScheduleChange('afternoon', e.target.checked)}
                   style={{ marginTop: 10 }}
                 />
               </ScheduleItem>
@@ -322,7 +322,7 @@ const NotificationSettings: React.FC = () => {
                 <Text type="secondary">6PM - 8PM</Text>
                 <Checkbox
                   checked={preferences.schedule.evening}
-                  onChange={e => handleScheduleChange('evening', e.target.checked)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleScheduleChange('evening', e.target.checked)}
                   style={{ marginTop: 10 }}
                 />
               </ScheduleItem>

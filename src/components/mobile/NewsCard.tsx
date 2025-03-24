@@ -8,7 +8,13 @@ import { NewsItem } from '@/types';
 import { formatDateToKorean } from '@/utils/dateUtils';
 
 const Card = dynamic(() => import('antd/lib/card'), { ssr: false }) as any;
-const message = dynamic(() => import('antd/lib/message'), { ssr: false }) as any;
+let message: any = { success: () => {}, error: () => {} };
+if (typeof window !== 'undefined') {
+  // 클라이언트 사이드에서만 임포트
+  import('antd/lib/message').then(mod => {
+    message = mod.default;
+  });
+}
 const Tag = dynamic(() => import('antd/lib/tag'), { ssr: false }) as any;
 
 const TouchCard = styled(Card)`
@@ -147,7 +153,7 @@ export default function NewsCard({
   };
 
   const handlers = useSwipeable({
-    onSwiping: (e) => {
+    onSwiping: (e: { deltaX: number }) => {
       setIsSwiping(true);
       if (e.deltaX < 0) { // 왼쪽으로 스와이프
         setOffset(Math.max(-130, e.deltaX));
@@ -165,7 +171,6 @@ export default function NewsCard({
     },
     trackMouse: false, // 모바일에서는 마우스 이벤트 불필요
     trackTouch: true,
-    preventDefaultTouchmoveEvent: true,
     delta: 10, // 조금 더 민감하게 스와이프 인식
   });
 
@@ -183,6 +188,7 @@ export default function NewsCard({
       // 공유 API가 지원되지 않는 경우 링크 복사
       if (typeof navigator !== 'undefined') {
         navigator.clipboard.writeText(original_link || window.location.href);
+        // @ts-ignore
         message.success('링크가 복사되었습니다.');
       }
     }
@@ -196,10 +202,12 @@ export default function NewsCard({
     try {
       await handleCache();
       if (typeof window !== 'undefined') {
+        // @ts-ignore
         message.success('뉴스가 저장되었습니다.');
       }
     } catch (error) {
       if (typeof window !== 'undefined') {
+        // @ts-ignore
         message.error('뉴스 저장에 실패했습니다.');
       }
     }
