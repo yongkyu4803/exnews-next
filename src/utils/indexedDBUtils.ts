@@ -11,12 +11,14 @@ interface NewsItem {
   pub_date: string;
   original_link: string;
   category: string;
+  isRecent?: boolean;
+  viewedAt?: string;
 }
 
 // IndexedDB 초기화
 export const initDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, DB_VERSION);
+    const request: IDBOpenDBRequest = indexedDB.open(DB_NAME, DB_VERSION);
     
     request.onerror = (event) => {
       console.error('IndexedDB 열기 실패:', event);
@@ -79,7 +81,7 @@ export const getNewsByCategory = async (category?: string, limit = 50): Promise<
     const store = transaction.objectStore(NEWS_STORE);
     
     return new Promise((resolve, reject) => {
-      let request;
+      let request: IDBRequest<NewsItem[]>;
       
       if (category && category !== 'all') {
         const index = store.index('category');
@@ -140,7 +142,7 @@ export const getRecentNews = async (limit = 20): Promise<NewsItem[]> => {
     const db = await initDB();
     const transaction = db.transaction(NEWS_STORE, 'readonly');
     const store = transaction.objectStore(NEWS_STORE);
-    const request = store.getAll();
+    const request: IDBRequest<NewsItem[]> = store.getAll();
     
     return new Promise((resolve, reject) => {
       request.onsuccess = () => {
@@ -171,7 +173,7 @@ export const clearOldData = async (days = 7): Promise<boolean> => {
     const db = await initDB();
     const transaction = db.transaction(NEWS_STORE, 'readwrite');
     const store = transaction.objectStore(NEWS_STORE);
-    const request = store.getAll();
+    const request: IDBRequest<NewsItem[]> = store.getAll();
     
     request.onsuccess = () => {
       const allItems = request.result;
