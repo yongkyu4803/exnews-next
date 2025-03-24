@@ -25,6 +25,8 @@ export interface PaginationParams {
   page: number;
   pageSize: number;
   category?: string;
+  searchTerm?: string;
+  dateRange?: [Date | null, Date | null];
 }
 
 // 카테고리 타입

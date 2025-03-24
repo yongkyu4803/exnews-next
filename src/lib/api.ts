@@ -1,7 +1,7 @@
 import { NewsItem, PaginationParams } from '@/types';
 import { supabase } from './supabaseClient';
 
-export async function fetchNewsItems({ page, pageSize, category }: PaginationParams) {
+export async function fetchNewsItems({ page, pageSize, category, searchTerm, dateRange }: PaginationParams) {
   // 1. 전체 데이터 쿼리 준비
   let query = supabase
     .from('news')
@@ -10,6 +10,18 @@ export async function fetchNewsItems({ page, pageSize, category }: PaginationPar
   // 카테고리 필터 적용
   if (category && category !== 'all') {
     query = query.eq('category', category);
+  }
+
+  // 검색어 필터 적용
+  if (searchTerm) {
+    query = query.ilike('title', `%${searchTerm}%`);
+  }
+
+  // 날짜 범위 필터 적용
+  if (dateRange && dateRange[0] && dateRange[1]) {
+    const startDate = dateRange[0].toISOString().split('T')[0];
+    const endDate = dateRange[1].toISOString().split('T')[0];
+    query = query.gte('pub_date', startDate).lte('pub_date', endDate);
   }
 
   // 2. 날짜 문자열을 파싱하여 정렬
