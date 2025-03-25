@@ -291,6 +291,18 @@ a {
 }
 
 /* 풀투리프레시 관련 스타일 */
+.refresh-indicator {
+  transform: translateY(-100%) !important;
+  opacity: 0 !important;
+  visibility: hidden;
+}
+
+.refresh-indicator.visible {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+  visibility: visible;
+}
+
 .PullToRefresh__Content {
   height: 100% !important;
   overscroll-behavior: none !important;
