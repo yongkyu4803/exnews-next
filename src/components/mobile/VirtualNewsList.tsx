@@ -178,13 +178,10 @@ export default function VirtualNewsList({
   
   // 실제 새로고침 수행 함수
   const performRefresh = useCallback(async () => {
-    // 이미 새로고침 중인 경우 무시
     if (isRefreshing) return;
     
-    // 새로고침 상태 설정
     setIsRefreshing(true);
     
-    // 인디케이터 업데이트
     if (refreshIndicatorRef.current) {
       refreshIndicatorRef.current.textContent = '새로고침 중...';
       refreshIndicatorRef.current.style.transform = 'translateY(0)';
@@ -193,45 +190,69 @@ export default function VirtualNewsList({
     
     console.log('새로고침 시작');
     
-    // 아예 페이지 전체를 새로고침하는 가장 확실한 방법으로 변경
     try {
-      // onRefresh가 Promise를 반환하도록 설계된 경우
-      await onRefresh();
+      // 최대 3번까지 재시도
+      let retryCount = 0;
+      const maxRetries = 3;
       
-      // 성공 후 시각적 피드백
-      if (refreshIndicatorRef.current) {
-        refreshIndicatorRef.current.textContent = '새로고침 완료!';
+      while (retryCount < maxRetries) {
+        try {
+          await onRefresh();
+          
+          // 데이터가 성공적으로 반환되었는지 확인
+          if (items.length > 0) {
+            if (refreshIndicatorRef.current) {
+              refreshIndicatorRef.current.textContent = '새로고침 완료!';
+            }
+            console.log('새로고침 성공적으로 완료');
+            break;
+          }
+          
+          // 데이터가 없으면 재시도
+          retryCount++;
+          if (retryCount < maxRetries) {
+            console.log(`데이터 없음, 재시도 ${retryCount}/${maxRetries}`);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
+          }
+        } catch (error) {
+          console.error(`새로고침 시도 ${retryCount + 1} 실패:`, error);
+          retryCount++;
+          if (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
+        }
       }
       
-      console.log('새로고침 성공적으로 완료');
-      
-      // 그래도 데이터가 반환되지 않는 경우, 1초 후 리다이렉트하여 강제 새로고침 (마지막 수단)
-      if (items.length === 0 && typeof window !== 'undefined') {
+      // 모든 재시도 후에도 데이터가 없는 경우
+      if (retryCount === maxRetries && items.length === 0) {
+        console.log('모든 재시도 실패, 페이지 새로고침');
+        if (refreshIndicatorRef.current) {
+          refreshIndicatorRef.current.textContent = '새로고침 실패';
+        }
+        setToastMessage('데이터를 불러오는데 실패했습니다. 페이지를 새로고침합니다.');
+        setShowToast(true);
+        
+        // 2초 후 페이지 새로고침
         setTimeout(() => {
-          console.log('데이터가 없음, 강제 새로고침 시도');
           window.location.reload();
-        }, 1000);
+        }, 2000);
       }
     } catch (error) {
       console.error('새로고침 오류:', error);
       
-      // 오류 메시지 표시
       if (refreshIndicatorRef.current) {
         refreshIndicatorRef.current.textContent = '새로고침 실패';
       }
       
-      // 필요한 경우 오류 토스트 표시
       setToastMessage('새로고침 중 오류가 발생했습니다.');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } finally {
-      // 지연 후 인디케이터 숨기기 및 상태 초기화
       setTimeout(() => {
         if (refreshIndicatorRef.current) {
           refreshIndicatorRef.current.style.transform = 'translateY(-100%)';
         }
         
-        // 상태 초기화는 인디케이터 숨김 후에 수행
         setTimeout(() => {
           setIsRefreshing(false);
         }, 300);
