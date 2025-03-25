@@ -227,19 +227,15 @@ export default function VirtualNewsList({
     const diff = touchY - touchStartY.current;
     
     // 스크롤 위치가 맨 위에 있고, 아래로 당길 때
-    if (window.scrollY === 0 && diff > 0) {
-      if (diff > refreshThreshold) {
-        setIsRefreshing(true);
-        handleRefresh();
-      }
+    if (window.scrollY === 0 && diff > refreshThreshold) {
+      setIsRefreshing(true);
+      handleRefresh();
     }
   }, [isRefreshing]);
 
   // 새로고침 처리
   const handleRefresh = async () => {
     if (isRefreshing) return;
-    
-    trackEvent('refresh_news', {});
     
     try {
       setIsRefreshing(true);
@@ -249,8 +245,9 @@ export default function VirtualNewsList({
       setTimeout(() => {
         setIsRefreshing(false);
         window.scrollTo(0, 0);
-      }, 500);
+      }, 800);
     } catch (error) {
+      console.error('새로고침 실패:', error);
       setIsRefreshing(false);
     }
   };

@@ -262,6 +262,7 @@ a {
   position: relative;
 }
 
+/* 선택됨 라벨 제거 
 .selected-news-card::before {
   content: "선택됨";
   position: absolute;
@@ -274,6 +275,7 @@ a {
   border-radius: 10px;
   z-index: 1;
 }
+*/
 
 .selected-news-card::after {
   content: "";

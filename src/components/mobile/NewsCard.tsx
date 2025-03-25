@@ -108,29 +108,29 @@ const CardContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  height: 120px;
+  height: 140px;
   overflow: hidden;
-  margin-bottom: 40px; /* Footer 공간 확보 */
+  margin-bottom: 20px; /* Footer 공간 확보 - 줄임 */
 `;
 
 const SelectButton = styled.button<{ isSelected?: boolean }>`
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 24px;
-  height: 24px;
-  background: ${props => props.isSelected ? 'var(--primary-color)' : 'rgba(0,0,0,0.1)'};
-  border: ${props => props.isSelected ? 'none' : '1px solid rgba(0,0,0,0.2)'};
+  top: 8px;
+  right: 8px;
+  width: 20px;
+  height: 20px;
+  background: ${props => props.isSelected ? 'var(--primary-color)' : 'rgba(0,0,0,0.05)'};
+  border: ${props => props.isSelected ? 'none' : '1px solid rgba(0,0,0,0.1)'};
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: ${props => props.isSelected ? 'white' : '#666'};
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   z-index: 10;
   cursor: pointer;
-  box-shadow: ${props => props.isSelected ? '0 2px 4px rgba(0,0,0,0.2)' : 'none'};
+  opacity: 0.8;
   
   &:active {
     transform: scale(0.95);
@@ -277,6 +277,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
   };
 
   const handleClickSave = (e: React.MouseEvent) => {
+    /*
     e.stopPropagation();
     if (isSaved) {
       removeSavedNews(id);
@@ -291,6 +292,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
       });
     }
     trackEvent(isSaved ? 'unsave_news' : 'save_news', { id, title });
+    */
   };
 
   const handleClick = () => {
@@ -331,9 +333,11 @@ const NewsCard: React.FC<NewsCardProps> = ({
           <IconButton onClick={handleClickShare} aria-label="공유">
             <ShareIcon />
           </IconButton>
+          {/* 저장 기능은 주석 처리함 
           <IconButton onClick={handleClickSave} aria-label={isSaved ? '저장 취소' : '저장'}>
             {isSaved ? <SavedIcon /> : <SaveIcon />}
           </IconButton>
+          */}
         </ActionButtons>
       </CardFooter>
     </TouchCard>
