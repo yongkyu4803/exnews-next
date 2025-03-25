@@ -18,8 +18,7 @@ body {
   touch-action: manipulation;
   height: 100%;
   width: 100%;
-  overflow: hidden;
-  position: fixed;
+  overflow: auto;
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -192,7 +191,7 @@ a {
   overscroll-behavior: none !important;
   -webkit-overflow-scrolling: touch !important;
   position: relative !important;
-  overflow-anchor: none !important;
+  overflow-y: auto !important;
   will-change: transform !important;
   contain: layout style !important;
   scrollbar-width: none !important;
@@ -241,7 +240,7 @@ a {
   position: relative !important;
   width: 100% !important;
   height: calc(100vh - 180px) !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   contain: layout style !important;
   transform: translateZ(0) !important;
   -webkit-transform: translateZ(0) !important;
@@ -265,7 +264,7 @@ a {
 .PullToRefresh__Content {
   height: 100% !important;
   overscroll-behavior: none !important;
-  overflow-anchor: none !important;
+  overflow: visible !important;
 }
 
 .PullToRefresh__Indicator {
@@ -274,6 +273,7 @@ a {
   align-items: center !important;
   justify-content: center !important;
   color: var(--primary-color) !important;
+  z-index: 10 !important;
 }
 
 /* 모바일 미디어 쿼리 */

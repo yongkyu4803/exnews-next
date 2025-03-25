@@ -1,17 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
-import PullToRefresh from 'react-pull-to-refresh';
 import NewsCard from './NewsCard';
 import styled from '@emotion/styled';
 
 const ListContainer = styled.div`
   height: calc(100vh - 180px);
   width: 100%;
-  overflow: hidden;
+  overflow: auto;
+  position: relative;
+  z-index: 1;
   -webkit-overflow-scrolling: touch;
-  -webkit-tap-highlight-color: transparent;
-  will-change: transform; /* 성능 최적화 */
 `;
 
 // 로딩 인디케이터
@@ -40,20 +39,12 @@ const LoadingIndicator = styled.div`
   }
 `;
 
-// 당겨서 새로고침 스타일 
-const PullIndicator = styled.div`
-  text-align: center;
-  padding: 12px;
-  color: #666;
-  font-size: 14px;
-`;
-
 // ReactWindow 스크롤 컨테이너 스타일
 const WindowContainer = styled.div`
   position: relative;
   height: 100%;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
   
   .ReactVirtualized__List::-webkit-scrollbar {
     display: none;
@@ -62,7 +53,7 @@ const WindowContainer = styled.div`
   .ReactVirtualized__List {
     scrollbar-width: none;
     -ms-overflow-style: none;
-    overflow-anchor: none !important;
+    overflow-y: auto !important;
   }
 `;
 
@@ -98,12 +89,10 @@ export default function ReactWindowComponents({
   onSelectItem,
   onScrollDirectionChange
 }: ReactWindowComponentsProps) {
-  const [listHeight, setListHeight] = useState(600); 
+  const [listHeight, setListHeight] = useState(window.innerHeight - 180); 
   const listRef = React.useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [refreshing, setRefreshing] = useState(false);
   const lastScrollTop = useRef(0);
-  const preventScrollReset = useRef(false);
   
   // 아이템 고정 높이 설정
   const ITEM_HEIGHT = 220;
@@ -111,12 +100,9 @@ export default function ReactWindowComponents({
   
   // 메모이제이션된 리사이즈 핸들러
   const handleResize = useCallback(() => {
-    if (containerRef.current) {
-      const containerHeight = containerRef.current.clientHeight;
-      setListHeight(containerHeight);
-    } else {
-      setListHeight(window.innerHeight - 180);
-    }
+    const height = typeof window !== 'undefined' ? 
+      (containerRef.current?.clientHeight || window.innerHeight - 180) : 600;
+    setListHeight(height);
   }, []);
   
   useEffect(() => {
@@ -124,21 +110,11 @@ export default function ReactWindowComponents({
       handleResize();
       window.addEventListener('resize', handleResize);
       
-      // 스크롤 락 방지를 위한 이벤트 처리
-      const preventDefaultTouchMove = (e: TouchEvent) => {
-        if (refreshing) {
-          e.preventDefault();
-        }
-      };
-      
-      window.addEventListener('touchmove', preventDefaultTouchMove, { passive: false });
-      
       return () => {
         window.removeEventListener('resize', handleResize);
-        window.removeEventListener('touchmove', preventDefaultTouchMove);
       };
     }
-  }, [handleResize, refreshing]);
+  }, [handleResize]);
 
   // 초기 렌더링 시 height 강제 재계산
   useEffect(() => {
@@ -149,7 +125,6 @@ export default function ReactWindowComponents({
   useEffect(() => {
     setTimeout(() => {
       if (listRef.current) {
-        // FixedSizeList에는 resetAfterIndex 대신 scrollTo 사용
         listRef.current.scrollTo(0);
       }
     }, 10);
@@ -159,30 +134,15 @@ export default function ReactWindowComponents({
   const loadMoreItems = isLoading ? () => {} : onLoadMore;
   const isItemLoaded = (index: number) => !hasMore || index < items.length;
   
-  // 스크롤 이벤트 핸들러 - 간소화하여 스크롤 방향만 감지
+  // 스크롤 이벤트 핸들러 - 간소화
   const handleScroll = useCallback(({ scrollOffset }: { scrollOffset: number, scrollDirection: string, scrollUpdateWasRequested: boolean }) => {
     const currentScrollTop = scrollOffset;
     
     // 스크롤 방향 감지 및 알림
     if (currentScrollTop > lastScrollTop.current) {
-      // 아래로 스크롤
-      if (onScrollDirectionChange) {
-        onScrollDirectionChange('down');
-      }
+      if (onScrollDirectionChange) onScrollDirectionChange('down');
     } else if (currentScrollTop < lastScrollTop.current) {
-      // 위로 스크롤
-      if (onScrollDirectionChange) {
-        onScrollDirectionChange('up');
-      }
-      
-      // 상단 근처에서 스크롤 위치 보정
-      if (currentScrollTop < 10 && !preventScrollReset.current) {
-        requestAnimationFrame(() => {
-          if (listRef.current) {
-            listRef.current.scrollTo(0);
-          }
-        });
-      }
+      if (onScrollDirectionChange) onScrollDirectionChange('up');
     }
     
     // 현재 스크롤 위치 저장
@@ -234,78 +194,47 @@ export default function ReactWindowComponents({
       </CardContainer>
     );
   };
-  
-  // 당겨서 새로고침 처리 - 동작 중 플래그 관리 추가
-  const handleRefresh = async () => {
-    try {
-      setRefreshing(true);
-      preventScrollReset.current = true;
-      
-      await onRefresh();
-      
-      setTimeout(() => {
-        if (listRef.current) {
-          listRef.current.scrollTo(0);
-        }
-        setRefreshing(false);
-        preventScrollReset.current = false;
-      }, 300);
-      
-      return Promise.resolve();
-    } catch (error) {
-      setRefreshing(false);
-      preventScrollReset.current = false;
-      return Promise.reject(error);
-    }
-  };
 
   return (
     <ListContainer ref={containerRef}>
-      <PullToRefresh
-        onRefresh={handleRefresh}
-        resistance={2.5}
-        pullDownContent={<PullIndicator>↓ 당겨서 새로고침</PullIndicator>}
-        releaseContent={<PullIndicator>↑ 놓아서 새로고침</PullIndicator>}
-        refreshContent={<PullIndicator>새로고침 중...</PullIndicator>}
-      >
-        <WindowContainer>
-          <InfiniteLoader
-            isItemLoaded={isItemLoaded}
-            itemCount={itemCount}
-            loadMoreItems={loadMoreItems}
-            threshold={5}
-          >
-            {({ onItemsRendered, ref }) => (
-              <List
-                ref={(list) => {
-                  listRef.current = list;
-                  if (typeof ref === 'function') ref(list);
-                }}
-                height={listHeight}
-                itemCount={itemCount}
-                itemSize={ITEM_HEIGHT}
-                onItemsRendered={onItemsRendered}
-                onScroll={handleScroll}
-                width="100%"
-                overscanCount={3}
-                style={{ 
-                  WebkitOverflowScrolling: 'touch',
-                  width: '100%',
-                  height: '100%',
-                  outline: 'none',
-                  overscrollBehavior: 'none',
-                  willChange: 'transform',
-                  contain: 'size layout',
-                }}
-                useIsScrolling={false}
-                className="ReactVirtualizedList"
-              >
-                {Row}
-              </List>
-            )}
-          </InfiniteLoader>
-        </WindowContainer>
-      </PullToRefresh>
+      <WindowContainer>
+        <InfiniteLoader
+          isItemLoaded={isItemLoaded}
+          itemCount={itemCount}
+          loadMoreItems={loadMoreItems}
+          threshold={5}
+        >
+          {({ onItemsRendered, ref }) => (
+            <List
+              ref={(list) => {
+                listRef.current = list;
+                if (typeof ref === 'function') ref(list);
+              }}
+              height={listHeight}
+              itemCount={itemCount}
+              itemSize={ITEM_HEIGHT}
+              onItemsRendered={onItemsRendered}
+              onScroll={handleScroll}
+              width="100%"
+              overscanCount={3}
+              style={{ 
+                WebkitOverflowScrolling: 'touch',
+                width: '100%',
+                height: '100%',
+                outline: 'none',
+                overscrollBehavior: 'none',
+                willChange: 'transform',
+                contain: 'size layout',
+                overflow: 'auto'
+              }}
+              useIsScrolling={false}
+              className="ReactVirtualizedList"
+            >
+              {Row}
+            </List>
+          )}
+        </InfiniteLoader>
+      </WindowContainer>
     </ListContainer>
   );
 } 

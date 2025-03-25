@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import NewsCard from './NewsCard';
 import styled from '@emotion/styled';
+import { trackEvent } from '@/utils/analyticsUtils';
 
 // 클라이언트 사이드에서만 로드되는 컴포넌트
 const ReactWindowComponents = dynamic(() => import('./ReactWindowComponents'), {
@@ -12,8 +13,30 @@ const ReactWindowComponents = dynamic(() => import('./ReactWindowComponents'), {
 const ListContainer = styled.div`
   height: calc(100vh - 180px);
   width: 100%;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
+  -webkit-overflow-scrolling: touch;
+`;
+
+// 새로고침 인디케이터
+const RefreshIndicator = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  background-color: #f9f9f9;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+  z-index: 10;
+  
+  &.visible {
+    transform: translateY(0);
+  }
 `;
 
 // 로딩 컴포넌트
@@ -118,6 +141,9 @@ export default function VirtualNewsList({
   const [isMounted, setIsMounted] = useState(false);
   const divRef = useRef<HTMLDivElement>(null);
   const [initialRender, setInitialRender] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const touchStartY = useRef(0);
+  const refreshThreshold = 80;
 
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
@@ -148,6 +174,46 @@ export default function VirtualNewsList({
       });
     }
   }, [initialRender]);
+
+  // 터치 이벤트 핸들러
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (isRefreshing) return;
+    
+    const touchY = e.touches[0].clientY;
+    const diff = touchY - touchStartY.current;
+    
+    // 스크롤 위치가 맨 위에 있고, 아래로 당길 때
+    if (window.scrollY === 0 && diff > 0) {
+      if (diff > refreshThreshold) {
+        setIsRefreshing(true);
+        handleRefresh();
+      }
+    }
+  }, [isRefreshing]);
+
+  // 새로고침 처리
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    
+    trackEvent('refresh_news', {});
+    
+    try {
+      setIsRefreshing(true);
+      await onRefresh();
+      
+      // 새로고침 완료 후 처리
+      setTimeout(() => {
+        setIsRefreshing(false);
+        window.scrollTo(0, 0);
+      }, 500);
+    } catch (error) {
+      setIsRefreshing(false);
+    }
+  };
 
   // 아이템 선택 처리
   const handleSelectItem = useCallback((id: string | number) => {
@@ -193,9 +259,15 @@ export default function VirtualNewsList({
         padding: 0, 
         position: 'relative',
         height: 'calc(100vh - 180px)',
-        overflow: 'hidden'
+        overflow: 'auto'
       }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
     >
+      <RefreshIndicator className={isRefreshing ? 'visible' : ''}>
+        {isRefreshing ? '새로고침 중...' : '당겨서 새로고침'}
+      </RefreshIndicator>
+      
       <ReactWindowComponents
         items={items}
         hasMore={hasMore}
