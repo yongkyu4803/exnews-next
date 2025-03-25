@@ -63,13 +63,13 @@ export default function ReactWindowComponents({
   const listRef = useRef<any>(null);
   const [windowHeight, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight - 180 : 600);
   const [lastScrollOffset, setLastScrollOffset] = useState(0);
-  const itemCount = hasMore ? items.length + 1 : items.length;
+  const itemCount = hasMore ? (Array.isArray(items) ? items.length + 1 : 1) : (Array.isArray(items) ? items.length : 0);
   const [isFirstRender, setIsFirstRender] = useState(true);
   const itemsRef = useRef<any[]>([]); // 아이템 참조 저장
   
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
-    console.log('ReactWindowComponents 마운트됨. 아이템 수:', items.length);
+    console.log('ReactWindowComponents 마운트됨. 아이템 수:', Array.isArray(items) ? items.length : 0);
     setIsFirstRender(false);
     
     // 초기 리사이즈 처리
@@ -91,6 +91,13 @@ export default function ReactWindowComponents({
   
   // items 변경 감지 및 처리
   useEffect(() => {
+    // 배열 확인
+    if (!Array.isArray(items)) {
+      console.warn('ReactWindowComponents - items가 배열이 아닙니다:', items);
+      itemsRef.current = [];
+      return;
+    }
+    
     console.log('ReactWindowComponents - items 변경됨:', items.length);
     itemsRef.current = items;
     
@@ -128,7 +135,9 @@ export default function ReactWindowComponents({
   // 행 렌더링 함수
   const Row = useCallback(({ index, style }: { index: number, style: React.CSSProperties }) => {
     // 먼저 items 배열 유효성 검사
-    const currentItems = itemsRef.current.length > 0 ? itemsRef.current : items;
+    const currentItems = Array.isArray(itemsRef.current) && itemsRef.current.length > 0 
+      ? itemsRef.current 
+      : Array.isArray(items) ? items : [];
     
     // 아이템이 없는 경우 로딩 표시
     if (!currentItems || currentItems.length === 0) {
@@ -216,11 +225,11 @@ export default function ReactWindowComponents({
   
   // 아이템이 로드되었는지 확인하는 함수
   const isItemLoaded = useCallback((index: number) => {
-    return !hasMore || index < items.length;
-  }, [hasMore, items.length]);
+    return !hasMore || (Array.isArray(items) && index < items.length);
+  }, [hasMore, items]);
   
   // 아이템이 없는 경우의 처리
-  if (items.length === 0 && !isLoading) {
+  if (!Array.isArray(items) || items.length === 0 && !isLoading) {
     return (
       <div style={{ 
         padding: '32px 16px', 

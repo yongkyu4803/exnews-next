@@ -126,6 +126,14 @@ const Toast = styled.div`
   }
 `;
 
+// 회전 애니메이션 정의 추가
+const SpinAnimation = styled.div`
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
 // 아이콘 컴포넌트
 const RefreshIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -222,24 +230,30 @@ export default function VirtualNewsList({
       console.log('[VirtualNewsList] 데이터 새로고침 시작');
       const result = await onRefresh();
       
-      if (result) {
-        // 결과 데이터 추출 시도
-        const newItems = extractItemsFromResult(result);
-        
-        if (newItems && newItems.length > 0) {
-          console.log(`[VirtualNewsList] 새로고침 성공: ${newItems.length}개 항목`);
-          setLocalItems(newItems);
-          showToast('새로고침 완료');
-        } else if (itemsRef.current.length > 0) {
-          // 추출 실패했지만 items prop이 있으면 그것을 사용
-          console.log('[VirtualNewsList] 데이터 추출 실패, 기존 items 사용');
-          setLocalItems(itemsRef.current);
-          showToast('새로고침 완료');
-        } else {
-          // 데이터 없음
-          console.warn('[VirtualNewsList] 데이터를 불러올 수 없습니다');
-          showToast('데이터를 불러올 수 없습니다', 3000);
-        }
+      // 결과가 null, undefined인 경우 체크
+      if (!result) {
+        console.warn('[VirtualNewsList] 새로고침 결과가 없습니다');
+        showToast('데이터를 불러올 수 없습니다', 3000);
+        return;
+      }
+      
+      // 결과 데이터 추출 시도
+      const newItems = extractItemsFromResult(result);
+      
+      if (newItems && Array.isArray(newItems) && newItems.length > 0) {
+        console.log(`[VirtualNewsList] 새로고침 성공: ${newItems.length}개 항목`);
+        setLocalItems(newItems);
+        showToast('새로고침 완료');
+      } else if (Array.isArray(itemsRef.current) && itemsRef.current.length > 0) {
+        // 추출 실패했지만 기존 items prop이 있으면 그것을 사용
+        console.log('[VirtualNewsList] 데이터 추출 실패, 기존 items 사용');
+        setLocalItems(itemsRef.current);
+        showToast('새로고침 완료');
+      } else {
+        // 데이터 없음
+        console.warn('[VirtualNewsList] 데이터를 불러올 수 없습니다');
+        showToast('데이터를 불러올 수 없습니다', 3000);
+        setLocalItems([]); // 명시적으로 빈 배열 설정
       }
     } catch (error) {
       console.error('[VirtualNewsList] 새로고침 오류:', error);
@@ -345,6 +359,7 @@ export default function VirtualNewsList({
   // 메인 컴포넌트 렌더링
   return (
     <Container>
+      <SpinAnimation /> {/* 애니메이션 스타일 추가 */}
       {/* 디버그 정보 (개발 환경) */}
       {process.env.NODE_ENV === 'development' && (
         <div style={{ 
@@ -367,12 +382,12 @@ export default function VirtualNewsList({
         <LoadingView />
       ) : (
         <ReactWindowComponents
-          items={localItems}
+          items={localItems || []} /* null/undefined 방지 */
           hasMore={hasMore}
           isLoading={isLoading || refreshing}
           onLoadMore={onLoadMore}
           onRefresh={onRefresh}
-          selectedItems={selectedKeys.map(key => key.toString())}
+          selectedItems={(selectedKeys || []).map(key => key.toString())}
           onSelectItem={handleSelectItem}
           onScrollDirectionChange={handleScrollDirectionChange}
         />
@@ -387,14 +402,15 @@ export default function VirtualNewsList({
         <CopyIcon />
       </ActionButton>
       
-      {/* 새로고침 버튼 */}
+      {/* 새로고침 버튼 - 애니메이션 방식 수정 */}
       <ActionButton
         color="green"
         onClick={handleRefresh}
         disabled={refreshing}
         aria-label="뉴스 새로고침"
         style={{
-          animation: refreshing ? 'spin 1s linear infinite' : 'none'
+          animation: refreshing ? 'spin 1s linear infinite' : 'none',
+          transform: refreshing ? 'initial' : 'none' // 애니메이션 중 transform 덮어쓰기 방지
         }}
       >
         <RefreshIcon />
