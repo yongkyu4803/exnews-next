@@ -49,6 +49,26 @@ const PullIndicator = styled.div`
   font-size: 14px;
 `;
 
+// PullToRefresh 래퍼 스타일 - 추가
+const PullToRefreshWrapper = styled.div`
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  overflow: hidden;
+  
+  .ptr__children {
+    height: 100%;
+    width: 100%;
+    overflow: visible !important;
+  }
+  
+  .ptr__pull-down {
+    position: absolute;
+    top: -50px;
+    height: 50px;
+  }
+`;
+
 interface ReactWindowComponentsProps {
   items: any[];
   hasMore: boolean;
@@ -71,6 +91,7 @@ export default function ReactWindowComponents({
   const [listHeight, setListHeight] = useState(600); 
   const listRef = React.useRef<any>(null);
   const lastItemsLength = useRef(items.length);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // 스크롤 최적화를 위한 상태
   const [scrolling, setScrolling] = useState(false);
@@ -78,7 +99,14 @@ export default function ReactWindowComponents({
   
   // 메모이제이션된 리사이즈 핸들러
   const handleResize = useCallback(() => {
-    setListHeight(window.innerHeight - 180);
+    if (containerRef.current) {
+      // 컨테이너의 실제 높이를 측정하여 사용
+      const containerHeight = containerRef.current.clientHeight;
+      setListHeight(containerHeight);
+    } else {
+      // 폴백으로 window 높이 기반 계산
+      setListHeight(window.innerHeight - 180);
+    }
   }, []);
   
   useEffect(() => {
@@ -89,8 +117,26 @@ export default function ReactWindowComponents({
       
       // 리사이즈 이벤트 리스너
       window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
+      
+      // 10ms 후 다시 한번 높이 계산 (초기 렌더링 이후)
+      const timer = setTimeout(() => {
+        handleResize();
+      }, 10);
+      
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        clearTimeout(timer);
+      };
     }
+  }, [handleResize]);
+
+  // 리스트가 마운트된 후 높이 재계산
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleResize();
+    }, 200);
+    
+    return () => clearTimeout(timer);
   }, [handleResize]);
 
   // 아이템이 변경될 때 리스트 캐시 리셋
@@ -244,6 +290,8 @@ export default function ReactWindowComponents({
       if (listRef.current) {
         setTimeout(() => {
           listRef.current.resetAfterIndex(0);
+          // 높이 재계산
+          handleResize();
         }, 100);
       }
       return Promise.resolve();
@@ -253,71 +301,74 @@ export default function ReactWindowComponents({
   };
 
   // 스크롤 방지 레이어 스타일
-  const FixedLayer = styled.div`
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    pointer-events: none;
-    z-index: -1;
-  `;
+  const FixedLayer = styled.div({
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: 'none',
+    zIndex: -1
+  });
 
   return (
-    <ListContainer>
+    <ListContainer ref={containerRef}>
       <FixedLayer /> {/* 스크롤 이슈 방지를 위한 투명 레이어 */}
-      <PullToRefresh
-        onRefresh={handleRefresh}
-        resistance={2.5}
-        pullDownContent={<PullIndicator>↓ 당겨서 새로고침</PullIndicator>}
-        releaseContent={<PullIndicator>↑ 놓아서 새로고침</PullIndicator>}
-        refreshContent={<PullIndicator>새로고침 중...</PullIndicator>}
-      >
-        <InfiniteLoader
-          isItemLoaded={isItemLoaded}
-          itemCount={itemCount}
-          loadMoreItems={loadMoreItems}
-          threshold={5} // 미리 로드할 항목 수 증가
+      <PullToRefreshWrapper>
+        <PullToRefresh
+          onRefresh={handleRefresh}
+          resistance={2.5}
+          pullDownContent={<PullIndicator>↓ 당겨서 새로고침</PullIndicator>}
+          releaseContent={<PullIndicator>↑ 놓아서 새로고침</PullIndicator>}
+          refreshContent={<PullIndicator>새로고침 중...</PullIndicator>}
         >
-          {({ onItemsRendered, ref }) => (
-            <List
-              ref={(list) => {
-                // 두 개의 ref 합치기
-                listRef.current = list;
-                if (typeof ref === 'function') ref(list);
-              }}
-              height={listHeight}
-              itemCount={itemCount}
-              itemSize={getItemHeight}
-              onItemsRendered={(props) => {
-                // 상단 아이템에 대한 특별 처리
-                if (props.visibleStartIndex === 0 && listRef.current) {
-                  // 첫 번째 아이템이 보이면 강제로 높이 재계산
-                  setTimeout(() => {
-                    listRef.current.resetAfterIndex(0, false);
-                  }, 10);
-                }
-                onItemsRendered(props);
-              }}
-              onScroll={handleScroll}
-              width="100%"
-              overscanCount={10} // 오버스캔 값 증가
-              style={{ 
-                scrollbarWidth: 'none',
-                WebkitOverflowScrolling: 'touch',
-                paddingBottom: '50px', 
-                willChange: 'transform',
-                position: 'relative',
-                zIndex: 1,
-                backfaceVisibility: 'hidden' /* 렌더링 최적화 */
-              }}
-              useIsScrolling={true}
-            >
-              {Row}
-            </List>
-          )}
-        </InfiniteLoader>
-      </PullToRefresh>
+          <InfiniteLoader
+            isItemLoaded={isItemLoaded}
+            itemCount={itemCount}
+            loadMoreItems={loadMoreItems}
+            threshold={5} // 미리 로드할 항목 수 증가
+          >
+            {({ onItemsRendered, ref }) => (
+              <List
+                ref={(list) => {
+                  // 두 개의 ref 합치기
+                  listRef.current = list;
+                  if (typeof ref === 'function') ref(list);
+                }}
+                height={listHeight}
+                itemCount={itemCount}
+                itemSize={getItemHeight}
+                onItemsRendered={(props) => {
+                  // 상단 아이템에 대한 특별 처리
+                  if (props.visibleStartIndex === 0 && listRef.current) {
+                    // 첫 번째 아이템이 보이면 강제로 높이 재계산
+                    requestAnimationFrame(() => {
+                      listRef.current.resetAfterIndex(0, false);
+                    });
+                  }
+                  onItemsRendered(props);
+                }}
+                onScroll={handleScroll}
+                width="100%"
+                overscanCount={10} // 오버스캔 값 증가
+                style={{ 
+                  scrollbarWidth: 'none',
+                  WebkitOverflowScrolling: 'touch',
+                  paddingBottom: '50px', 
+                  willChange: 'transform',
+                  position: 'relative',
+                  zIndex: 1,
+                  backfaceVisibility: 'hidden',
+                  transform: 'translateZ(0)' // 하드웨어 가속
+                }}
+                useIsScrolling={true}
+              >
+                {Row}
+              </List>
+            )}
+          </InfiniteLoader>
+        </PullToRefresh>
+      </PullToRefreshWrapper>
     </ListContainer>
   );
 } 

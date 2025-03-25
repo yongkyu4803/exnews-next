@@ -23,13 +23,12 @@ const TouchCard = styled.div<{ isSelected?: boolean }>`
   width: 100%;
   margin: 0 0 8px 0;
   padding: 12px;
-  background-color: #fff;
+  background-color: ${(props) => (props.isSelected ? '#e6f7ff !important' : '#fff !important')};
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   overflow: hidden;
   cursor: pointer;
   border-left: ${(props) => (props.isSelected ? '4px solid #1890ff' : '4px solid transparent')};
-  background-color: ${(props) => (props.isSelected ? '#e6f7ff' : '#fff')};
   transition: all 0.2s ease;
   transform: ${(props) => (props.isSelected ? 'scale(1.01)' : 'scale(1)')};
   box-shadow: ${(props) => (props.isSelected ? '0 4px 8px rgba(24, 144, 255, 0.15)' : '0 2px 4px rgba(0, 0, 0, 0.05)')};
@@ -246,6 +245,10 @@ const NewsCard: React.FC<NewsCardProps> = ({
       onMouseDown={handlePressStart}
       onMouseUp={handlePressEnd}
       onMouseLeave={handlePressCancel}
+      style={{
+        backgroundColor: isSelected ? '#e6f7ff' : '#fff',
+        borderLeft: isSelected ? '4px solid #1890ff' : '4px solid transparent'
+      }}
     >
       <CardTitle isSelected={isSelected}>{title}</CardTitle>
       <CardDescription>{description}</CardDescription>
@@ -267,7 +270,8 @@ const NewsCard: React.FC<NewsCardProps> = ({
           justifyContent: 'center',
           color: 'white',
           fontSize: '14px',
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          zIndex: 2
         }}>
           ✓
         </div>
