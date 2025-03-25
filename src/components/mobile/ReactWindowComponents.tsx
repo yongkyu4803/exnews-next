@@ -75,7 +75,7 @@ interface ReactWindowComponentsProps {
   onLoadMore: () => void;
   onRefresh: () => Promise<any>;
   selectedItems?: string[];
-  onSelectItem?: (id: string | number) => void;
+  onSelectItem?: (id: string | number, isSelected: boolean) => void;
   onScrollDirectionChange?: (direction: 'up' | 'down') => void;
 }
 

@@ -285,7 +285,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
   const handleSelectClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onSelect) {
-      onSelect(id);
+      onSelect(id, !isSelected);
       trackEvent('select_news', { id, title });
     }
   };

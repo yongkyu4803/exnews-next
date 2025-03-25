@@ -216,16 +216,16 @@ export default function VirtualNewsList({
   };
 
   // 아이템 선택 처리
-  const handleSelectItem = useCallback((id: string | number) => {
+  const handleSelectItem = useCallback((id: string | number, isSelected: boolean) => {
     if (!onSelectChange) return;
     
     const itemKey = id.toString();
     let newSelectedKeys: React.Key[];
     
-    if (selectedKeys.includes(itemKey)) {
-      newSelectedKeys = selectedKeys.filter(key => key !== itemKey);
-    } else {
+    if (isSelected) {
       newSelectedKeys = [...selectedKeys, itemKey];
+    } else {
+      newSelectedKeys = selectedKeys.filter(key => key !== itemKey);
     }
     
     const selectedRows = items.filter(item => 
