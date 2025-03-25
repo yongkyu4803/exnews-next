@@ -141,6 +141,53 @@ const CopyButton = styled.button<{ visible: boolean }>`
   }
 `;
 
+// 새로고침 버튼 스타일
+const RefreshButton = styled.button<{ loading: boolean }>`
+  position: fixed;
+  bottom: 20px;
+  right: ${props => props.loading ? '20px' : '80px'};
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #4CAF50;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+  z-index: 100;
+  transition: all 0.3s ease;
+  
+  &:active {
+    transform: scale(0.95);
+    background-color: #3e8e41;
+  }
+  
+  svg {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.5s ease;
+    transform: ${props => props.loading ? 'rotate(360deg)' : 'rotate(0)'};
+    animation: ${props => props.loading ? 'spin 1s linear infinite' : 'none'};
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+// 새로고침 아이콘 컴포넌트
+const RefreshIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M23 4v6h-6"></path>
+    <path d="M1 20v-6h6"></path>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+    <path d="M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+  </svg>
+);
+
 // 복사 아이콘 컴포넌트
 const CopyIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -174,21 +221,15 @@ export default function VirtualNewsList({
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const refreshIndicatorRef = useRef<HTMLDivElement | null>(null);
   
   // 실제 새로고침 수행 함수
   const performRefresh = useCallback(async () => {
     if (isRefreshing) return;
     
     setIsRefreshing(true);
-    
-    if (refreshIndicatorRef.current) {
-      refreshIndicatorRef.current.textContent = '새로고침 중...';
-      refreshIndicatorRef.current.style.transform = 'translateY(0)';
-      refreshIndicatorRef.current.style.color = '#1a73e8';
-    }
-    
     console.log('새로고침 시작');
+    setToastMessage('새로고침 중...');
+    setShowToast(true);
     
     try {
       // 최대 3번까지 재시도
@@ -201,10 +242,10 @@ export default function VirtualNewsList({
           
           // 데이터가 성공적으로 반환되었는지 확인
           if (items.length > 0) {
-            if (refreshIndicatorRef.current) {
-              refreshIndicatorRef.current.textContent = '새로고침 완료!';
-            }
             console.log('새로고침 성공적으로 완료');
+            setToastMessage('새로고침 완료!');
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 1500);
             break;
           }
           
@@ -212,6 +253,8 @@ export default function VirtualNewsList({
           retryCount++;
           if (retryCount < maxRetries) {
             console.log(`데이터 없음, 재시도 ${retryCount}/${maxRetries}`);
+            setToastMessage(`데이터 로딩 중... (${retryCount}/${maxRetries})`);
+            setShowToast(true);
             await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
           }
         } catch (error) {
@@ -226,9 +269,6 @@ export default function VirtualNewsList({
       // 모든 재시도 후에도 데이터가 없는 경우
       if (retryCount === maxRetries && items.length === 0) {
         console.log('모든 재시도 실패, 페이지 새로고침');
-        if (refreshIndicatorRef.current) {
-          refreshIndicatorRef.current.textContent = '새로고침 실패';
-        }
         setToastMessage('데이터를 불러오는데 실패했습니다. 페이지를 새로고침합니다.');
         setShowToast(true);
         
@@ -239,160 +279,17 @@ export default function VirtualNewsList({
       }
     } catch (error) {
       console.error('새로고침 오류:', error);
-      
-      if (refreshIndicatorRef.current) {
-        refreshIndicatorRef.current.textContent = '새로고침 실패';
-      }
-      
       setToastMessage('새로고침 중 오류가 발생했습니다.');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
     } finally {
       setTimeout(() => {
-        if (refreshIndicatorRef.current) {
-          refreshIndicatorRef.current.style.transform = 'translateY(-100%)';
-        }
-        
-        setTimeout(() => {
-          setIsRefreshing(false);
-        }, 300);
-      }, 800);
+        setIsRefreshing(false);
+      }, 500);
     }
-  }, [isRefreshing, onRefresh, setToastMessage, items]);
+  }, [isRefreshing, onRefresh, items]);
   
-  // 새로고침 인디케이터 생성 - 이제 setupTouchEvents를 직접 호출하지 않고 인디케이터만 반환
-  const createRefreshIndicator = useCallback(() => {
-    // 이미 생성된 경우 제거
-    if (refreshIndicatorRef.current && refreshIndicatorRef.current.parentNode) {
-      refreshIndicatorRef.current.parentNode.removeChild(refreshIndicatorRef.current);
-    }
-    
-    // 새로고침 인디케이터 엘리먼트 생성
-    const indicator = document.createElement('div');
-    indicator.textContent = '당겨서 새로고침';
-    indicator.className = 'refresh-indicator';
-    indicator.style.position = 'absolute';
-    indicator.style.top = '0';
-    indicator.style.left = '0';
-    indicator.style.width = '100%';
-    indicator.style.height = '50px';
-    indicator.style.backgroundColor = '#f9f9f9';
-    indicator.style.color = '#333';
-    indicator.style.display = 'flex';
-    indicator.style.alignItems = 'center';
-    indicator.style.justifyContent = 'center';
-    indicator.style.fontWeight = '500';
-    indicator.style.zIndex = '9999';
-    indicator.style.transform = 'translateY(-100%)';
-    indicator.style.transition = 'transform 0.3s ease';
-    indicator.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-    
-    document.body.insertBefore(indicator, document.body.firstChild);
-    refreshIndicatorRef.current = indicator;
-    
-    return indicator;
-  }, []);
-  
-  // 터치 이벤트 설정 - 이제 인디케이터를 매개변수로 받음
-  const setupTouchEvents = useCallback((indicator: HTMLDivElement) => {
-    let startY = 0;
-    let isActive = false;
-    const minPullDistance = 80;
-    
-    // 이벤트 리스너 제거 함수
-    const removeListeners = () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleTouchEnd);
-    };
-    
-    // 터치 시작
-    const handleTouchStart = (e: TouchEvent) => {
-      if (isRefreshing) return;
-      
-      // 스크롤이 최상단에 있을 때만 작동
-      if (window.scrollY <= 0) {
-        startY = e.touches[0].clientY;
-        isActive = true;
-        
-        // 디버깅 로그
-        console.log('터치 시작 위치:', startY);
-      }
-    };
-    
-    // 터치 이동
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isActive || isRefreshing) return;
-      
-      const y = e.touches[0].clientY;
-      const pullDistance = y - startY;
-      
-      // 디버깅 로그
-      if (pullDistance > 10) {
-        console.log('당김 거리:', pullDistance);
-      }
-      
-      // 아래로 당겼을 때만 처리
-      if (pullDistance > 0) {
-        // 스크롤 방지 - preventDefault는 passive: false 옵션이 있어야 작동
-        e.preventDefault();
-        
-        // 당김 거리에 비례하여 인디케이터 표시 (저항 적용)
-        const resistance = 0.4;
-        const translateY = Math.min(pullDistance * resistance, 80);
-        
-        // 인라인 스타일 직접 적용 (중요)
-        indicator.style.transform = `translateY(${translateY}px)`;
-        indicator.style.transition = 'none'; // 당기는 동안 전환 효과 없음
-        
-        // 충분히 당겼는지 표시
-        if (pullDistance > minPullDistance) {
-          indicator.textContent = '놓아서 새로고침';
-          indicator.style.color = '#1a73e8';
-        } else {
-          indicator.textContent = '당겨서 새로고침';
-          indicator.style.color = '#333';
-        }
-      }
-    };
-    
-    // 터치 종료
-    const handleTouchEnd = (e: TouchEvent) => {
-      if (!isActive) return;
-      
-      isActive = false;
-      
-      // 인디케이터에 전환 효과 다시 적용
-      indicator.style.transition = 'transform 0.3s ease';
-      
-      // 마지막 터치 위치 가져오기
-      const y = e.changedTouches[0].clientY;
-      const pullDistance = y - startY;
-      
-      console.log('터치 종료, 당김 거리:', pullDistance, '최소 필요 거리:', minPullDistance);
-      
-      // 충분히 당겼는지 확인
-      if (pullDistance > minPullDistance) {
-        // 새로고침 실행
-        console.log('충분히 당겨서 새로고침 시작');
-        performRefresh();
-      } else {
-        // 인디케이터 원위치 - 충분히 당기지 않은 경우
-        console.log('충분히 당기지 않아 원위치');
-        indicator.style.transform = 'translateY(-100%)';
-      }
-    };
-    
-    // 이벤트 리스너 등록 - passive: false 설정은 필수!
-    document.addEventListener('touchstart', handleTouchStart, { passive: false });
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd, { passive: false });
-    
-    // 이벤트 리스너 제거 함수 반환
-    return removeListeners;
-  }, [isRefreshing, performRefresh]);
-  
-  // 최초 마운트 시 초기화 - 여기서 함수를 호출하는 useEffect를 맨 뒤로 이동
+  // 최초 마운트 시 초기화
   useEffect(() => {
     setIsMounted(true);
     
@@ -400,20 +297,8 @@ export default function VirtualNewsList({
     if (typeof window !== 'undefined') {
       window.scrollTo(0, 0);
       setInitialRender(false);
-      
-      // 인디케이터 생성 및 이벤트 리스너 설정
-      const indicator = createRefreshIndicator();
-      const cleanupListeners = setupTouchEvents(indicator);
-      
-      return () => {
-        // 컴포넌트 언마운트 시 정리
-        cleanupListeners();
-        if (indicator && indicator.parentNode) {
-          indicator.parentNode.removeChild(indicator);
-        }
-      };
     }
-  }, [createRefreshIndicator, setupTouchEvents]);
+  }, []);
 
   // 아이템 선택 처리
   const handleSelectItem = useCallback((id: string | number, isSelected: boolean) => {
@@ -504,6 +389,16 @@ export default function VirtualNewsList({
         onSelectItem={handleSelectItem}
         onScrollDirectionChange={handleScrollDirectionChange}
       />
+      
+      {/* 새로고침 버튼 */}
+      <RefreshButton 
+        loading={isRefreshing}
+        onClick={performRefresh}
+        disabled={isRefreshing}
+        aria-label="뉴스 새로고침"
+      >
+        <RefreshIcon />
+      </RefreshButton>
       
       {/* 선택된 항목 복사 버튼 */}
       <CopyButton 
