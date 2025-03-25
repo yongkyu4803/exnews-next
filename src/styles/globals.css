@@ -31,6 +31,16 @@ html, body, #__next, main {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   user-select: none;
+  position: relative; /* 모든 포지셔닝 컨텍스트 제공 */
+}
+
+body {
+  touch-action: pan-y; /* 수직 스크롤만 허용 */
+}
+
+/* 딥 레이어 숨김 방지 */
+#__next, main, .virtual-news-list-container {
+  isolation: isolate; /* 새로운 쌓임 맥락 생성 */
 }
 
 a {
@@ -245,6 +255,7 @@ a {
   transform: translateZ(0) !important;
   -webkit-transform: translateZ(0) !important;
   will-change: transform !important;
+  -webkit-overflow-scrolling: touch !important;
 }
 
 /* 모바일 가상 스크롤 레이아웃 */
@@ -316,6 +327,38 @@ a {
   justify-content: center !important;
   color: var(--primary-color) !important;
   z-index: 10 !important;
+}
+
+/* 새로고침 관련 스타일 완전 재정의 */
+.virtual-news-list-container > div:first-of-type {
+  z-index: 100 !important; /* 항상 최상단에 표시되도록 */
+  transform: translateY(-100%) !important; /* 초기에 숨김 */
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease !important;
+}
+
+.virtual-news-list-container > div:first-of-type[style*="opacity: 1"] {
+  z-index: 100 !important;
+}
+
+/* pull-to-refresh 동작 중 전체 문서 스크롤 방지 */
+.is-pulling {
+  overflow: hidden !important;
+  touch-action: none !important;
+}
+
+/* 특별히 iOS Safari를 위한 최적화 */
+@supports (-webkit-touch-callout: none) {
+  .virtual-news-list-container {
+    height: -webkit-fill-available !important;
+  }
+  
+  /* iOS에서 끌어당김 동작 최적화 */
+  .virtual-news-list-container > div:first-of-type {
+    /* iOS에서 하드웨어 가속 보장 */
+    transform: translate3d(0, -100%, 0) !important;
+  }
 }
 
 /* 모바일 미디어 쿼리 */

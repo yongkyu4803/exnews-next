@@ -19,7 +19,7 @@ const ListContainer = styled.div`
   -webkit-overflow-scrolling: touch;
 `;
 
-// 새로고침 인디케이터
+// 새로고침 인디케이터 - 기본적으로 완전히 숨겨짐
 const RefreshIndicator = styled.div`
   position: absolute;
   top: 0;
@@ -33,11 +33,12 @@ const RefreshIndicator = styled.div`
   font-weight: 500;
   background-color: #f9f9f9;
   transform: translateY(-100%);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, opacity 0.3s ease;
   z-index: 1000;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   opacity: 0;
   pointer-events: none;
+  visibility: hidden; /* 완전히 숨기기 위해 visibility 추가 */
 `;
 
 // 로딩 컴포넌트
@@ -180,21 +181,21 @@ export default function VirtualNewsList({
   const divRef = useRef<HTMLDivElement>(null);
   const [initialRender, setInitialRender] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const touchStartY = useRef(0);
-  const refreshThreshold = 80;
+  const [refreshProgress, setRefreshProgress] = useState(0); // 당김 진행도 (0-100)
+  const [refreshText, setRefreshText] = useState('당겨서 새로고침');
+  const refreshThreshold = 70;
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-
-  // 컴포넌트 마운트 시 초기화
-  useLayoutEffect(() => {
-    // 초기 인디케이터 상태 설정 (반드시 레이아웃 계산 전에 적용)
-    const indicator = document.querySelector('.refresh-indicator') as HTMLElement;
-    if (indicator) {
-      indicator.style.transform = 'translateY(-100%)';
-      indicator.style.opacity = '0';
-    }
-  }, []);
   
+  // 터치 관련 ref
+  const touchStartY = useRef(0);
+  const touchCurrentY = useRef(0);
+  const pullDistance = useRef(0);
+  const isPulling = useRef(false);
+  const readyToRefresh = useRef(false);
+  const indicatorRef = useRef<HTMLDivElement>(null);
+  
+  // 컴포넌트 마운트 시 초기화
   useEffect(() => {
     setIsMounted(true);
     
@@ -205,155 +206,150 @@ export default function VirtualNewsList({
         setInitialRender(false);
       }, 100);
       
-      return () => clearTimeout(timer);
+      // CSS 컨트롤 - 클래스 통해 인디케이터 강제 숨김
+      const refreshIndicator = document.querySelector('.virtual-news-list-container > div:first-of-type');
+      if (refreshIndicator) {
+        (refreshIndicator as HTMLElement).style.transform = 'translateY(-100%)';
+        (refreshIndicator as HTMLElement).style.opacity = '0';
+        (refreshIndicator as HTMLElement).style.visibility = 'hidden';
+      }
+      
+      return () => {
+        clearTimeout(timer);
+        // 당기기 클래스 정리
+        document.body.classList.remove('is-pulling');
+      };
     }
   }, []);
 
-  // 새로고침 상태 관리 변수
-  const isDragging = useRef(false);
-  const lastTouchY = useRef(0);
-
   // 터치 시작 이벤트 핸들러
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    // 이미 새로고침 중이면 무시
     if (isRefreshing) return;
-
-    // 터치 시작 위치 저장
-    touchStartY.current = e.touches[0].clientY;
-    lastTouchY.current = e.touches[0].clientY;
-    isDragging.current = false;
-
-    console.log('터치 시작', { y: touchStartY.current });
+    
+    // 스크롤 위치가 최상단인 경우에만 pull-to-refresh 동작 시작
+    if (window.scrollY === 0) {
+      touchStartY.current = e.touches[0].clientY;
+      touchCurrentY.current = e.touches[0].clientY;
+      isPulling.current = true;
+      pullDistance.current = 0;
+      readyToRefresh.current = false;
+      
+      // 문서에 당김 클래스 추가
+      document.body.classList.add('is-pulling');
+    }
   }, [isRefreshing]);
 
   // 터치 이동 이벤트 핸들러
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    // 이미 새로고침 중이면 무시
-    if (isRefreshing) return;
-
-    const currentY = e.touches[0].clientY;
-    const diffFromStart = currentY - touchStartY.current;
-    const diffFromLast = currentY - lastTouchY.current;
+    if (isRefreshing || !isPulling.current) return;
     
-    // 현재 위치 업데이트
-    lastTouchY.current = currentY;
-
-    // 스크롤 위치가 최상단이 아니거나 아래로 당기는 중이 아니면 무시
-    if (window.scrollY > 0 || diffFromStart <= 0) {
+    // 현재 스크롤 위치가 0이 아니면 pull-to-refresh 동작 중단
+    if (window.scrollY > 0) {
+      isPulling.current = false;
+      setRefreshProgress(0);
+      document.body.classList.remove('is-pulling');
       return;
     }
     
-    // 당기는 상태 감지 (처음 일정 거리 이상 당길 때)
-    if (!isDragging.current && diffFromStart > 10) {
-      isDragging.current = true;
-      console.log('당기기 시작');
+    touchCurrentY.current = e.touches[0].clientY;
+    pullDistance.current = Math.max(0, touchCurrentY.current - touchStartY.current);
+    
+    // 당김 거리가 있는 경우에만 기본 동작 방지
+    if (pullDistance.current > 10) { // 작은 임계값 추가하여 우발적 당김 방지
+      e.preventDefault();
+      e.stopPropagation(); // 이벤트 전파 중지
+      
+      // 당김 진행도 계산 (0-100%)
+      const progress = Math.min(100, (pullDistance.current / refreshThreshold) * 100);
+      setRefreshProgress(progress);
+      
+      // 인디케이터 상태 업데이트 - 최대한 직접 DOM 조작
+      if (indicatorRef.current) {
+        const translateY = Math.min(0, -100 + progress);
+        const opacity = progress / 100;
+        
+        indicatorRef.current.style.transform = `translateY(${translateY}%)`;
+        indicatorRef.current.style.opacity = opacity.toString();
+        indicatorRef.current.style.visibility = opacity > 0 ? 'visible' : 'hidden';
+        
+        // 하드웨어 가속 강제
+        indicatorRef.current.style.willChange = 'transform, opacity';
+      }
+      
+      // 새로고침 준비 상태 업데이트
+      const wasReadyToRefresh = readyToRefresh.current;
+      readyToRefresh.current = progress >= 100;
+      
+      // 상태가 변경된 경우에만 텍스트 업데이트
+      if (readyToRefresh.current !== wasReadyToRefresh) {
+        setRefreshText(readyToRefresh.current ? '놓아서 새로고침' : '당겨서 새로고침');
+      }
     }
-    
-    // 당기는 중이 아니면 무시
-    if (!isDragging.current) return;
-    
-    // 새로고침 인디케이터 가져오기
-    const indicator = document.querySelector('.refresh-indicator') as HTMLElement;
-    if (!indicator) return;
-    
-    // 기본 스크롤 동작 방지 (중요!)
-    e.preventDefault();
-    
-    // 당긴 거리에 비례해 인디케이터 표시
-    const pullDistance = Math.min(diffFromStart, refreshThreshold * 2);
-    const pullProgress = Math.min(pullDistance / refreshThreshold, 1);
-    
-    // 인디케이터 위치 및 투명도 업데이트
-    const translateY = -100 + (pullProgress * 100);
-    indicator.style.transform = `translateY(${translateY}%)`;
-    indicator.style.opacity = pullProgress.toString();
-    
-    // 당김 거리에 따라 텍스트 변경
-    if (pullDistance >= refreshThreshold) {
-      indicator.textContent = '놓아서 새로고침';
-    } else {
-      indicator.textContent = '당겨서 새로고침';
-    }
-    
-    // 새로고침 준비 여부 플래그 설정
-    const target = e.currentTarget as HTMLElement;
-    target.dataset.readyToRefresh = pullDistance >= refreshThreshold ? 'true' : 'false';
-    
-    console.log('당기는 중', { 
-      diffFromStart, 
-      pullProgress, 
-      translateY,
-      readyToRefresh: target.dataset.readyToRefresh 
-    });
   }, [isRefreshing, refreshThreshold]);
 
   // 터치 종료 이벤트 핸들러
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+  const handleTouchEnd = useCallback(() => {
+    if (!isPulling.current) return;
+    
+    // 문서에서 당김 클래스 제거
+    document.body.classList.remove('is-pulling');
+    isPulling.current = false;
+    
     // 이미 새로고침 중이면 무시
     if (isRefreshing) return;
     
-    // 당기는 중이 아니면 무시
-    if (!isDragging.current) return;
-    
-    // 상태 초기화
-    isDragging.current = false;
-    
-    // 새로고침 인디케이터
-    const indicator = document.querySelector('.refresh-indicator') as HTMLElement;
-    if (!indicator) return;
-    
-    // 요소
-    const target = e.currentTarget as HTMLElement;
-    
-    console.log('터치 종료', { readyToRefresh: target.dataset.readyToRefresh });
-    
-    // 새로고침 실행 여부 확인
-    if (target.dataset.readyToRefresh === 'true') {
-      // 새로고침 실행
+    // 새로고침 실행
+    if (readyToRefresh.current) {
       setIsRefreshing(true);
+      setRefreshText('새로고침 중...');
       
-      // 인디케이터 표시 상태 조정
-      indicator.textContent = '새로고침 중...';
-      indicator.style.opacity = '1';
-      indicator.style.transform = 'translateY(0)';
+      // 인디케이터 완전히 표시 - DOM 직접 조작
+      if (indicatorRef.current) {
+        indicatorRef.current.style.transform = 'translateY(0)';
+        indicatorRef.current.style.opacity = '1';
+        indicatorRef.current.style.visibility = 'visible';
+      }
       
-      // 실제 새로고침 함수 호출
-      console.log('새로고침 시작');
+      // 새로고침 함수 실행
       onRefresh()
         .then(() => {
-          console.log('새로고침 성공');
-          indicator.textContent = '새로고침 완료!';
+          setRefreshText('새로고침 완료!');
           
-          // 0.8초 후 인디케이터 숨기기
+          // 인디케이터 숨기기
           setTimeout(() => {
-            indicator.style.transform = 'translateY(-100%)';
-            indicator.style.opacity = '0';
-            
-            // 모든 상태 초기화
-            setTimeout(() => {
-              setIsRefreshing(false);
-              target.dataset.readyToRefresh = 'false';
-            }, 300);
+            hideRefreshIndicator();
           }, 800);
         })
-        .catch((error) => {
-          console.error('새로고침 실패:', error);
-          indicator.textContent = '새로고침 실패';
+        .catch(() => {
+          setRefreshText('새로고침 실패');
           
-          // 1초 후 인디케이터 숨기기
+          // 인디케이터 숨기기
           setTimeout(() => {
-            indicator.style.transform = 'translateY(-100%)';
-            indicator.style.opacity = '0';
-            setIsRefreshing(false);
-            target.dataset.readyToRefresh = 'false';
-          }, 1000);
+            hideRefreshIndicator();
+          }, 800);
         });
     } else {
-      // 새로고침 조건 미달 시 인디케이터 숨기기
-      indicator.style.transform = 'translateY(-100%)';
-      indicator.style.opacity = '0';
+      // 새로고침 취소 - 인디케이터 숨기기
+      hideRefreshIndicator();
     }
   }, [isRefreshing, onRefresh]);
+  
+  // 인디케이터 숨기기 함수
+  const hideRefreshIndicator = () => {
+    if (indicatorRef.current) {
+      indicatorRef.current.style.transform = 'translateY(-100%)';
+      indicatorRef.current.style.opacity = '0';
+      indicatorRef.current.style.visibility = 'hidden';
+      
+      // 상태 초기화
+      setTimeout(() => {
+        setIsRefreshing(false);
+        readyToRefresh.current = false;
+        setRefreshProgress(0);
+        setRefreshText('당겨서 새로고침');
+      }, 300);
+    }
+  };
 
   // 아이템 선택 처리
   const handleSelectItem = useCallback((id: string | number, isSelected: boolean) => {
@@ -397,17 +393,12 @@ export default function VirtualNewsList({
     }, 3000);
   };
 
-  // 스크롤 방향 변경 핸들러 - 간소화 및 최적화
+  // 스크롤 방향 변경 핸들러
   const handleScrollDirectionChange = useCallback((direction: 'up' | 'down') => {
-    if (initialRender) return; // 초기 렌더링 시 스크롤 이벤트 무시
+    if (initialRender) return;
     
     if (direction === 'up' && window.scrollY < 10) {
-      requestAnimationFrame(() => {
-        window.scrollTo({
-          top: 0,
-          behavior: 'auto'
-        });
-      });
+      window.scrollTo({ top: 0, behavior: 'auto' });
     }
   }, [initialRender]);
 
@@ -435,22 +426,25 @@ export default function VirtualNewsList({
         padding: 0, 
         position: 'relative',
         height: 'calc(100vh - 180px)',
-        overflow: 'auto'
+        overflow: 'auto',
+        touchAction: isPulling.current ? 'none' : 'auto'
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      data-ready-to-refresh="false"
+      onTouchCancel={handleTouchEnd} // 터치 취소 이벤트도 처리
     >
-      {/* 새로고침 인디케이터를 초기에 숨김 상태로 설정 */}
+      {/* 새로고침 인디케이터 */}
       <RefreshIndicator 
-        className="refresh-indicator"
-        style={{ 
+        ref={indicatorRef}
+        style={{
           transform: 'translateY(-100%)',
-          opacity: 0
+          opacity: '0',
+          visibility: 'hidden',
+          willChange: 'transform, opacity' // 하드웨어 가속
         }}
       >
-        당겨서 새로고침
+        {refreshText}
       </RefreshIndicator>
       
       <ReactWindowComponents
