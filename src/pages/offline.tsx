@@ -1,7 +1,7 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
-import { getRecentNews } from '@/utils/indexedDBUtils';
+import { getRecentNews, SavedNewsItem } from '@/utils/indexedDBUtils';
 import styled from '@emotion/styled';
 import { OfflineNewsItem } from '@/types';
 
@@ -53,10 +53,12 @@ interface NewsItem {
   id: string | number;
   title: string;
   description?: string;
-  pub_date: string;
+  date: string;  // pub_date 대신 date 사용
+  pub_date?: string; // 선택적으로 추가
   original_link: string;
   category: string;
   viewedAt?: string;
+  saved_at?: number;
 }
 
 function OfflinePage() {
@@ -162,7 +164,7 @@ function OfflinePage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Text type="secondary">카테고리: {item.category}</Text>
                   <Text type="secondary">
-                    {new Date(item.pub_date).toLocaleDateString('ko-KR')}
+                    {new Date(item.date || item.pub_date || '').toLocaleDateString('ko-KR')}
                   </Text>
                 </div>
                 {item.viewedAt && (
