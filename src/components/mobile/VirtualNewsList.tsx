@@ -25,18 +25,24 @@ const RefreshIndicator = styled.div`
   top: 0;
   left: 0;
   width: 100%;
-  height: 40px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
+  color: #333;
+  font-weight: 500;
   background-color: #f9f9f9;
   transform: translateY(-100%);
   transition: transform 0.3s ease;
-  z-index: 10;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   
   &.visible {
     transform: translateY(0);
+  }
+  
+  &.pulling {
+    transform: translateY(-70%);
   }
 `;
 
@@ -226,12 +232,51 @@ export default function VirtualNewsList({
     const touchY = e.touches[0].clientY;
     const diff = touchY - touchStartY.current;
     
-    // 스크롤 위치가 맨 위에 있고, 아래로 당길 때
-    if (window.scrollY === 0 && diff > refreshThreshold) {
-      setIsRefreshing(true);
-      handleRefresh();
+    // 스크롤 위치가 맨 위에 있을 때만 당겨서 새로고침 동작
+    if (window.scrollY <= 5 && diff > 0) {
+      e.preventDefault(); // 스크롤 방지
+      
+      const indicator = document.querySelector('.refresh-indicator') as HTMLElement;
+      if (indicator) {
+        if (diff > refreshThreshold) {
+          indicator.classList.add('pulling');
+          indicator.textContent = '놓아서 새로고침';
+        } else {
+          indicator.classList.remove('pulling');
+          indicator.textContent = '당겨서 새로고침';
+        }
+        
+        // 부분적으로 표시
+        const translateY = Math.min(diff * 0.5, 50) - 100;
+        indicator.style.transform = `translateY(${translateY}%)`;
+      }
+      
+      // 임계값을 넘으면 리프레시 플래그 설정
+      if (diff > refreshThreshold) {
+        e.currentTarget.dataset.readyToRefresh = 'true';
+      } else {
+        e.currentTarget.dataset.readyToRefresh = 'false';
+      }
     }
-  }, [isRefreshing]);
+  }, [isRefreshing, refreshThreshold]);
+  
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (isRefreshing) return;
+    
+    // 임계값을 넘었는지 확인
+    if (e.currentTarget.dataset.readyToRefresh === 'true') {
+      handleRefresh();
+    } else {
+      // 임계값에 도달하지 않았을 때 인디케이터 숨기기
+      const indicator = document.querySelector('.refresh-indicator') as HTMLElement;
+      if (indicator) {
+        indicator.style.transform = 'translateY(-100%)';
+      }
+    }
+    
+    // 플래그 초기화
+    e.currentTarget.dataset.readyToRefresh = 'false';
+  }, [isRefreshing, handleRefresh]);
 
   // 새로고침 처리
   const handleRefresh = async () => {
@@ -239,16 +284,44 @@ export default function VirtualNewsList({
     
     try {
       setIsRefreshing(true);
+      
+      const indicator = document.querySelector('.refresh-indicator') as HTMLElement;
+      if (indicator) {
+        indicator.classList.remove('pulling');
+        indicator.textContent = '새로고침 중...';
+        indicator.style.transform = 'translateY(0)';
+      }
+      
       await onRefresh();
       
-      // 새로고침 완료 후 처리
+      // 새로고침 완료 표시 후 숨기기
       setTimeout(() => {
-        setIsRefreshing(false);
-        window.scrollTo(0, 0);
-      }, 800);
+        if (indicator) {
+          indicator.textContent = '새로고침 완료!';
+        }
+        
+        setTimeout(() => {
+          if (indicator) {
+            indicator.style.transform = 'translateY(-100%)';
+          }
+          setIsRefreshing(false);
+          window.scrollTo(0, 0);
+        }, 500);
+      }, 500);
     } catch (error) {
       console.error('새로고침 실패:', error);
-      setIsRefreshing(false);
+      
+      const indicator = document.querySelector('.refresh-indicator') as HTMLElement;
+      if (indicator) {
+        indicator.textContent = '새로고침 실패';
+        
+        setTimeout(() => {
+          if (indicator) {
+            indicator.style.transform = 'translateY(-100%)';
+          }
+          setIsRefreshing(false);
+        }, 1000);
+      }
     }
   };
 
@@ -322,12 +395,12 @@ export default function VirtualNewsList({
       }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      data-ready-to-refresh="false"
     >
-      {isRefreshing && (
-        <RefreshIndicator className="visible">
-          새로고침 중...
-        </RefreshIndicator>
-      )}
+      <RefreshIndicator className="refresh-indicator">
+        당겨서 새로고침
+      </RefreshIndicator>
       
       <ReactWindowComponents
         items={items}
