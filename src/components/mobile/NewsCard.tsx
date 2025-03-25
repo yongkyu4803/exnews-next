@@ -182,7 +182,7 @@ const Description = styled.p`
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  max-height: 63px;
+  max-height: 33px;
 `;
 
 const IconButton = styled.button`
