@@ -1,71 +1,42 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { FixedSizeList as List } from 'react-window';
+import styled from '@emotion/styled';
 import InfiniteLoader from 'react-window-infinite-loader';
 import NewsCard from './NewsCard';
-import styled from '@emotion/styled';
 
-const ListContainer = styled.div`
-  height: calc(100vh - 180px);
+// 상수 정의
+const ITEM_HEIGHT = 220; // 카드 아이템 높이 (픽셀)
+const LOADING_ITEM_HEIGHT = 100; // 로딩 아이템 높이 (픽셀)
+
+const WindowContainer = styled.div`
   width: 100%;
-  overflow: auto;
+  height: 100%;
+  overflow: visible; /* 필수: 스크롤을 부모 컨테이너로 위임 */
   position: relative;
-  z-index: 1;
-  -webkit-overflow-scrolling: touch;
+  contain: layout style;
 `;
 
-// 로딩 인디케이터
+const ListContainer = styled.div`
+  width: 100%;
+  background-color: #f9f9f9;
+  height: 100%;
+  overflow: visible;
+  position: relative;
+  will-change: transform;
+  transform: translateZ(0);
+`;
+
+// 로딩 인디케이터 스타일
 const LoadingIndicator = styled.div`
-  padding: 16px;
-  text-align: center;
-  color: #666;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 80px;
-  
-  &::after {
-    content: '';
-    width: 20px;
-    height: 20px;
-    border: 2px solid #ddd;
-    border-radius: 50%;
-    border-top-color: var(--primary-color, #1a4b8c);
-    animation: spin 0.8s linear infinite;
-    margin-left: 8px;
-  }
-  
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-`;
-
-// ReactWindow 스크롤 컨테이너 스타일
-const WindowContainer = styled.div`
-  position: relative;
-  height: 100%;
+  height: ${LOADING_ITEM_HEIGHT}px;
+  padding: 16px;
+  background-color: transparent;
+  color: #666;
+  font-size: 14px;
   width: 100%;
-  overflow: visible;
-  
-  .ReactVirtualized__List::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .ReactVirtualized__List {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    overflow-y: auto !important;
-  }
-`;
-
-// 카드 컨테이너 스타일
-const CardContainer = styled.div`
-  padding: 6px 10px;
-  width: 100%;
-  box-sizing: border-box;
-  height: 150px !important; /* 명시적 고정 높이 */
-  position: relative;
-  contain: content;
-  overflow: visible;
 `;
 
 interface ReactWindowComponentsProps {
@@ -73,110 +44,80 @@ interface ReactWindowComponentsProps {
   hasMore: boolean;
   isLoading: boolean;
   onLoadMore: () => void;
-  onRefresh: () => Promise<any>;
+  onRefresh?: () => Promise<any>;
   selectedItems?: string[];
   onSelectItem?: (id: string | number, isSelected: boolean) => void;
   onScrollDirectionChange?: (direction: 'up' | 'down') => void;
 }
 
-export default function ReactWindowComponents({ 
-  items, 
-  hasMore, 
-  isLoading, 
+export default function ReactWindowComponents({
+  items,
+  hasMore,
+  isLoading,
   onLoadMore,
   onRefresh,
   selectedItems = [],
   onSelectItem,
   onScrollDirectionChange
 }: ReactWindowComponentsProps) {
-  const [listHeight, setListHeight] = useState(window.innerHeight - 180); 
-  const listRef = React.useRef<any>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const lastScrollTop = useRef(0);
-  
-  // 아이템 고정 높이 설정
-  const ITEM_HEIGHT = 220;
-  const LOADING_ITEM_HEIGHT = 100;
-  
-  // 메모이제이션된 리사이즈 핸들러
-  const handleResize = useCallback(() => {
-    const height = typeof window !== 'undefined' ? 
-      (containerRef.current?.clientHeight || window.innerHeight - 180) : 600;
-    setListHeight(height);
-  }, []);
-  
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      handleResize();
-      window.addEventListener('resize', handleResize);
-      
-      return () => {
-        window.removeEventListener('resize', handleResize);
-      };
-    }
-  }, [handleResize]);
-
-  // 초기 렌더링 시 height 강제 재계산
-  useEffect(() => {
-    setTimeout(handleResize, 100);
-  }, [handleResize]);
-
-  // 아이템이 변경될 때만 리스트 캐시 리셋
-  useEffect(() => {
-    setTimeout(() => {
-      if (listRef.current) {
-        listRef.current.scrollTo(0);
-      }
-    }, 10);
-  }, [items.length]);
-  
+  const listRef = useRef<any>(null);
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight - 180);
+  const [lastScrollOffset, setLastScrollOffset] = useState(0);
   const itemCount = hasMore ? items.length + 1 : items.length;
-  const loadMoreItems = isLoading ? () => {} : onLoadMore;
-  const isItemLoaded = (index: number) => !hasMore || index < items.length;
   
-  // 스크롤 이벤트 핸들러 - 간소화
-  const handleScroll = useCallback(({ scrollOffset }: { scrollOffset: number, scrollDirection: string, scrollUpdateWasRequested: boolean }) => {
-    const currentScrollTop = scrollOffset;
-    
-    // 스크롤 방향 감지 및 알림
-    if (currentScrollTop > lastScrollTop.current) {
-      if (onScrollDirectionChange) onScrollDirectionChange('down');
-    } else if (currentScrollTop < lastScrollTop.current) {
-      if (onScrollDirectionChange) onScrollDirectionChange('up');
-    }
-    
-    // 현재 스크롤 위치 저장
-    lastScrollTop.current = currentScrollTop;
-  }, [onScrollDirectionChange]);
-
-  // Row 컴포넌트 - 높이 일관성 보장
-  const Row = ({ index, style }: { index: number, style: React.CSSProperties }) => {
-    const rowStyle: React.CSSProperties = {
-      ...style,
-      height: isItemLoaded(index) ? ITEM_HEIGHT : LOADING_ITEM_HEIGHT,
-      padding: 0,
-      margin: 0,
-      position: 'absolute',
-      top: style.top as number,
-      left: 0,
-      width: '100%',
-      contain: 'layout',
+  // 화면 크기 변경 시 리스트 높이 조정
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowHeight(window.innerHeight - 180);
+      if (listRef.current && typeof listRef.current.resetAfterIndex === 'function') {
+        listRef.current.resetAfterIndex(0);
+      }
     };
     
-    if (!isItemLoaded(index)) {
+    window.addEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+  
+  // 스크롤 이벤트 처리
+  const handleScroll = useCallback(({ scrollOffset }: { scrollOffset: number }) => {
+    // 스크롤 방향 감지 및 전달
+    if (onScrollDirectionChange) {
+      const direction = scrollOffset > lastScrollOffset ? 'down' : 'up';
+      onScrollDirectionChange(direction);
+    }
+    
+    setLastScrollOffset(scrollOffset);
+  }, [lastScrollOffset, onScrollDirectionChange]);
+  
+  // 행 렌더링 함수
+  const Row = ({ index, style }: { index: number, style: React.CSSProperties }) => {
+    // 마지막 아이템이면서 hasMore이면 로딩 인디케이터 표시
+    if (index === items.length) {
+      if (!isLoading) {
+        setTimeout(() => {
+          onLoadMore();
+        }, 100);
+      }
+      
       return (
-        <div style={rowStyle}>
-          <LoadingIndicator>더 불러오는 중...</LoadingIndicator>
+        <div style={{ ...style, height: LOADING_ITEM_HEIGHT }}>
+          <LoadingIndicator>
+            더 불러오는 중...
+          </LoadingIndicator>
         </div>
       );
     }
-
+    
     const item = items[index];
-    const isSelected = selectedItems.includes(item.id);
+    const isSelected = selectedItems.includes(item.id?.toString() || '');
     
     return (
-      <CardContainer style={rowStyle}>
-        <NewsCard
+      <div style={{ ...style, height: ITEM_HEIGHT, paddingBottom: '16px' }}>
+        <NewsCard 
+          key={item.id} 
           title={item.title}
           description={item.description || ''}
           date={new Date(item.pub_date).toLocaleString('ko-KR')}
@@ -184,57 +125,54 @@ export default function ReactWindowComponents({
           original_link={item.original_link}
           id={item.id}
           isSelected={isSelected}
-          onSelect={onSelectItem}
-          onClick={() => {
-            if (typeof window !== 'undefined') {
-              window.open(item.original_link, '_blank', 'noopener,noreferrer');
-            }
-          }}
+          onSelect={() => onSelectItem?.(item.id, !isSelected)}
         />
-      </CardContainer>
+      </div>
     );
   };
-
+  
+  // 아이템이 로드되었는지 확인하는 함수
+  const isItemLoaded = (index: number) => {
+    return !hasMore || index < items.length;
+  };
+  
   return (
-    <ListContainer ref={containerRef}>
-      <WindowContainer>
+    <WindowContainer>
+      <ListContainer>
         <InfiniteLoader
           isItemLoaded={isItemLoaded}
           itemCount={itemCount}
-          loadMoreItems={loadMoreItems}
-          threshold={5}
+          loadMoreItems={isLoading ? () => {} : onLoadMore}
+          threshold={3}
         >
           {({ onItemsRendered, ref }) => (
             <List
               ref={(list) => {
-                listRef.current = list;
-                if (typeof ref === 'function') ref(list);
+                if (list) {
+                  listRef.current = list;
+                  if (typeof ref === 'function') ref(list);
+                }
               }}
-              height={listHeight}
-              itemCount={itemCount}
-              itemSize={ITEM_HEIGHT}
               onItemsRendered={onItemsRendered}
               onScroll={handleScroll}
+              height={windowHeight}
               width="100%"
+              itemCount={itemCount}
+              itemSize={ITEM_HEIGHT}
               overscanCount={3}
-              style={{ 
-                WebkitOverflowScrolling: 'touch',
-                width: '100%',
-                height: '100%',
-                outline: 'none',
-                overscrollBehavior: 'none',
+              style={{
                 willChange: 'transform',
-                contain: 'size layout',
-                overflow: 'auto'
+                transform: 'translateZ(0)',
+                overflowX: 'hidden',
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch'
               }}
-              useIsScrolling={false}
-              className="ReactVirtualizedList"
             >
               {Row}
             </List>
           )}
         </InfiniteLoader>
-      </WindowContainer>
-    </ListContainer>
+      </ListContainer>
+    </WindowContainer>
   );
 } 

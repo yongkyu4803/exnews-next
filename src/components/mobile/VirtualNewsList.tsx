@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import NewsCard from './NewsCard';
 import styled from '@emotion/styled';
 import { trackEvent } from '@/utils/analyticsUtils';
 import { copySelectedNewsToClipboard } from '@/utils/clipboardUtils';
+import PullToRefresh from 'react-simple-pull-to-refresh';
 
 // 클라이언트 사이드에서만 로드되는 컴포넌트
 const ReactWindowComponents = dynamic(() => import('./ReactWindowComponents'), {
@@ -17,28 +18,6 @@ const ListContainer = styled.div`
   overflow: auto;
   position: relative;
   -webkit-overflow-scrolling: touch;
-`;
-
-// 새로고침 인디케이터 - 기본적으로 완전히 숨겨짐
-const RefreshIndicator = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 50px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #333;
-  font-weight: 500;
-  background-color: #f9f9f9;
-  transform: translateY(-100%);
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  z-index: 1000;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden; /* 완전히 숨기기 위해 visibility 추가 */
 `;
 
 // 로딩 컴포넌트
@@ -84,6 +63,19 @@ const SkeletonCard = styled.div`
       transform: translateX(100%);
     }
   }
+`;
+
+// 커스텀 새로고침 인디케이터
+const PullIndicator = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50px;
+  width: 100%;
+  background-color: #f9f9f9;
+  color: #333;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 `;
 
 // 스켈레톤 로딩 상태
@@ -180,20 +172,8 @@ export default function VirtualNewsList({
   const [isMounted, setIsMounted] = useState(false);
   const divRef = useRef<HTMLDivElement>(null);
   const [initialRender, setInitialRender] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [refreshProgress, setRefreshProgress] = useState(0); // 당김 진행도 (0-100)
-  const [refreshText, setRefreshText] = useState('당겨서 새로고침');
-  const refreshThreshold = 70;
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
-  
-  // 터치 관련 ref
-  const touchStartY = useRef(0);
-  const touchCurrentY = useRef(0);
-  const pullDistance = useRef(0);
-  const isPulling = useRef(false);
-  const readyToRefresh = useRef(false);
-  const indicatorRef = useRef<HTMLDivElement>(null);
   
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
@@ -206,150 +186,9 @@ export default function VirtualNewsList({
         setInitialRender(false);
       }, 100);
       
-      // CSS 컨트롤 - 클래스 통해 인디케이터 강제 숨김
-      const refreshIndicator = document.querySelector('.virtual-news-list-container > div:first-of-type');
-      if (refreshIndicator) {
-        (refreshIndicator as HTMLElement).style.transform = 'translateY(-100%)';
-        (refreshIndicator as HTMLElement).style.opacity = '0';
-        (refreshIndicator as HTMLElement).style.visibility = 'hidden';
-      }
-      
-      return () => {
-        clearTimeout(timer);
-        // 당기기 클래스 정리
-        document.body.classList.remove('is-pulling');
-      };
+      return () => clearTimeout(timer);
     }
   }, []);
-
-  // 터치 시작 이벤트 핸들러
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (isRefreshing) return;
-    
-    // 스크롤 위치가 최상단인 경우에만 pull-to-refresh 동작 시작
-    if (window.scrollY === 0) {
-      touchStartY.current = e.touches[0].clientY;
-      touchCurrentY.current = e.touches[0].clientY;
-      isPulling.current = true;
-      pullDistance.current = 0;
-      readyToRefresh.current = false;
-      
-      // 문서에 당김 클래스 추가
-      document.body.classList.add('is-pulling');
-    }
-  }, [isRefreshing]);
-
-  // 터치 이동 이벤트 핸들러
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (isRefreshing || !isPulling.current) return;
-    
-    // 현재 스크롤 위치가 0이 아니면 pull-to-refresh 동작 중단
-    if (window.scrollY > 0) {
-      isPulling.current = false;
-      setRefreshProgress(0);
-      document.body.classList.remove('is-pulling');
-      return;
-    }
-    
-    touchCurrentY.current = e.touches[0].clientY;
-    pullDistance.current = Math.max(0, touchCurrentY.current - touchStartY.current);
-    
-    // 당김 거리가 있는 경우에만 기본 동작 방지
-    if (pullDistance.current > 10) { // 작은 임계값 추가하여 우발적 당김 방지
-      e.preventDefault();
-      e.stopPropagation(); // 이벤트 전파 중지
-      
-      // 당김 진행도 계산 (0-100%)
-      const progress = Math.min(100, (pullDistance.current / refreshThreshold) * 100);
-      setRefreshProgress(progress);
-      
-      // 인디케이터 상태 업데이트 - 최대한 직접 DOM 조작
-      if (indicatorRef.current) {
-        const translateY = Math.min(0, -100 + progress);
-        const opacity = progress / 100;
-        
-        indicatorRef.current.style.transform = `translateY(${translateY}%)`;
-        indicatorRef.current.style.opacity = opacity.toString();
-        indicatorRef.current.style.visibility = opacity > 0 ? 'visible' : 'hidden';
-        
-        // 하드웨어 가속 강제
-        indicatorRef.current.style.willChange = 'transform, opacity';
-      }
-      
-      // 새로고침 준비 상태 업데이트
-      const wasReadyToRefresh = readyToRefresh.current;
-      readyToRefresh.current = progress >= 100;
-      
-      // 상태가 변경된 경우에만 텍스트 업데이트
-      if (readyToRefresh.current !== wasReadyToRefresh) {
-        setRefreshText(readyToRefresh.current ? '놓아서 새로고침' : '당겨서 새로고침');
-      }
-    }
-  }, [isRefreshing, refreshThreshold]);
-
-  // 터치 종료 이벤트 핸들러
-  const handleTouchEnd = useCallback(() => {
-    if (!isPulling.current) return;
-    
-    // 문서에서 당김 클래스 제거
-    document.body.classList.remove('is-pulling');
-    isPulling.current = false;
-    
-    // 이미 새로고침 중이면 무시
-    if (isRefreshing) return;
-    
-    // 새로고침 실행
-    if (readyToRefresh.current) {
-      setIsRefreshing(true);
-      setRefreshText('새로고침 중...');
-      
-      // 인디케이터 완전히 표시 - DOM 직접 조작
-      if (indicatorRef.current) {
-        indicatorRef.current.style.transform = 'translateY(0)';
-        indicatorRef.current.style.opacity = '1';
-        indicatorRef.current.style.visibility = 'visible';
-      }
-      
-      // 새로고침 함수 실행
-      onRefresh()
-        .then(() => {
-          setRefreshText('새로고침 완료!');
-          
-          // 인디케이터 숨기기
-          setTimeout(() => {
-            hideRefreshIndicator();
-          }, 800);
-        })
-        .catch(() => {
-          setRefreshText('새로고침 실패');
-          
-          // 인디케이터 숨기기
-          setTimeout(() => {
-            hideRefreshIndicator();
-          }, 800);
-        });
-    } else {
-      // 새로고침 취소 - 인디케이터 숨기기
-      hideRefreshIndicator();
-    }
-  }, [isRefreshing, onRefresh]);
-  
-  // 인디케이터 숨기기 함수
-  const hideRefreshIndicator = () => {
-    if (indicatorRef.current) {
-      indicatorRef.current.style.transform = 'translateY(-100%)';
-      indicatorRef.current.style.opacity = '0';
-      indicatorRef.current.style.visibility = 'hidden';
-      
-      // 상태 초기화
-      setTimeout(() => {
-        setIsRefreshing(false);
-        readyToRefresh.current = false;
-        setRefreshProgress(0);
-        setRefreshText('당겨서 새로고침');
-      }, 300);
-    }
-  };
 
   // 아이템 선택 처리
   const handleSelectItem = useCallback((id: string | number, isSelected: boolean) => {
@@ -417,76 +256,75 @@ export default function VirtualNewsList({
     );
   }
 
+  // 새로고침 인디케이터 커스텀 UI
+  const renderRefreshIndicator = () => (
+    <PullIndicator>
+      새로고침 중...
+    </PullIndicator>
+  );
+
   return (
-    <div 
-      ref={divRef} 
-      className="virtual-news-list-container"
-      style={{ 
-        margin: 0, 
-        padding: 0, 
-        position: 'relative',
-        height: 'calc(100vh - 180px)',
-        overflow: 'auto',
-        touchAction: isPulling.current ? 'none' : 'auto'
-      }}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onTouchCancel={handleTouchEnd} // 터치 취소 이벤트도 처리
+    <PullToRefresh 
+      onRefresh={onRefresh}
+      pullingContent={<PullIndicator>당겨서 새로고침</PullIndicator>}
+      refreshingContent={renderRefreshIndicator()}
+      pullDownThreshold={60}
+      maxPullDownDistance={95}
+      resistance={2.5}
+      className="pull-to-refresh-container"
     >
-      {/* 새로고침 인디케이터 */}
-      <RefreshIndicator 
-        ref={indicatorRef}
-        style={{
-          transform: 'translateY(-100%)',
-          opacity: '0',
-          visibility: 'hidden',
-          willChange: 'transform, opacity' // 하드웨어 가속
+      <div 
+        ref={divRef} 
+        className="virtual-news-list-container"
+        style={{ 
+          margin: 0, 
+          padding: 0, 
+          position: 'relative',
+          height: 'calc(100vh - 180px)',
+          overflow: 'visible'
         }}
       >
-        {refreshText}
-      </RefreshIndicator>
-      
-      <ReactWindowComponents
-        items={items}
-        hasMore={hasMore}
-        isLoading={isLoading}
-        onLoadMore={onLoadMore}
-        onRefresh={onRefresh}
-        selectedItems={selectedKeys.map(key => key.toString())}
-        onSelectItem={handleSelectItem}
-        onScrollDirectionChange={handleScrollDirectionChange}
-      />
-      
-      {/* 선택된 항목 복사 버튼 */}
-      <CopyButton 
-        visible={selectedKeys.length > 0}
-        onClick={handleCopySelected}
-        aria-label="선택한 뉴스 복사"
-      >
-        <CopyIcon />
-      </CopyButton>
-      
-      {/* 토스트 메시지 */}
-      {showToast && (
-        <div 
-          style={{
-            position: 'fixed',
-            bottom: 80,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(0,0,0,0.7)',
-            color: 'white',
-            padding: '8px 16px',
-            borderRadius: '4px',
-            zIndex: 1000,
-            maxWidth: '80%',
-            textAlign: 'center',
-          }}
+        <ReactWindowComponents
+          items={items}
+          hasMore={hasMore}
+          isLoading={isLoading}
+          onLoadMore={onLoadMore}
+          onRefresh={onRefresh}
+          selectedItems={selectedKeys.map(key => key.toString())}
+          onSelectItem={handleSelectItem}
+          onScrollDirectionChange={handleScrollDirectionChange}
+        />
+        
+        {/* 선택된 항목 복사 버튼 */}
+        <CopyButton 
+          visible={selectedKeys.length > 0}
+          onClick={handleCopySelected}
+          aria-label="선택한 뉴스 복사"
         >
-          {toastMessage}
-        </div>
-      )}
-    </div>
+          <CopyIcon />
+        </CopyButton>
+        
+        {/* 토스트 메시지 */}
+        {showToast && (
+          <div 
+            style={{
+              position: 'fixed',
+              bottom: 80,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(0,0,0,0.7)',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: '4px',
+              zIndex: 1000,
+              maxWidth: '80%',
+              textAlign: 'center',
+            }}
+          >
+            {toastMessage}
+          </div>
+        )}
+      </div>
+    </PullToRefresh>
   );
 }

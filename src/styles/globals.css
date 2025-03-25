@@ -250,7 +250,7 @@ a {
   position: relative !important;
   width: 100% !important;
   height: calc(100vh - 180px) !important;
-  overflow: visible !important;
+  overflow: auto !important; 
   contain: layout style !important;
   transform: translateZ(0) !important;
   -webkit-transform: translateZ(0) !important;
@@ -367,4 +367,62 @@ a {
     height: 100vh;
     max-height: -webkit-fill-available;
   }
+}
+
+/* PullToRefresh 라이브러리 스타일 커스터마이징 */
+.pull-to-refresh-container {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch !important;
+  transform: translateZ(0) !important;
+  will-change: transform !important;
+}
+
+/* PullToRefresh 내부 컨텐츠 스타일 */
+.pull-to-refresh-container > div:first-child {
+  position: relative !important;
+  z-index: 100 !important;
+  overflow: visible !important;
+}
+
+/* 풀 인디케이터 스타일 */
+.ptr__pull-down {
+  height: 50px !important;
+  transform: translateZ(0) !important;
+  will-change: transform !important;
+}
+
+.ptr__children {
+  background-color: #fff !important;
+  min-height: 100%;
+  transform: translateZ(0) !important;
+}
+
+.ptr__pull-down--pull-more,
+.ptr__pull-down--pull-more::after {
+  color: var(--primary-color) !important;
+}
+
+/* 모바일 터치 최적화 */
+@supports (-webkit-touch-callout: none) {
+  .pull-to-refresh-container,
+  .virtual-news-list-container {
+    height: -webkit-fill-available !important;
+  }
+  
+  .ptr__pull-down {
+    transform: translate3d(0, 0, 0) !important;
+  }
+}
+
+/* 스크롤바 숨기기 */
+.virtual-news-list-container::-webkit-scrollbar {
+  display: none;
+}
+
+.virtual-news-list-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
