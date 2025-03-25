@@ -107,10 +107,10 @@ const ActionButton = styled.button`
 const CardContent = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  height: 110px;
+  gap: 3px;
+  height: 90px;
   overflow: hidden;
-  margin-bottom: 20px; /* Footer 공간 확보 - 줄임 */
+  margin-bottom: 5px; /* Footer 공간 확보 - 줄임 */
 `;
 
 const SelectButton = styled.button<{ isSelected?: boolean }>`
