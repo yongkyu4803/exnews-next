@@ -62,7 +62,7 @@ const CardContainer = styled.div`
   padding: 6px 10px;
   width: 100%;
   box-sizing: border-box;
-  height: 220px !important; /* 명시적 고정 높이 */
+  height: 150px !important; /* 명시적 고정 높이 */
   position: relative;
   contain: content;
   overflow: visible;
