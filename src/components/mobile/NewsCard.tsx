@@ -108,7 +108,7 @@ const CardContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  height: 140px;
+  height: 110px;
   overflow: hidden;
   margin-bottom: 20px; /* Footer 공간 확보 - 줄임 */
 `;
@@ -315,10 +315,6 @@ const NewsCard: React.FC<NewsCardProps> = ({
       isMounted={isMounted}
       className={isSelected ? 'selected-news-card' : ''}
     >
-      <SelectButton onClick={handleSelectClick} isSelected={isSelected}>
-        {isSelected ? '✓' : '+'}
-      </SelectButton>
-      
       <CardHeader>
         <Title>{title}</Title>
       </CardHeader>
@@ -333,11 +329,9 @@ const NewsCard: React.FC<NewsCardProps> = ({
           <IconButton onClick={handleClickShare} aria-label="공유">
             <ShareIcon />
           </IconButton>
-          {/* 저장 기능은 주석 처리함 
-          <IconButton onClick={handleClickSave} aria-label={isSaved ? '저장 취소' : '저장'}>
-            {isSaved ? <SavedIcon /> : <SaveIcon />}
-          </IconButton>
-          */}
+          <SelectButton onClick={handleSelectClick} isSelected={isSelected}>
+            {isSelected ? '✓' : '+'}
+          </SelectButton>
         </ActionButtons>
       </CardFooter>
     </TouchCard>
