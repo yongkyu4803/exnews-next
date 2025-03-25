@@ -4,7 +4,6 @@ import NewsCard from './NewsCard';
 import styled from '@emotion/styled';
 import { trackEvent } from '@/utils/analyticsUtils';
 import { copySelectedNewsToClipboard } from '@/utils/clipboardUtils';
-import PullToRefresh from 'react-simple-pull-to-refresh';
 
 // 클라이언트 사이드에서만 로드되는 컴포넌트
 const ReactWindowComponents = dynamic(() => import('./ReactWindowComponents'), {
@@ -175,87 +174,205 @@ export default function VirtualNewsList({
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const mountedRef = useRef(false);
+  const refreshIndicatorRef = useRef<HTMLDivElement | null>(null);
   
-  // 디버깅을 위한 로그
-  useEffect(() => {
-    console.log('VirtualNewsList 마운트됨', { itemCount: items.length });
-    mountedRef.current = true;
-    
-    return () => {
-      mountedRef.current = false;
-    };
-  }, [items.length]);
-  
-  // 컴포넌트 마운트 시 초기화
+  // 최초 마운트 시 초기화
   useEffect(() => {
     setIsMounted(true);
     
     // 스크롤 위치 초기화
     if (typeof window !== 'undefined') {
-      const timer = setTimeout(() => {
-        window.scrollTo(0, 0);
-        setInitialRender(false);
-      }, 100);
+      window.scrollTo(0, 0);
+      setInitialRender(false);
       
-      return () => clearTimeout(timer);
+      // 페이지 로드 후 인디케이터 생성
+      createRefreshIndicator();
+      
+      return () => {
+        // 컴포넌트 언마운트 시 인디케이터 제거
+        if (refreshIndicatorRef.current && refreshIndicatorRef.current.parentNode) {
+          refreshIndicatorRef.current.parentNode.removeChild(refreshIndicatorRef.current);
+        }
+      };
     }
   }, []);
-
-  // 새로고침 핸들러 - 래핑하여 데이터 반환 보장
-  const handleRefresh = useCallback(async () => {
-    console.log('새로고침 시작:', new Date().toISOString());
-    
-    // 이미 새로고침 중이면 진행 중인 새로고침 반환
-    if (isRefreshing) {
-      console.log('이미 새로고침 중입니다');
-      return Promise.resolve(true);
+  
+  // 새로고침 인디케이터 생성
+  const createRefreshIndicator = useCallback(() => {
+    // 이미 생성된 경우 제거
+    if (refreshIndicatorRef.current && refreshIndicatorRef.current.parentNode) {
+      refreshIndicatorRef.current.parentNode.removeChild(refreshIndicatorRef.current);
     }
+    
+    // 새로고침 인디케이터 엘리먼트 생성
+    const indicator = document.createElement('div');
+    indicator.textContent = '당겨서 새로고침';
+    indicator.className = 'refresh-indicator';
+    indicator.style.position = 'absolute';
+    indicator.style.top = '0';
+    indicator.style.left = '0';
+    indicator.style.width = '100%';
+    indicator.style.height = '50px';
+    indicator.style.backgroundColor = '#f9f9f9';
+    indicator.style.color = '#333';
+    indicator.style.display = 'flex';
+    indicator.style.alignItems = 'center';
+    indicator.style.justifyContent = 'center';
+    indicator.style.fontWeight = '500';
+    indicator.style.zIndex = '1000';
+    indicator.style.transform = 'translateY(-100%)';
+    indicator.style.transition = 'transform 0.3s ease';
+    indicator.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+    
+    document.body.insertBefore(indicator, document.body.firstChild);
+    refreshIndicatorRef.current = indicator;
+    
+    // 터치 이벤트 설정
+    setupTouchEvents();
+  }, []);
+  
+  // 터치 이벤트 설정
+  const setupTouchEvents = useCallback(() => {
+    let startY = 0;
+    let isActive = false;
+    const minPullDistance = 80;
+    
+    // 터치 시작
+    const handleTouchStart = (e: TouchEvent) => {
+      if (isRefreshing) return;
+      
+      // 스크롤이 최상단에 있을 때만 작동
+      if (window.scrollY <= 0) {
+        startY = e.touches[0].clientY;
+        isActive = true;
+      }
+    };
+    
+    // 터치 이동
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isActive || isRefreshing) return;
+      
+      const y = e.touches[0].clientY;
+      const pullDistance = y - startY;
+      
+      // 아래로 당겼을 때만 처리
+      if (pullDistance > 0) {
+        // 스크롤 방지
+        e.preventDefault();
+        
+        // 인디케이터가 존재하는지 확인
+        if (refreshIndicatorRef.current) {
+          // 당김 거리에 비례하여 인디케이터 표시 (저항 적용)
+          const resistance = 0.4;
+          const translateY = Math.min(pullDistance * resistance, 80);
+          
+          refreshIndicatorRef.current.style.transform = `translateY(${translateY}px)`;
+          
+          // 충분히 당겼는지 표시
+          if (pullDistance > minPullDistance) {
+            refreshIndicatorRef.current.textContent = '놓아서 새로고침';
+            refreshIndicatorRef.current.style.color = '#1a73e8';
+          } else {
+            refreshIndicatorRef.current.textContent = '당겨서 새로고침';
+            refreshIndicatorRef.current.style.color = '#333';
+          }
+        }
+      }
+    };
+    
+    // 터치 종료
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!isActive || isRefreshing) return;
+      
+      isActive = false;
+      
+      // 인디케이터가 존재하는지 확인
+      if (!refreshIndicatorRef.current) return;
+      
+      const y = e.changedTouches[0].clientY;
+      const pullDistance = y - startY;
+      
+      // 충분히 당겼는지 확인
+      if (pullDistance > minPullDistance) {
+        // 새로고침 실행
+        performRefresh();
+      } else {
+        // 인디케이터 원위치
+        refreshIndicatorRef.current.style.transform = 'translateY(-100%)';
+      }
+    };
+    
+    // 이벤트 리스너 등록
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd, { passive: false });
+    
+    // 정리 함수 반환 (컴포넌트가 언마운트될 때 호출됨)
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isRefreshing]);
+  
+  // 실제 새로고침 수행
+  const performRefresh = useCallback(async () => {
+    // 이미 새로고침 중인 경우 무시
+    if (isRefreshing) return;
     
     try {
+      // 새로고침 상태 설정
       setIsRefreshing(true);
       
-      // 분석 이벤트 발생 (선택 사항)
-      if (typeof trackEvent === 'function') {
-        trackEvent('refresh_news', { source: 'pull-to-refresh' });
+      // 인디케이터가 존재하는지 확인
+      if (refreshIndicatorRef.current) {
+        // 새로고침 중임을 표시
+        refreshIndicatorRef.current.textContent = '새로고침 중...';
+        refreshIndicatorRef.current.style.transform = 'translateY(0)';
       }
       
-      // 개발자 도구에 로그 추가
-      console.log('원본 onRefresh 함수 호출 전', { 
-        mountedRef: mountedRef.current,
-        isFunction: typeof onRefresh === 'function'
-      });
+      console.log('새로고침 시작');
       
-      // 상위 컴포넌트의 onRefresh 호출
-      await onRefresh();
-      
-      console.log('새로고침 데이터 로드 완료');
-      
-      // 컴포넌트가 언마운트되지 않았는지 확인
-      if (mountedRef.current) {
-        setIsRefreshing(false);
-      }
-      
-      // 명시적으로 성공 상태 반환
-      return Promise.resolve(true);
-    } catch (error) {
-      console.error('새로고침 오류:', error);
-      
-      // 컴포넌트가 언마운트되지 않았는지 확인
-      if (mountedRef.current) {
-        setIsRefreshing(false);
+      // 실제 데이터 새로고침 수행
+      try {
+        // Promise.resolve()로 감싸서 예외 처리를 더 잘 할 수 있도록 함
+        await Promise.resolve(onRefresh());
         
-        // 오류 발생 시 토스트 메시지 표시 (선택 사항)
-        setToastMessage('새로고침 중 오류가 발생했습니다');
-        setShowToast(true);
-        setTimeout(() => setShowToast(false), 3000);
+        // 성공 메시지 표시
+        if (refreshIndicatorRef.current) {
+          refreshIndicatorRef.current.textContent = '새로고침 완료!';
+        }
+        
+        console.log('새로고침 성공');
+      } catch (error) {
+        // 오류 메시지 표시
+        if (refreshIndicatorRef.current) {
+          refreshIndicatorRef.current.textContent = '새로고침 실패';
+        }
+        
+        console.error('새로고침 오류:', error);
       }
       
-      // 오류 발생 시에도 Promise 해결 (라이브러리가 거부된 Promise에 대응하지 못할 수 있음)
-      return Promise.resolve(false);
+      // 잠시 후 인디케이터 숨기기
+      setTimeout(() => {
+        if (refreshIndicatorRef.current) {
+          refreshIndicatorRef.current.style.transform = 'translateY(-100%)';
+        }
+        
+        // 상태 초기화
+        setTimeout(() => {
+          setIsRefreshing(false);
+        }, 300);
+      }, 800);
+    } catch (e) {
+      console.error('전체 새로고침 오류:', e);
+      setIsRefreshing(false);
+      if (refreshIndicatorRef.current) {
+        refreshIndicatorRef.current.style.transform = 'translateY(-100%)';
+      }
     }
-  }, [onRefresh, isRefreshing]);
-
+  }, [isRefreshing, onRefresh]);
+  
   // 아이템 선택 처리
   const handleSelectItem = useCallback((id: string | number, isSelected: boolean) => {
     if (!onSelectChange) return;
@@ -306,13 +423,6 @@ export default function VirtualNewsList({
       window.scrollTo({ top: 0, behavior: 'auto' });
     }
   }, [initialRender]);
-
-  // 새로고침 인디케이터 커스텀 UI
-  const renderRefreshIndicator = useCallback(() => (
-    <PullIndicator>
-      새로고침 중...
-    </PullIndicator>
-  ), []);
   
   // 서버 사이드 렌더링 시 로딩 UI 표시
   if (!isMounted) {
@@ -330,70 +440,58 @@ export default function VirtualNewsList({
   }
 
   return (
-    <PullToRefresh 
-      onRefresh={handleRefresh}
-      pullingContent={<PullIndicator>당겨서 새로고침</PullIndicator>}
-      refreshingContent={renderRefreshIndicator()}
-      pullDownThreshold={60}
-      maxPullDownDistance={95}
-      resistance={2.5}
-      backgroundColor="#ffffff"
-      isPullable={!isLoading && !isRefreshing} // 로딩 중에는 당길 수 없도록 설정
-      className="pull-to-refresh-container"
+    <div 
+      ref={divRef} 
+      className="virtual-news-list-container"
+      style={{ 
+        margin: 0, 
+        padding: 0, 
+        position: 'relative',
+        height: 'calc(100vh - 180px)',
+        overflow: 'visible',
+        backgroundColor: '#ffffff'
+      }}
     >
-      <div 
-        ref={divRef} 
-        className="virtual-news-list-container"
-        style={{ 
-          margin: 0, 
-          padding: 0, 
-          position: 'relative',
-          height: 'calc(100vh - 180px)',
-          overflow: 'visible',
-          backgroundColor: '#ffffff'
-        }}
+      <ReactWindowComponents
+        items={items}
+        hasMore={hasMore}
+        isLoading={isLoading || isRefreshing}
+        onLoadMore={onLoadMore}
+        onRefresh={onRefresh}
+        selectedItems={selectedKeys.map(key => key.toString())}
+        onSelectItem={handleSelectItem}
+        onScrollDirectionChange={handleScrollDirectionChange}
+      />
+      
+      {/* 선택된 항목 복사 버튼 */}
+      <CopyButton 
+        visible={selectedKeys.length > 0}
+        onClick={handleCopySelected}
+        aria-label="선택한 뉴스 복사"
       >
-        <ReactWindowComponents
-          items={items}
-          hasMore={hasMore}
-          isLoading={isLoading || isRefreshing}
-          onLoadMore={onLoadMore}
-          onRefresh={handleRefresh}
-          selectedItems={selectedKeys.map(key => key.toString())}
-          onSelectItem={handleSelectItem}
-          onScrollDirectionChange={handleScrollDirectionChange}
-        />
-        
-        {/* 선택된 항목 복사 버튼 */}
-        <CopyButton 
-          visible={selectedKeys.length > 0}
-          onClick={handleCopySelected}
-          aria-label="선택한 뉴스 복사"
+        <CopyIcon />
+      </CopyButton>
+      
+      {/* 토스트 메시지 */}
+      {showToast && (
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: 80,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(0,0,0,0.7)',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            zIndex: 1000,
+            maxWidth: '80%',
+            textAlign: 'center',
+          }}
         >
-          <CopyIcon />
-        </CopyButton>
-        
-        {/* 토스트 메시지 */}
-        {showToast && (
-          <div 
-            style={{
-              position: 'fixed',
-              bottom: 80,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'rgba(0,0,0,0.7)',
-              color: 'white',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              zIndex: 1000,
-              maxWidth: '80%',
-              textAlign: 'center',
-            }}
-          >
-            {toastMessage}
-          </div>
-        )}
-      </div>
-    </PullToRefresh>
+          {toastMessage}
+        </div>
+      )}
+    </div>
   );
 }

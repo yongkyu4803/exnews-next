@@ -19,9 +19,11 @@ body {
   height: 100%;
   width: 100%;
   overflow: auto;
-  overscroll-behavior: none;
+  overscroll-behavior: none; /* 오버스크롤 방지 */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative; /* 새로고침 인디케이터를 위한 기준점 */
+  background-color: #ffffff;
 }
 
 /* Mobile 스크롤 최적화 */
@@ -31,7 +33,7 @@ html, body, #__next, main {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   user-select: none;
-  position: relative; /* 모든 포지셔닝 컨텍스트 제공 */
+  position: relative;
 }
 
 body {
@@ -41,6 +43,7 @@ body {
 /* 딥 레이어 숨김 방지 */
 #__next, main, .virtual-news-list-container {
   isolation: isolate; /* 새로운 쌓임 맥락 생성 */
+  z-index: 1; /* 쌓임 맥락 설정 */
 }
 
 a {
@@ -256,6 +259,7 @@ a {
   -webkit-transform: translateZ(0) !important;
   will-change: transform !important;
   -webkit-overflow-scrolling: touch !important;
+  background-color: #ffffff;
 }
 
 /* 모바일 가상 스크롤 레이아웃 */
@@ -303,9 +307,26 @@ a {
 
 /* 풀투리프레시 관련 스타일 */
 .refresh-indicator {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 50px !important;
+  background-color: #f9f9f9 !important;
+  color: #333 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 500 !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
   transform: translateY(-100%) !important;
-  opacity: 0 !important;
-  visibility: hidden;
+  transition: transform 0.3s ease !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+  font-size: 14px !important;
 }
 
 .refresh-indicator.visible {
@@ -439,4 +460,36 @@ a {
 .virtual-news-list-container {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* 네이티브 새로고침 관련 스타일 */
+body::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  background: transparent;
+  z-index: 0;
+}
+
+/* 새로고침 인디케이터는 자바스크립트에서 동적 생성 */
+/* 스크롤 방지 스타일 */
+body.no-scroll {
+  overflow: hidden !important;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+/* iOS Safari에서 당김 최적화 */
+@supports (-webkit-touch-callout: none) {
+  html, body {
+    height: -webkit-fill-available;
+  }
+  
+  .virtual-news-list-container {
+    height: -webkit-fill-available !important;
+  }
 }
