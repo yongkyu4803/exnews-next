@@ -117,89 +117,57 @@ export default function VirtualNewsList({
 }: VirtualNewsListProps) {
   const [isMounted, setIsMounted] = useState(false);
   const divRef = useRef<HTMLDivElement>(null);
+  const [initialRender, setInitialRender] = useState(true);
 
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
     setIsMounted(true);
-    // 스크롤 위치 초기화
+    
+    // 스크롤 위치 초기화 - 안정적인 시점에 실행
     if (typeof window !== 'undefined') {
-      window.scrollTo(0, 0);
-    }
-    
-    // 스크롤 처리 관련 기본 스타일 추가
-    const addStyles = () => {
-      const style = document.createElement('style');
-      style.textContent = `
-        .ptr-element {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          color: #aaa;
-          z-index: 10;
-          text-align: center;
-          height: 50px;
-          transition: all .25s ease;
-        }
-        .ptr-element .ptr-content {
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
-        }
-        .ptr-element svg {
-          transform-origin: center center;
-          transition: all .25s ease;
-        }
-      `;
-      document.head.appendChild(style);
+      // iOS Safari에서 스크롤 위치 리셋을 위한 딜레이 추가
+      const timer = setTimeout(() => {
+        window.scrollTo(0, 0);
+        setInitialRender(false);
+      }, 100);
       
-      return () => {
-        document.head.removeChild(style);
-      };
-    };
-    
-    const cleanup = addStyles();
-    return () => {
-      cleanup();
-    };
+      return () => clearTimeout(timer);
+    }
   }, []);
-
-  // 스크롤 방향 변경 핸들러
+  
+  // 스크롤 방향 변경 핸들러 - 간소화 및 최적화
   const handleScrollDirectionChange = useCallback((direction: 'up' | 'down') => {
-    // 스크롤 방향이 변경될 때마다 체크
-    if (direction === 'up') {
-      // 현재 스크롤 위치가 상단 근처인지 확인
-      if (window.scrollY < 50) {
-        // 스크롤 위치 리셋
+    if (initialRender) return; // 초기 렌더링 시 스크롤 이벤트 무시
+    
+    if (direction === 'up' && window.scrollY < 10) {
+      requestAnimationFrame(() => {
         window.scrollTo({
           top: 0,
           behavior: 'auto'
         });
-      }
+      });
     }
-  }, []);
+  }, [initialRender]);
 
   // 아이템 선택 처리
-  const handleSelectItem = (id: string | number) => {
+  const handleSelectItem = useCallback((id: string | number) => {
     if (!onSelectChange) return;
     
-    let newSelectedKeys: React.Key[];
     const itemKey = id.toString();
+    let newSelectedKeys: React.Key[];
     
     if (selectedKeys.includes(itemKey)) {
-      // 이미 선택된 항목이면 제거
       newSelectedKeys = selectedKeys.filter(key => key !== itemKey);
     } else {
-      // 선택되지 않은 항목이면 추가
       newSelectedKeys = [...selectedKeys, itemKey];
     }
     
-    // 선택된 행 데이터 찾기
-    const selectedRows = items.filter(item => newSelectedKeys.includes(item.id.toString()));
+    const selectedRows = items.filter(item => 
+      newSelectedKeys.includes(item.id?.toString() || '')
+    );
     
-    // 부모 컴포넌트에 선택 변경 알림
     onSelectChange(newSelectedKeys, selectedRows);
-  };
+  }, [items, selectedKeys, onSelectChange]);
 
   // 서버 사이드 렌더링 시 로딩 UI 표시
   if (!isMounted) {
@@ -219,8 +187,14 @@ export default function VirtualNewsList({
   return (
     <div 
       ref={divRef} 
-      className="virtual-news-list" 
-      style={{ margin: 0, padding: 0 }}
+      className="virtual-news-list-container"
+      style={{ 
+        margin: 0, 
+        padding: 0, 
+        position: 'relative',
+        height: 'calc(100vh - 180px)',
+        overflow: 'hidden'
+      }}
     >
       <ReactWindowComponents
         items={items}

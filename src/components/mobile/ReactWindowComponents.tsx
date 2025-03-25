@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { VariableSizeList as List } from 'react-window';
+import { FixedSizeList as List } from 'react-window';
 import InfiniteLoader from 'react-window-infinite-loader';
 import PullToRefresh from 'react-pull-to-refresh';
 import NewsCard from './NewsCard';
@@ -66,6 +66,17 @@ const WindowContainer = styled.div`
   }
 `;
 
+// 카드 컨테이너 스타일
+const CardContainer = styled.div`
+  padding: 6px 10px;
+  width: 100%;
+  box-sizing: border-box;
+  height: 220px !important; /* 명시적 고정 높이 */
+  position: relative;
+  contain: content;
+  overflow: visible;
+`;
+
 interface ReactWindowComponentsProps {
   items: any[];
   hasMore: boolean;
@@ -93,6 +104,10 @@ export default function ReactWindowComponents({
   const [refreshing, setRefreshing] = useState(false);
   const lastScrollTop = useRef(0);
   const preventScrollReset = useRef(false);
+  
+  // 아이템 고정 높이 설정
+  const ITEM_HEIGHT = 220;
+  const LOADING_ITEM_HEIGHT = 100;
   
   // 메모이제이션된 리사이즈 핸들러
   const handleResize = useCallback(() => {
@@ -125,23 +140,25 @@ export default function ReactWindowComponents({
     }
   }, [handleResize, refreshing]);
 
+  // 초기 렌더링 시 height 강제 재계산
+  useEffect(() => {
+    setTimeout(handleResize, 100);
+  }, [handleResize]);
+
   // 아이템이 변경될 때만 리스트 캐시 리셋
   useEffect(() => {
-    if (listRef.current) {
-      listRef.current.resetAfterIndex(0);
-    }
+    setTimeout(() => {
+      if (listRef.current) {
+        // FixedSizeList에는 resetAfterIndex 대신 scrollTo 사용
+        listRef.current.scrollTo(0);
+      }
+    }, 10);
   }, [items.length]);
   
   const itemCount = hasMore ? items.length + 1 : items.length;
   const loadMoreItems = isLoading ? () => {} : onLoadMore;
   const isItemLoaded = (index: number) => !hasMore || index < items.length;
   
-  // 아이템 높이 계산 함수 - 정확한 고정 값 사용
-  const getItemHeight = (index: number) => {
-    if (!isItemLoaded(index)) return 100; // 로딩 인디케이터 높이
-    return 220; // 모든 카드 동일 높이
-  };
-
   // 스크롤 이벤트 핸들러 - 간소화하여 스크롤 방향만 감지
   const handleScroll = useCallback(({ scrollOffset }: { scrollOffset: number, scrollDirection: string, scrollUpdateWasRequested: boolean }) => {
     const currentScrollTop = scrollOffset;
@@ -160,11 +177,11 @@ export default function ReactWindowComponents({
       
       // 상단 근처에서 스크롤 위치 보정
       if (currentScrollTop < 10 && !preventScrollReset.current) {
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           if (listRef.current) {
-            listRef.current.scrollToItem(0, 'start');
+            listRef.current.scrollTo(0);
           }
-        }, 0);
+        });
       }
     }
     
@@ -172,11 +189,23 @@ export default function ReactWindowComponents({
     lastScrollTop.current = currentScrollTop;
   }, [onScrollDirectionChange]);
 
-  // Row 컴포넌트 - 최적화하여 필요한 기능만 유지
+  // Row 컴포넌트 - 높이 일관성 보장
   const Row = ({ index, style }: { index: number, style: React.CSSProperties }) => {
+    const rowStyle: React.CSSProperties = {
+      ...style,
+      height: isItemLoaded(index) ? ITEM_HEIGHT : LOADING_ITEM_HEIGHT,
+      padding: 0,
+      margin: 0,
+      position: 'absolute',
+      top: style.top as number,
+      left: 0,
+      width: '100%',
+      contain: 'layout',
+    };
+    
     if (!isItemLoaded(index)) {
       return (
-        <div style={{...style, height: 100}}>
+        <div style={rowStyle}>
           <LoadingIndicator>더 불러오는 중...</LoadingIndicator>
         </div>
       );
@@ -186,13 +215,7 @@ export default function ReactWindowComponents({
     const isSelected = selectedItems.includes(item.id);
     
     return (
-      <div 
-        style={{
-          ...style, 
-          padding: '6px 10px',
-          width: '100%',
-        }}
-      >
+      <CardContainer style={rowStyle}>
         <NewsCard
           title={item.title}
           description={item.description || ''}
@@ -208,7 +231,7 @@ export default function ReactWindowComponents({
             }
           }}
         />
-      </div>
+      </CardContainer>
     );
   };
   
@@ -222,8 +245,7 @@ export default function ReactWindowComponents({
       
       setTimeout(() => {
         if (listRef.current) {
-          listRef.current.scrollToItem(0, 'start');
-          listRef.current.resetAfterIndex(0);
+          listRef.current.scrollTo(0);
         }
         setRefreshing(false);
         preventScrollReset.current = false;
@@ -261,17 +283,19 @@ export default function ReactWindowComponents({
                 }}
                 height={listHeight}
                 itemCount={itemCount}
-                itemSize={getItemHeight}
+                itemSize={ITEM_HEIGHT}
                 onItemsRendered={onItemsRendered}
                 onScroll={handleScroll}
                 width="100%"
-                overscanCount={5}
+                overscanCount={3}
                 style={{ 
                   WebkitOverflowScrolling: 'touch',
                   width: '100%',
                   height: '100%',
                   outline: 'none',
                   overscrollBehavior: 'none',
+                  willChange: 'transform',
+                  contain: 'size layout',
                 }}
                 useIsScrolling={false}
                 className="ReactVirtualizedList"
