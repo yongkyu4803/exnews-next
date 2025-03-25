@@ -268,7 +268,6 @@ const NewsCard: React.FC<NewsCardProps> = ({
   };
 
   const handleClickSave = (e: React.MouseEvent) => {
-    /*
     e.stopPropagation();
     if (isSaved) {
       removeSavedNews(id);
@@ -283,20 +282,21 @@ const NewsCard: React.FC<NewsCardProps> = ({
       });
     }
     trackEvent(isSaved ? 'unsave_news' : 'save_news', { id, title });
-    */
   };
 
   const handleClick = () => {
-    if (onClick) {
+    // onClick이 함수인 경우에만 실행
+    if (typeof onClick === 'function') {
       onClick();
     }
     
     // 링크가 있는 경우에만 실행
     if (original_link && original_link !== '#') {
-      // 현재 창에서 열기
-      window.open(original_link, '_blank');
+      // 새 창에서 열기 (보안 속성 추가)
+      window.open(original_link, '_blank', 'noopener,noreferrer');
     }
     
+    // 이벤트 트래킹
     if (id) {
       trackEvent('click_news', { id, title: title || '제목 없음' });
     }
@@ -304,7 +304,8 @@ const NewsCard: React.FC<NewsCardProps> = ({
 
   const handleSelectClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onSelect) {
+    // onSelect가 함수인 경우에만 실행
+    if (typeof onSelect === 'function') {
       onSelect(id, !isSelected);
       if (id) {
         trackEvent('select_news', { id, title: title || '제목 없음' });

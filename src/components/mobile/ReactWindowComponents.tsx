@@ -61,7 +61,7 @@ export default function ReactWindowComponents({
   onScrollDirectionChange
 }: ReactWindowComponentsProps) {
   const listRef = useRef<any>(null);
-  const [windowHeight, setWindowHeight] = useState(window.innerHeight - 180);
+  const [windowHeight, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight - 180 : 600);
   const [lastScrollOffset, setLastScrollOffset] = useState(0);
   const itemCount = hasMore ? items.length + 1 : items.length;
   const [isFirstRender, setIsFirstRender] = useState(true);
@@ -131,12 +131,20 @@ export default function ReactWindowComponents({
     const currentItems = itemsRef.current.length > 0 ? itemsRef.current : items;
     
     // 아이템이 없는 경우 로딩 표시
-    if (currentItems.length === 0 && isLoading) {
-      return (
-        <div style={{ ...style, height: LOADING_ITEM_HEIGHT }}>
-          <LoadingIndicator>데이터를 불러오는 중...</LoadingIndicator>
-        </div>
-      );
+    if (!currentItems || currentItems.length === 0) {
+      if (isLoading) {
+        return (
+          <div style={{ ...style, height: LOADING_ITEM_HEIGHT }}>
+            <LoadingIndicator>데이터를 불러오는 중...</LoadingIndicator>
+          </div>
+        );
+      } else {
+        return (
+          <div style={{ ...style, height: LOADING_ITEM_HEIGHT }}>
+            <LoadingIndicator>데이터가 없습니다</LoadingIndicator>
+          </div>
+        );
+      }
     }
     
     // 마지막 아이템이면서 hasMore이면 로딩 인디케이터 표시

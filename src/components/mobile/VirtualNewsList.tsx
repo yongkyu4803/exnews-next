@@ -413,7 +413,7 @@ export default function VirtualNewsList({
       console.log('초기 데이터 있음, localItems 설정:', items.length);
       setLocalItems(items);
     }
-  }, []);
+  }, [items, onRefresh, performRefresh]);
 
   // 아이템 선택 처리
   const handleSelectItem = useCallback((id: string | number, isSelected: boolean) => {
@@ -515,7 +515,7 @@ export default function VirtualNewsList({
         </div>
       )}
       
-      {isLoading && localItems.length === 0 && !isRefreshing ? (
+      {isLoading && items.length === 0 && localItems.length === 0 ? (
         <ListLoadingState />
       ) : (
         <ReactWindowComponents
