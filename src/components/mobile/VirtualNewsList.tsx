@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import NewsCard from './NewsCard';
 import styled from '@emotion/styled';
@@ -116,9 +116,30 @@ export default function VirtualNewsList({
   onSelectChange
 }: VirtualNewsListProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const windowRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsMounted(true);
+    // 스크롤 위치가 0이 아닌 경우 초기화
+    if (typeof window !== 'undefined' && window.scrollY !== 0) {
+      window.scrollTo(0, 0);
+    }
+  }, []);
+
+  // 스크롤 방향 전환 시 상태 유지를 위한 핸들러
+  const handleScrollDirectionChange = useCallback((direction: 'up' | 'down') => {
+    // 상단으로 스크롤 시 특별 처리
+    if (direction === 'up' && windowRef.current) {
+      const currentScroll = windowRef.current.scrollTop;
+      
+      // 맨 위에 가까울 때 강제로 첫 번째 아이템으로 스크롤
+      if (currentScroll < 10) {
+        windowRef.current.scrollTo({
+          top: 0,
+          behavior: 'auto'
+        });
+      }
+    }
   }, []);
 
   // 아이템 선택 처리
@@ -159,7 +180,7 @@ export default function VirtualNewsList({
   }
 
   return (
-    <ListContainer>
+    <div className="virtual-news-list" style={{ marginTop: 0, padding: 0 }}>
       <ReactWindowComponents
         items={items}
         hasMore={hasMore}
@@ -168,7 +189,8 @@ export default function VirtualNewsList({
         onRefresh={onRefresh}
         selectedItems={selectedKeys.map(key => key.toString())}
         onSelectItem={handleSelectItem}
+        onScrollDirectionChange={handleScrollDirectionChange}
       />
-    </ListContainer>
+    </div>
   );
 }

@@ -49,7 +49,7 @@ const PullIndicator = styled.div`
   font-size: 14px;
 `;
 
-// PullToRefresh 래퍼 스타일 - 추가
+// PullToRefresh 래퍼 스타일 수정
 const PullToRefreshWrapper = styled.div`
   position: relative;
   z-index: 1;
@@ -67,6 +67,17 @@ const PullToRefreshWrapper = styled.div`
     top: -50px;
     height: 50px;
   }
+  
+  /* 스크롤 빈 공간 방지를 위한 추가 스타일 */
+  .ptr__pull-down--transition {
+    transition: all 0.3s;
+  }
+  
+  /* react-window 스크롤 컨테이너 오버라이드 */
+  .ReactVirtualized__List {
+    overflow-anchor: auto !important;
+    contain: none !important;
+  }
 `;
 
 interface ReactWindowComponentsProps {
@@ -77,6 +88,7 @@ interface ReactWindowComponentsProps {
   onRefresh: () => Promise<any>;
   selectedItems?: string[];
   onSelectItem?: (id: string | number) => void;
+  onScrollDirectionChange?: (direction: 'up' | 'down') => void;
 }
 
 export default function ReactWindowComponents({ 
@@ -86,16 +98,21 @@ export default function ReactWindowComponents({
   onLoadMore,
   onRefresh,
   selectedItems = [],
-  onSelectItem
+  onSelectItem,
+  onScrollDirectionChange
 }: ReactWindowComponentsProps) {
   const [listHeight, setListHeight] = useState(600); 
   const listRef = React.useRef<any>(null);
   const lastItemsLength = useRef(items.length);
   const containerRef = useRef<HTMLDivElement>(null);
+  const ptrRef = useRef<any>(null);
   
   // 스크롤 최적화를 위한 상태
   const [scrolling, setScrolling] = useState(false);
   const scrollTimeout = React.useRef<number | null>(null);
+  // 스크롤 방향 추적
+  const [scrollDirection, setScrollDirection] = useState<'up' | 'down'>('down');
+  const lastScrollTop = useRef(0);
   
   // 메모이제이션된 리사이즈 핸들러
   const handleResize = useCallback(() => {
@@ -160,34 +177,42 @@ export default function ReactWindowComponents({
   const loadMoreItems = isLoading ? () => {} : onLoadMore;
   const isItemLoaded = (index: number) => !hasMore || index < items.length;
   
-  // 아이템 높이 계산 함수
+  // 아이템 높이 계산 함수 - 고정 값 사용으로 안정성 향상
   const getItemHeight = (index: number) => {
     if (!isItemLoaded(index)) return 100; // 로딩 인디케이터 높이
     
-    // 설명이 길거나 제목이 길면 높이 증가
-    const item = items[index];
-    const titleLength = item.title?.length || 0;
-    const descLength = item.description?.length || 0;
-    
-    // 기본 높이
-    let height = 160; // 기본 높이 축소
-    
-    // 제목과 설명 길이에 따라 높이 조정
-    if (titleLength > 50) height += 20;
-    if (descLength > 100) height += 30;
-    if (descLength > 200) height += 30;
-
-    // 버튼 영역과 여백을 위한 추가 공간
-    height += 20;
-    
-    // 안전 마진 추가 (겹침 방지)
-    height += 12;
-    
-    return height;
+    // 모든 카드를 같은 크기로 처리해 렌더링 안정성 확보
+    return 220;
   };
 
   // 스크롤 이벤트 핸들러
-  const handleScroll = useCallback(({ scrollOffset, scrollDirection }: { scrollOffset: number, scrollDirection: string }) => {
+  const handleScroll = useCallback(({ scrollOffset, scrollDirection: direction, scrollUpdateWasRequested }: { scrollOffset: number, scrollDirection: string, scrollUpdateWasRequested: boolean }) => {
+    // 현재 스크롤 위치 추적
+    const currentScrollTop = scrollOffset;
+    
+    // 스크롤 방향 감지
+    if (currentScrollTop > lastScrollTop.current) {
+      if (scrollDirection !== 'down') {
+        setScrollDirection('down');
+        // 방향 변경 알림
+        if (onScrollDirectionChange) {
+          onScrollDirectionChange('down');
+        }
+      }
+    } else if (currentScrollTop < lastScrollTop.current) {
+      if (scrollDirection !== 'up') {
+        setScrollDirection('up');
+        // 방향 변경 알림
+        if (onScrollDirectionChange) {
+          onScrollDirectionChange('up');
+        }
+      }
+    }
+    
+    // 스크롤 위치 저장
+    lastScrollTop.current = currentScrollTop;
+    
+    // 스크롤 중 상태 설정
     setScrolling(true);
     
     // 기존 타임아웃 클리어
@@ -196,28 +221,38 @@ export default function ReactWindowComponents({
       scrollTimeout.current = null;
     }
     
-    // 스크롤이 멈춘 후 100ms 후에 scrolling 상태를 false로 설정
+    // 스크롤이 멈춘 후 처리
     scrollTimeout.current = window.setTimeout(() => {
       setScrolling(false);
       scrollTimeout.current = null;
       
-      // 스크롤이 멈추면 보이는 영역의 아이템들 강제 재계산
-      if (listRef.current) {
-        // 모든 아이템 강제 재계산 (특히 상단 아이템 문제 해결)
-        listRef.current.resetAfterIndex(0, false);
-        
-        // 추가로 스크롤 영역의 아이템들 특별히 처리
-        const visibleStartIndex = Math.max(0, Math.floor(scrollOffset / 100) - 3); // 더 위쪽부터 계산
-        const visibleEndIndex = Math.min(visibleStartIndex + 15, items.length - 1); // 더 많은 항목 포함
-        
-        for (let i = visibleStartIndex; i <= visibleEndIndex; i++) {
-          if (i >= 0 && i < items.length) {
-            listRef.current.resetAfterIndex(i, false);
+      // 방향 전환 후 리스트 조정
+      if (scrollDirection === 'up' && currentScrollTop <= 50) {
+        // 상단 영역에서 스크롤 방향이 위에서 아래로 바뀔 때 강제 조정
+        requestAnimationFrame(() => {
+          if (listRef.current) {
+            // 전체 리스트 강제 재계산
+            listRef.current.resetAfterIndex(0);
+            
+            // 첫 번째 아이템이 상단에 정확히 위치하도록 조정
+            if (currentScrollTop < 5) {
+              listRef.current.scrollToItem(0, 'start');
+            }
           }
-        }
+        });
       }
-    }, 50); // 시간 더 짧게 설정
-  }, [items.length]);
+    }, 50);
+    
+    // 스크롤 요청이 외부에서 온 경우(예: scrollToItem)
+    if (scrollUpdateWasRequested) {
+      // 강제로 높이 재계산 트리거
+      requestAnimationFrame(() => {
+        if (listRef.current) {
+          listRef.current.resetAfterIndex(0);
+        }
+      });
+    }
+  }, [scrollDirection, onScrollDirectionChange]);
 
   interface RowProps {
     index: number;
@@ -244,7 +279,7 @@ export default function ReactWindowComponents({
     
     if (!isItemLoaded(index)) {
       return (
-        <div style={style}>
+        <div style={{...style, height: 100}}>
           <LoadingIndicator>더 불러오는 중...</LoadingIndicator>
         </div>
       );
@@ -259,9 +294,8 @@ export default function ReactWindowComponents({
         style={{
           ...style, 
           padding: '6px 10px',
-          height: 'auto', // 높이를 자동으로 조정
         }}
-        data-index={index} // 디버깅용 인덱스 추가
+        data-index={index}
       >
         <NewsCard
           title={item.title}
@@ -290,6 +324,7 @@ export default function ReactWindowComponents({
       if (listRef.current) {
         setTimeout(() => {
           listRef.current.resetAfterIndex(0);
+          listRef.current.scrollToItem(0, 'start');
           // 높이 재계산
           handleResize();
         }, 100);
@@ -313,8 +348,8 @@ export default function ReactWindowComponents({
 
   return (
     <ListContainer ref={containerRef}>
-      <FixedLayer /> {/* 스크롤 이슈 방지를 위한 투명 레이어 */}
-      <PullToRefreshWrapper>
+      <FixedLayer />
+      <PullToRefreshWrapper ref={ptrRef}>
         <PullToRefresh
           onRefresh={handleRefresh}
           resistance={2.5}
@@ -326,7 +361,7 @@ export default function ReactWindowComponents({
             isItemLoaded={isItemLoaded}
             itemCount={itemCount}
             loadMoreItems={loadMoreItems}
-            threshold={5} // 미리 로드할 항목 수 증가
+            threshold={5}
           >
             {({ onItemsRendered, ref }) => (
               <List
@@ -350,18 +385,21 @@ export default function ReactWindowComponents({
                 }}
                 onScroll={handleScroll}
                 width="100%"
-                overscanCount={10} // 오버스캔 값 증가
+                overscanCount={10}
                 style={{ 
                   scrollbarWidth: 'none',
                   WebkitOverflowScrolling: 'touch',
-                  paddingBottom: '50px', 
+                  paddingBottom: '50px',
                   willChange: 'transform',
                   position: 'relative',
                   zIndex: 1,
                   backfaceVisibility: 'hidden',
-                  transform: 'translateZ(0)' // 하드웨어 가속
+                  transform: 'translateZ(0)',
+                  marginTop: 0, // 상단 여백 제거
+                  overscrollBehavior: 'none', // iOS에서 스크롤 바운스 효과 제어
                 }}
                 useIsScrolling={true}
+                className="ReactVirtualizedList"
               >
                 {Row}
               </List>
