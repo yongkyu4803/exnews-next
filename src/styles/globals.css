@@ -262,6 +262,19 @@ a {
   position: relative;
 }
 
+.selected-news-card::before {
+  content: "선택됨";
+  position: absolute;
+  top: 6px;
+  right: 30px;
+  font-size: 10px;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1px 6px;
+  border-radius: 10px;
+  z-index: 1;
+}
+
 .selected-news-card::after {
   content: "";
   position: absolute;
