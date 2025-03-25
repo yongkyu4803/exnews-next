@@ -106,7 +106,6 @@ const CardContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  margin-top: 5px;
   height: 134px;
   overflow: hidden;
 `;
@@ -131,18 +130,16 @@ const SelectButton = styled.button<{ isSelected?: boolean }>`
 `;
 
 const CardHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 8px;
 `;
 
-const Category = styled.span`
-  font-size: 12px;
-  background-color: #f0f0f0;
-  color: #666;
-  padding: 2px 6px;
-  border-radius: 4px;
+const CardFooter = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 8px;
 `;
 
 const Date = styled.span`
@@ -151,7 +148,7 @@ const Date = styled.span`
 `;
 
 const Title = styled.h3`
-  margin: 0 0 6px 0;
+  margin: 0 0 10px 0;
   font-size: 16px;
   font-weight: 600;
   overflow-wrap: break-word;
@@ -160,7 +157,7 @@ const Title = styled.h3`
 `;
 
 const Description = styled.p`
-  margin: 0 0 6px 0;
+  margin: 0;
   font-size: 14px;
   color: #666;
   overflow-wrap: break-word;
@@ -302,7 +299,14 @@ const NewsCard: React.FC<NewsCardProps> = ({
       </SelectButton>
       
       <CardHeader>
-        <Category>{category}</Category>
+        <Title>{title}</Title>
+      </CardHeader>
+      
+      <CardContent>
+        <Description>{description}</Description>
+      </CardContent>
+      
+      <CardFooter>
         <Date>{date}</Date>
         <ActionButtons>
           <IconButton onClick={handleClickShare} aria-label="공유">
@@ -312,12 +316,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
             {isSaved ? <SavedIcon /> : <SaveIcon />}
           </IconButton>
         </ActionButtons>
-      </CardHeader>
-      
-      <CardContent>
-        <Title>{title}</Title>
-        <Description>{description}</Description>
-      </CardContent>
+      </CardFooter>
     </TouchCard>
   );
 };

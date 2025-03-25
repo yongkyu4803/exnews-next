@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import NewsCard from './NewsCard';
 import styled from '@emotion/styled';
 import { trackEvent } from '@/utils/analyticsUtils';
+import { copySelectedNewsToClipboard } from '@/utils/clipboardUtils';
 
 // 클라이언트 사이드에서만 로드되는 컴포넌트
 const ReactWindowComponents = dynamic(() => import('./ReactWindowComponents'), {
@@ -119,6 +120,43 @@ const EmptyState = styled.div`
   }
 `;
 
+// 복사 버튼 스타일
+const CopyButton = styled.button<{ visible: boolean }>`
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: var(--primary-color);
+  color: white;
+  display: ${props => props.visible ? 'flex' : 'none'};
+  align-items: center;
+  justify-content: center;
+  border: none;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+  z-index: 100;
+  transition: all 0.3s ease;
+  
+  &:active {
+    transform: scale(0.95);
+    background-color: #1562c5;
+  }
+  
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+`;
+
+// 복사 아이콘 컴포넌트
+const CopyIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+  </svg>
+);
+
 interface VirtualNewsListProps {
   items: any[];
   hasMore: boolean;
@@ -144,6 +182,8 @@ export default function VirtualNewsList({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const touchStartY = useRef(0);
   const refreshThreshold = 80;
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
 
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
@@ -235,6 +275,28 @@ export default function VirtualNewsList({
     onSelectChange(newSelectedKeys, selectedRows);
   }, [items, selectedKeys, onSelectChange]);
 
+  // 선택된 항목 복사 처리
+  const handleCopySelected = async () => {
+    if (selectedKeys.length === 0) return;
+    
+    const selectedItems = items.filter(item => 
+      selectedKeys.includes(item.id?.toString() || '')
+    );
+    
+    const success = await copySelectedNewsToClipboard(selectedItems);
+    
+    setToastMessage(success 
+      ? `${selectedKeys.length}개 항목이 클립보드에 복사되었습니다` 
+      : '복사에 실패했습니다'
+    );
+    setShowToast(true);
+    
+    // 3초 후 토스트 메시지 숨기기
+    setTimeout(() => {
+      setShowToast(false);
+    }, 3000);
+  };
+
   // 서버 사이드 렌더링 시 로딩 UI 표시
   if (!isMounted) {
     return <ListLoadingState />;
@@ -264,9 +326,11 @@ export default function VirtualNewsList({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
     >
-      <RefreshIndicator className={isRefreshing ? 'visible' : ''}>
-        {isRefreshing ? '새로고침 중...' : '당겨서 새로고침'}
-      </RefreshIndicator>
+      {isRefreshing && (
+        <RefreshIndicator className="visible">
+          새로고침 중...
+        </RefreshIndicator>
+      )}
       
       <ReactWindowComponents
         items={items}
@@ -278,6 +342,36 @@ export default function VirtualNewsList({
         onSelectItem={handleSelectItem}
         onScrollDirectionChange={handleScrollDirectionChange}
       />
+      
+      {/* 선택된 항목 복사 버튼 */}
+      <CopyButton 
+        visible={selectedKeys.length > 0}
+        onClick={handleCopySelected}
+        aria-label="선택한 뉴스 복사"
+      >
+        <CopyIcon />
+      </CopyButton>
+      
+      {/* 토스트 메시지 */}
+      {showToast && (
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: 80,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(0,0,0,0.7)',
+            color: 'white',
+            padding: '8px 16px',
+            borderRadius: '4px',
+            zIndex: 1000,
+            maxWidth: '80%',
+            textAlign: 'center',
+          }}
+        >
+          {toastMessage}
+        </div>
+      )}
     </div>
   );
 }

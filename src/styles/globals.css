@@ -258,6 +258,21 @@ a {
 .selected-news-card {
   background-color: rgba(26, 115, 232, 0.1) !important;
   border-left: 4px solid var(--primary-color) !important;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15) !important;
+  position: relative;
+}
+
+.selected-news-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 20px 20px 0;
+  border-color: transparent var(--primary-color) transparent transparent;
+  pointer-events: none;
 }
 
 /* 풀투리프레시 관련 스타일 */

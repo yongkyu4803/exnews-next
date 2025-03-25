@@ -9,7 +9,9 @@ type EventType =
   | 'select_news' 
   | 'load_more' 
   | 'refresh_news'
-  | 'page_view';
+  | 'page_view'
+  | 'copy_selected_news'
+  | 'share_selected_news';
 
 // 이벤트 속성 타입
 interface EventProps {
