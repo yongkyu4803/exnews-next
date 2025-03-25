@@ -223,9 +223,13 @@ export default function VirtualNewsList({
   const [isRefreshing, setIsRefreshing] = useState(false);
   // 로컬 데이터 관리를 위한 상태 추가
   const [localItems, setLocalItems] = useState<any[]>([]);
+  const itemsRef = useRef<any[]>([]); // items props 참조 저장
   
-  // items prop이 변경될 때 localItems 업데이트
+  // items prop이 변경될 때 localItems 업데이트 및 참조 저장
   useEffect(() => {
+    console.log('items prop 변경됨:', items.length);
+    itemsRef.current = items;
+    
     if (items.length > 0) {
       console.log('부모로부터 새 아이템 수신:', items.length);
       setLocalItems(items);
@@ -237,112 +241,161 @@ export default function VirtualNewsList({
     if (isRefreshing) return;
     
     setIsRefreshing(true);
-    console.log('새로고침 시작', { currentItems: items.length });
+    console.log('새로고침 시작', { currentItems: itemsRef.current.length });
     setToastMessage('새로고침 중...');
     setShowToast(true);
     
     try {
-      // 최대 3번까지 재시도
-      let retryCount = 0;
-      const maxRetries = 3;
-      let initialItemCount = items.length;
-      
-      while (retryCount < maxRetries) {
-        try {
-          console.log(`새로고침 시도 ${retryCount + 1} 시작`);
-          
-          // onRefresh 함수가 Promise를 반환하는지 확인
-          if (typeof onRefresh !== 'function') {
-            console.error('onRefresh is not a function:', onRefresh);
-            throw new Error('onRefresh is not a function');
-          }
-          
-          // onRefresh 호출 및 결과 캡처
-          const result = await onRefresh();
-          console.log(`새로고침 응답 받음:`, result);
-          
-          // 결과에서 아이템 추출 시도 (onRefresh가 다양한 형태의 응답을 반환할 수 있음)
-          let newItems = [];
-          if (result) {
-            if (Array.isArray(result)) {
-              newItems = result;
-            } else if (result.items && Array.isArray(result.items)) {
-              newItems = result.items;
-            } else if (result.data && Array.isArray(result.data)) {
-              newItems = result.data;
-            }
-          }
-          
-          // 새 아이템이 있으면 로컬 상태 업데이트
-          if (newItems.length > 0) {
-            console.log(`새로 받은 아이템 수: ${newItems.length}`);
-            setLocalItems(newItems);
-            
-            console.log('새로고침 성공적으로 완료');
-            setToastMessage('새로고침 완료!');
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 1500);
-            break;
-          }
-          
-          // 데이터 로드 후 1초 대기 (상태 업데이트 확인)
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          console.log(`새로고침 후 아이템 수: ${items.length}, 이전: ${initialItemCount}`);
-          
-          // items 업데이트 확인 (부모 컴포넌트에서 업데이트되었을 경우)
-          if (items.length > 0 && (items.length !== initialItemCount || items !== localItems)) {
-            console.log('부모 컴포넌트에서 아이템 업데이트됨');
-            setLocalItems(items);
-            
-            console.log('새로고침 성공적으로 완료');
-            setToastMessage('새로고침 완료!');
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 1500);
-            break;
-          }
-          
-          // 데이터가 없으면 재시도
-          retryCount++;
-          if (retryCount < maxRetries) {
-            console.log(`데이터 없음, 재시도 ${retryCount}/${maxRetries}`);
-            setToastMessage(`데이터 로딩 중... (${retryCount}/${maxRetries})`);
-            setShowToast(true);
-            await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 대기
-          }
-        } catch (error) {
-          console.error(`새로고침 시도 ${retryCount + 1} 실패:`, error);
-          retryCount++;
-          if (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000));
-          }
-        }
+      // onRefresh 함수가 Promise를 반환하는지 확인
+      if (typeof onRefresh !== 'function') {
+        console.error('onRefresh is not a function:', onRefresh);
+        throw new Error('onRefresh is not a function');
       }
       
-      // 모든 재시도 후에도 데이터가 없는 경우
-      if (retryCount === maxRetries && localItems.length === 0) {
-        console.log('모든 재시도 실패, 페이지 새로고침');
-        setToastMessage('데이터를 불러오는데 실패했습니다. 페이지를 새로고침합니다.');
-        setShowToast(true);
+      // onRefresh 직접 호출
+      console.log('onRefresh 함수 직접 호출');
+      const result = await onRefresh();
+      console.log('onRefresh 결과:', result);
+      
+      // 결과에서 아이템 추출 시도
+      let newItems = extractItemsFromResult(result);
+      
+      if (newItems && newItems.length > 0) {
+        // 새 아이템이 있으면 로컬 상태 업데이트
+        console.log(`새로 받은 아이템 수: ${newItems.length}`);
+        setLocalItems(newItems);
         
-        // 2초 후 페이지 새로고침
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        console.log('새로고침 성공적으로 완료');
+        setToastMessage('새로고침 완료!');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 1500);
+      } else {
+        // 응답으로부터 아이템을 추출할 수 없는 경우
+        console.log('응답에서 아이템을 찾을 수 없음, 부모 컴포넌트 아이템 확인');
+        
+        // 1초 대기 후 부모 items를 다시 확인
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        if (itemsRef.current.length > 0) {
+          console.log('부모 컴포넌트에서 아이템 발견:', itemsRef.current.length);
+          setLocalItems(itemsRef.current);
+          
+          setToastMessage('새로고침 완료!');
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 1500);
+        } else {
+          console.error('데이터를 불러올 수 없습니다.');
+          setToastMessage('데이터를 불러올 수 없습니다. 다시 시도해주세요.');
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 3000);
+          
+          // 재시도 시도
+          await retryFetchData();
+        }
       }
     } catch (error) {
       console.error('새로고침 오류:', error);
       setToastMessage('새로고침 중 오류가 발생했습니다.');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
+      
+      // 오류 발생 시 재시도
+      await retryFetchData();
     } finally {
       setTimeout(() => {
         setIsRefreshing(false);
       }, 500);
     }
-  }, [isRefreshing, onRefresh, items, localItems]);
+  }, [isRefreshing, onRefresh]);
   
-  // 최초 마운트 시 초기화
+  // 결과에서 아이템 추출 유틸리티 함수
+  const extractItemsFromResult = (result: any) => {
+    if (!result) return null;
+    
+    // 1. 결과가 배열인 경우
+    if (Array.isArray(result)) {
+      return result;
+    }
+    
+    // 2. result.items 배열이 있는 경우
+    if (result.items && Array.isArray(result.items)) {
+      return result.items;
+    }
+    
+    // 3. result.data 배열이 있는 경우
+    if (result.data && Array.isArray(result.data)) {
+      return result.data;
+    }
+    
+    // 4. result.news 배열이 있는 경우
+    if (result.news && Array.isArray(result.news)) {
+      return result.news;
+    }
+    
+    // 5. result.content 배열이 있는 경우
+    if (result.content && Array.isArray(result.content)) {
+      return result.content;
+    }
+    
+    console.warn('결과에서 아이템 배열을 찾을 수 없음:', result);
+    return null;
+  };
+  
+  // 재시도 로직
+  const retryFetchData = async () => {
+    console.log('데이터 로드 재시도 중...');
+    setToastMessage('데이터 로드 재시도 중...');
+    setShowToast(true);
+    
+    try {
+      // 최대 3번까지 재시도
+      for (let i = 0; i < 3; i++) {
+        console.log(`재시도 ${i + 1}/3...`);
+        
+        // 1초 대기
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // 재시도
+        const result = await onRefresh();
+        let newItems = extractItemsFromResult(result);
+        
+        if (newItems && newItems.length > 0) {
+          console.log(`재시도 ${i + 1} 성공, 아이템 수: ${newItems.length}`);
+          setLocalItems(newItems);
+          
+          setToastMessage('데이터 로드 성공!');
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 1500);
+          return;
+        }
+        
+        // 부모 컴포넌트 아이템 확인
+        if (itemsRef.current.length > 0) {
+          console.log('부모 컴포넌트에서 아이템 발견:', itemsRef.current.length);
+          setLocalItems(itemsRef.current);
+          
+          setToastMessage('데이터 로드 성공!');
+          setShowToast(true);
+          setTimeout(() => setShowToast(false), 1500);
+          return;
+        }
+      }
+      
+      // 모든 재시도 실패
+      console.error('모든 재시도 실패');
+      setToastMessage('데이터를 불러오는데 실패했습니다. 페이지를 새로고침합니다.');
+      setShowToast(true);
+      
+      // 2초 후 페이지 새로고침
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+    } catch (error) {
+      console.error('재시도 중 오류 발생:', error);
+    }
+  };
+  
+  // 최초 마운트 시 초기화 및 데이터 로드
   useEffect(() => {
     setIsMounted(true);
     
@@ -350,6 +403,15 @@ export default function VirtualNewsList({
     if (typeof window !== 'undefined') {
       window.scrollTo(0, 0);
       setInitialRender(false);
+    }
+    
+    // 처음 마운트 시 데이터가 없으면 자동으로 데이터 로드 시도
+    if (items.length === 0 && typeof onRefresh === 'function') {
+      console.log('초기 데이터 로드 시도');
+      performRefresh();
+    } else if (items.length > 0) {
+      console.log('초기 데이터 있음, localItems 설정:', items.length);
+      setLocalItems(items);
     }
   }, []);
 
@@ -453,16 +515,20 @@ export default function VirtualNewsList({
         </div>
       )}
       
-      <ReactWindowComponents
-        items={localItems.length > 0 ? localItems : items}
-        hasMore={hasMore}
-        isLoading={isLoading || isRefreshing}
-        onLoadMore={onLoadMore}
-        onRefresh={onRefresh}
-        selectedItems={selectedKeys.map(key => key.toString())}
-        onSelectItem={handleSelectItem}
-        onScrollDirectionChange={handleScrollDirectionChange}
-      />
+      {isLoading && localItems.length === 0 && !isRefreshing ? (
+        <ListLoadingState />
+      ) : (
+        <ReactWindowComponents
+          items={localItems.length > 0 ? localItems : items}
+          hasMore={hasMore}
+          isLoading={isLoading || isRefreshing}
+          onLoadMore={onLoadMore}
+          onRefresh={onRefresh}
+          selectedItems={selectedKeys.map(key => key.toString())}
+          onSelectItem={handleSelectItem}
+          onScrollDirectionChange={handleScrollDirectionChange}
+        />
+      )}
       
       {/* 새로고침 버튼 */}
       <RefreshButton 

@@ -241,17 +241,30 @@ const NewsCard: React.FC<NewsCardProps> = ({
 
   const handleClickShare = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (navigator.share) {
-      navigator.share({
-        title,
-        text: description,
-        url: original_link
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(original_link);
-      alert('링크가 클립보드에 복사되었습니다.');
+    try {
+      if (navigator.share) {
+        navigator.share({
+          title: title || '뉴스 공유',
+          text: description || '뉴스 내용',
+          url: original_link || window.location.href
+        }).catch(err => {
+          console.error('공유 실패:', err);
+          // 공유 실패 시 클립보드 복사 대체
+          navigator.clipboard.writeText(original_link || window.location.href);
+          alert('링크가 클립보드에 복사되었습니다.');
+        });
+      } else {
+        navigator.clipboard.writeText(original_link || window.location.href);
+        alert('링크가 클립보드에 복사되었습니다.');
+      }
+      
+      if (id) {
+        trackEvent('share_news', { id, title: title || '제목 없음' });
+      }
+    } catch (error) {
+      console.error('공유 중 오류 발생:', error);
+      alert('공유 중 오류가 발생했습니다.');
     }
-    trackEvent('share_news', { id, title });
   };
 
   const handleClickSave = (e: React.MouseEvent) => {
@@ -274,18 +287,36 @@ const NewsCard: React.FC<NewsCardProps> = ({
   };
 
   const handleClick = () => {
-    onClick?.();
-    trackEvent('click_news', { id, title });
+    if (onClick) {
+      onClick();
+    }
+    
+    // 링크가 있는 경우에만 실행
+    if (original_link && original_link !== '#') {
+      // 현재 창에서 열기
+      window.open(original_link, '_blank');
+    }
+    
+    if (id) {
+      trackEvent('click_news', { id, title: title || '제목 없음' });
+    }
   };
 
   const handleSelectClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onSelect) {
       onSelect(id, !isSelected);
-      trackEvent('select_news', { id, title });
+      if (id) {
+        trackEvent('select_news', { id, title: title || '제목 없음' });
+      }
     }
   };
 
+  // 내용이 비어있는 경우 대체 데이터 사용
+  const safeTitle = title || '제목 없음';
+  const safeDescription = description || '내용이 없습니다.';
+  const safeDate = date || '날짜 정보 없음';
+  
   return (
     <TouchCard
       onClick={handleClick}
@@ -294,15 +325,15 @@ const NewsCard: React.FC<NewsCardProps> = ({
       className={isSelected ? 'selected-news-card' : ''}
     >
       <CardHeader>
-        <Title>{title}</Title>
+        <Title>{safeTitle}</Title>
       </CardHeader>
       
       <CardContent>
-        <Description>{description}</Description>
+        <Description>{safeDescription}</Description>
       </CardContent>
       
       <CardFooter isSelected={isSelected}>
-        <Date>{date}</Date>
+        <Date>{safeDate}</Date>
         <ActionButtons>
           <IconButton onClick={handleClickShare} aria-label="공유">
             <ShareIcon />

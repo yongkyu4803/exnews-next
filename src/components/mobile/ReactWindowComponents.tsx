@@ -65,6 +65,7 @@ export default function ReactWindowComponents({
   const [lastScrollOffset, setLastScrollOffset] = useState(0);
   const itemCount = hasMore ? items.length + 1 : items.length;
   const [isFirstRender, setIsFirstRender] = useState(true);
+  const itemsRef = useRef<any[]>([]); // 아이템 참조 저장
   
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
@@ -88,13 +89,21 @@ export default function ReactWindowComponents({
     };
   }, []);
   
-  // 아이템이 변경될 때 리스트 리셋
+  // items 변경 감지 및 처리
   useEffect(() => {
+    console.log('ReactWindowComponents - items 변경됨:', items.length);
+    itemsRef.current = items;
+    
     if (!isFirstRender && listRef.current) {
       console.log('아이템 목록 변경됨. 스크롤 리셋');
       listRef.current.scrollTo(0);
+      
+      // 리스트 강제 업데이트
+      if (typeof listRef.current.resetAfterIndex === 'function') {
+        listRef.current.resetAfterIndex(0);
+      }
     }
-  }, [items.length, isFirstRender]);
+  }, [items, isFirstRender]);
   
   // 스크롤 이벤트 처리
   const handleScroll = useCallback(({ scrollOffset }: { scrollOffset: number }) => {
@@ -118,8 +127,20 @@ export default function ReactWindowComponents({
   
   // 행 렌더링 함수
   const Row = useCallback(({ index, style }: { index: number, style: React.CSSProperties }) => {
+    // 먼저 items 배열 유효성 검사
+    const currentItems = itemsRef.current.length > 0 ? itemsRef.current : items;
+    
+    // 아이템이 없는 경우 로딩 표시
+    if (currentItems.length === 0 && isLoading) {
+      return (
+        <div style={{ ...style, height: LOADING_ITEM_HEIGHT }}>
+          <LoadingIndicator>데이터를 불러오는 중...</LoadingIndicator>
+        </div>
+      );
+    }
+    
     // 마지막 아이템이면서 hasMore이면 로딩 인디케이터 표시
-    if (index === items.length) {
+    if (index === currentItems.length) {
       if (!isLoading && hasMore) {
         // 비동기적으로 다음 아이템 로드 요청
         setTimeout(() => {
@@ -137,27 +158,46 @@ export default function ReactWindowComponents({
     }
     
     // 일반 아이템 렌더링
-    if (index < items.length) {
-      const item = items[index];
+    if (index < currentItems.length) {
+      const item = currentItems[index];
       if (!item) {
-        console.warn('유효하지 않은 아이템', { index, itemsLength: items.length });
-        return null;
+        console.warn('유효하지 않은 아이템', { index, itemsLength: currentItems.length });
+        return (
+          <div style={{ ...style, height: ITEM_HEIGHT, padding: '16px' }}>
+            <div style={{ 
+              backgroundColor: '#f5f5f5', 
+              padding: '16px', 
+              borderRadius: '8px',
+              height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              항목 로드 오류
+            </div>
+          </div>
+        );
       }
       
       const isSelected = selectedItems.includes(item.id?.toString() || '');
+      
+      // 디버깅용 로그 추가
+      if (index === 0) {
+        console.log('첫 번째 아이템 렌더링:', item);
+      }
       
       return (
         <div style={{ ...style, height: ITEM_HEIGHT, paddingBottom: '16px' }}>
           <NewsCard 
             key={item.id} 
-            title={item.title}
-            description={item.description || ''}
-            date={new Date(item.pub_date || Date.now()).toLocaleString('ko-KR')}
-            category={item.category}
-            original_link={item.original_link}
-            id={item.id}
+            title={item.title || '제목 없음'}
+            description={item.description || '내용 없음'}
+            date={item.pub_date ? new Date(item.pub_date).toLocaleString('ko-KR') : new Date().toLocaleString('ko-KR')}
+            category={item.category || '일반'}
+            original_link={item.original_link || '#'}
+            id={item.id?.toString() || `item-${index}`}
             isSelected={isSelected}
-            onSelect={() => onSelectItem?.(item.id, !isSelected)}
+            onSelect={() => onSelectItem?.(item.id || `item-${index}`, !isSelected)}
           />
         </div>
       );
@@ -170,6 +210,23 @@ export default function ReactWindowComponents({
   const isItemLoaded = useCallback((index: number) => {
     return !hasMore || index < items.length;
   }, [hasMore, items.length]);
+  
+  // 아이템이 없는 경우의 처리
+  if (items.length === 0 && !isLoading) {
+    return (
+      <div style={{ 
+        padding: '32px 16px', 
+        textAlign: 'center',
+        backgroundColor: '#f9f9f9',
+        borderRadius: '8px',
+        margin: '16px',
+        color: '#666' 
+      }}>
+        <h3 style={{ marginBottom: '8px', color: '#333' }}>데이터가 없습니다</h3>
+        <p>새로고침 버튼을 눌러 다시 시도해보세요.</p>
+      </div>
+    );
+  }
   
   return (
     <WindowContainer>
