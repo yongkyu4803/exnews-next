@@ -83,42 +83,32 @@ const CardCategory = styled.span`
 
 const ActionButtons = styled.div`
   display: flex;
-  gap: 12px;
+  gap: 20px;
   margin-left: auto;
 `;
 
-const ActionButton = styled.button`
+const IconButton = styled.button`
   background: none;
   border: none;
   color: #666;
   cursor: pointer;
-  padding: 4px 8px;
-  font-size: 13px;
+  padding: 4px;
+  font-size: 14px;
   border-radius: 4px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
   
-  &:hover {
-    background-color: #f5f5f5;
+  &:hover, &:active {
+    background-color: rgba(0,0,0,0.05);
   }
 `;
 
-const CardContent = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  height: 80px;
-  overflow: hidden;
-  margin-bottom: 5px; /* Footer 공간 확보 - 줄임 */
-`;
-
 const SelectButton = styled.button<{ isSelected?: boolean }>`
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 20px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
   background: ${props => props.isSelected ? 'var(--primary-color)' : 'rgba(0,0,0,0.05)'};
   border: ${props => props.isSelected ? 'none' : '1px solid rgba(0,0,0,0.1)'};
   border-radius: 50%;
@@ -128,9 +118,7 @@ const SelectButton = styled.button<{ isSelected?: boolean }>`
   color: ${props => props.isSelected ? 'white' : '#666'};
   font-size: 12px;
   font-weight: bold;
-  z-index: 10;
   cursor: pointer;
-  opacity: 0.8;
   
   &:active {
     transform: scale(0.95);
@@ -185,23 +173,13 @@ const Description = styled.p`
   max-height: 63px;
 `;
 
-const IconButton = styled.button`
-  background: none;
-  border: none;
-  color: #666;
-  cursor: pointer;
-  padding: 4px;
-  font-size: 14px;
-  border-radius: 4px;
+const CardContent = styled.div`
   display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  
-  &:hover, &:active {
-    background-color: rgba(0,0,0,0.05);
-  }
+  flex-direction: column;
+  gap: 3px;
+  height: 80px;
+  overflow: hidden;
+  margin-bottom: 5px; /* Footer 공간 확보 - 줄임 */
 `;
 
 // 아이콘 컴포넌트
