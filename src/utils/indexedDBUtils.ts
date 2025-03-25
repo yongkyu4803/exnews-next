@@ -229,12 +229,15 @@ export function saveRecentNews(newsItem: SavedNewsItem): void {
 }
 
 // 최근 본 뉴스 가져오기
-export function getRecentNews(): SavedNewsItem[] {
+export function getRecentNews(limit?: number): SavedNewsItem[] {
   if (typeof window === 'undefined') return [];
   
   try {
     const recentNews = localStorage.getItem(RECENT_NEWS_KEY);
-    return recentNews ? JSON.parse(recentNews) : [];
+    const allNews = recentNews ? JSON.parse(recentNews) : [];
+    
+    // limit이 지정된 경우 해당 개수만큼만 반환
+    return limit ? allNews.slice(0, limit) : allNews;
   } catch (error) {
     console.error('Failed to get recent news', error);
     return [];
