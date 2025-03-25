@@ -174,6 +174,18 @@ export default function VirtualNewsList({
   const [initialRender, setInitialRender] = useState(true);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const mountedRef = useRef(false);
+  
+  // 디버깅을 위한 로그
+  useEffect(() => {
+    console.log('VirtualNewsList 마운트됨', { itemCount: items.length });
+    mountedRef.current = true;
+    
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [items.length]);
   
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
@@ -189,6 +201,60 @@ export default function VirtualNewsList({
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // 새로고침 핸들러 - 래핑하여 데이터 반환 보장
+  const handleRefresh = useCallback(async () => {
+    console.log('새로고침 시작:', new Date().toISOString());
+    
+    // 이미 새로고침 중이면 진행 중인 새로고침 반환
+    if (isRefreshing) {
+      console.log('이미 새로고침 중입니다');
+      return Promise.resolve(true);
+    }
+    
+    try {
+      setIsRefreshing(true);
+      
+      // 분석 이벤트 발생 (선택 사항)
+      if (typeof trackEvent === 'function') {
+        trackEvent('refresh_news', { source: 'pull-to-refresh' });
+      }
+      
+      // 개발자 도구에 로그 추가
+      console.log('원본 onRefresh 함수 호출 전', { 
+        mountedRef: mountedRef.current,
+        isFunction: typeof onRefresh === 'function'
+      });
+      
+      // 상위 컴포넌트의 onRefresh 호출
+      await onRefresh();
+      
+      console.log('새로고침 데이터 로드 완료');
+      
+      // 컴포넌트가 언마운트되지 않았는지 확인
+      if (mountedRef.current) {
+        setIsRefreshing(false);
+      }
+      
+      // 명시적으로 성공 상태 반환
+      return Promise.resolve(true);
+    } catch (error) {
+      console.error('새로고침 오류:', error);
+      
+      // 컴포넌트가 언마운트되지 않았는지 확인
+      if (mountedRef.current) {
+        setIsRefreshing(false);
+        
+        // 오류 발생 시 토스트 메시지 표시 (선택 사항)
+        setToastMessage('새로고침 중 오류가 발생했습니다');
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+      }
+      
+      // 오류 발생 시에도 Promise 해결 (라이브러리가 거부된 Promise에 대응하지 못할 수 있음)
+      return Promise.resolve(false);
+    }
+  }, [onRefresh, isRefreshing]);
 
   // 아이템 선택 처리
   const handleSelectItem = useCallback((id: string | number, isSelected: boolean) => {
@@ -241,13 +307,20 @@ export default function VirtualNewsList({
     }
   }, [initialRender]);
 
+  // 새로고침 인디케이터 커스텀 UI
+  const renderRefreshIndicator = useCallback(() => (
+    <PullIndicator>
+      새로고침 중...
+    </PullIndicator>
+  ), []);
+  
   // 서버 사이드 렌더링 시 로딩 UI 표시
   if (!isMounted) {
     return <ListLoadingState />;
   }
   
   // 아이템이 없고 로딩 중이 아닌 경우
-  if (items.length === 0 && !isLoading) {
+  if (items.length === 0 && !isLoading && !isRefreshing) {
     return (
       <EmptyState>
         <h3>표시할 뉴스가 없습니다</h3>
@@ -256,21 +329,16 @@ export default function VirtualNewsList({
     );
   }
 
-  // 새로고침 인디케이터 커스텀 UI
-  const renderRefreshIndicator = () => (
-    <PullIndicator>
-      새로고침 중...
-    </PullIndicator>
-  );
-
   return (
     <PullToRefresh 
-      onRefresh={onRefresh}
+      onRefresh={handleRefresh}
       pullingContent={<PullIndicator>당겨서 새로고침</PullIndicator>}
       refreshingContent={renderRefreshIndicator()}
       pullDownThreshold={60}
       maxPullDownDistance={95}
       resistance={2.5}
+      backgroundColor="#ffffff"
+      isPullable={!isLoading && !isRefreshing} // 로딩 중에는 당길 수 없도록 설정
       className="pull-to-refresh-container"
     >
       <div 
@@ -281,15 +349,16 @@ export default function VirtualNewsList({
           padding: 0, 
           position: 'relative',
           height: 'calc(100vh - 180px)',
-          overflow: 'visible'
+          overflow: 'visible',
+          backgroundColor: '#ffffff'
         }}
       >
         <ReactWindowComponents
           items={items}
           hasMore={hasMore}
-          isLoading={isLoading}
+          isLoading={isLoading || isRefreshing}
           onLoadMore={onLoadMore}
-          onRefresh={onRefresh}
+          onRefresh={handleRefresh}
           selectedItems={selectedKeys.map(key => key.toString())}
           onSelectItem={handleSelectItem}
           onScrollDirectionChange={handleScrollDirectionChange}

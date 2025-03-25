@@ -64,9 +64,14 @@ export default function ReactWindowComponents({
   const [windowHeight, setWindowHeight] = useState(window.innerHeight - 180);
   const [lastScrollOffset, setLastScrollOffset] = useState(0);
   const itemCount = hasMore ? items.length + 1 : items.length;
+  const [isFirstRender, setIsFirstRender] = useState(true);
   
-  // 화면 크기 변경 시 리스트 높이 조정
+  // 컴포넌트 마운트 시 초기화
   useEffect(() => {
+    console.log('ReactWindowComponents 마운트됨. 아이템 수:', items.length);
+    setIsFirstRender(false);
+    
+    // 초기 리사이즈 처리
     const handleResize = () => {
       setWindowHeight(window.innerHeight - 180);
       if (listRef.current && typeof listRef.current.resetAfterIndex === 'function') {
@@ -74,12 +79,22 @@ export default function ReactWindowComponents({
       }
     };
     
+    // 초기 리사이즈 실행 및 이벤트 리스너 등록
+    handleResize();
     window.addEventListener('resize', handleResize);
     
     return () => {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+  
+  // 아이템이 변경될 때 리스트 리셋
+  useEffect(() => {
+    if (!isFirstRender && listRef.current) {
+      console.log('아이템 목록 변경됨. 스크롤 리셋');
+      listRef.current.scrollTo(0);
+    }
+  }, [items.length, isFirstRender]);
   
   // 스크롤 이벤트 처리
   const handleScroll = useCallback(({ scrollOffset }: { scrollOffset: number }) => {
@@ -92,49 +107,69 @@ export default function ReactWindowComponents({
     setLastScrollOffset(scrollOffset);
   }, [lastScrollOffset, onScrollDirectionChange]);
   
+  // 무한 스크롤 로드 함수
+  const loadMoreItems = useCallback(() => {
+    if (!isLoading) {
+      console.log('추가 아이템 로드 요청');
+      return onLoadMore();
+    }
+    return Promise.resolve();
+  }, [isLoading, onLoadMore]);
+  
   // 행 렌더링 함수
-  const Row = ({ index, style }: { index: number, style: React.CSSProperties }) => {
+  const Row = useCallback(({ index, style }: { index: number, style: React.CSSProperties }) => {
     // 마지막 아이템이면서 hasMore이면 로딩 인디케이터 표시
     if (index === items.length) {
-      if (!isLoading) {
+      if (!isLoading && hasMore) {
+        // 비동기적으로 다음 아이템 로드 요청
         setTimeout(() => {
-          onLoadMore();
+          loadMoreItems();
         }, 100);
       }
       
       return (
         <div style={{ ...style, height: LOADING_ITEM_HEIGHT }}>
           <LoadingIndicator>
-            더 불러오는 중...
+            {isLoading ? '더 불러오는 중...' : '스크롤하여 더 불러오기'}
           </LoadingIndicator>
         </div>
       );
     }
     
-    const item = items[index];
-    const isSelected = selectedItems.includes(item.id?.toString() || '');
+    // 일반 아이템 렌더링
+    if (index < items.length) {
+      const item = items[index];
+      if (!item) {
+        console.warn('유효하지 않은 아이템', { index, itemsLength: items.length });
+        return null;
+      }
+      
+      const isSelected = selectedItems.includes(item.id?.toString() || '');
+      
+      return (
+        <div style={{ ...style, height: ITEM_HEIGHT, paddingBottom: '16px' }}>
+          <NewsCard 
+            key={item.id} 
+            title={item.title}
+            description={item.description || ''}
+            date={new Date(item.pub_date || Date.now()).toLocaleString('ko-KR')}
+            category={item.category}
+            original_link={item.original_link}
+            id={item.id}
+            isSelected={isSelected}
+            onSelect={() => onSelectItem?.(item.id, !isSelected)}
+          />
+        </div>
+      );
+    }
     
-    return (
-      <div style={{ ...style, height: ITEM_HEIGHT, paddingBottom: '16px' }}>
-        <NewsCard 
-          key={item.id} 
-          title={item.title}
-          description={item.description || ''}
-          date={new Date(item.pub_date).toLocaleString('ko-KR')}
-          category={item.category}
-          original_link={item.original_link}
-          id={item.id}
-          isSelected={isSelected}
-          onSelect={() => onSelectItem?.(item.id, !isSelected)}
-        />
-      </div>
-    );
-  };
+    return null;
+  }, [items, isLoading, hasMore, loadMoreItems, selectedItems, onSelectItem]);
   
   // 아이템이 로드되었는지 확인하는 함수
-  const isItemLoaded = (index: number) => {
+  const isItemLoaded = useCallback((index: number) => {
     return !hasMore || index < items.length;
-  };
+  }, [hasMore, items.length]);
   
   return (
     <WindowContainer>
@@ -142,7 +177,7 @@ export default function ReactWindowComponents({
         <InfiniteLoader
           isItemLoaded={isItemLoaded}
           itemCount={itemCount}
-          loadMoreItems={isLoading ? () => {} : onLoadMore}
+          loadMoreItems={loadMoreItems}
           threshold={3}
         >
           {({ onItemsRendered, ref }) => (
