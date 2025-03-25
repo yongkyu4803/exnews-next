@@ -89,7 +89,7 @@ const MobileNav = styled.div`
     right: 0;
     background-color: #fff;
     border-top: 1px solid #eee;
-    height: 60px;
+    height: 30px;
     
     nav {
       display: flex;
