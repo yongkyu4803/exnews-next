@@ -221,13 +221,23 @@ export default function VirtualNewsList({
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  // 로컬 데이터 관리를 위한 상태 추가
+  const [localItems, setLocalItems] = useState<any[]>([]);
+  
+  // items prop이 변경될 때 localItems 업데이트
+  useEffect(() => {
+    if (items.length > 0) {
+      console.log('부모로부터 새 아이템 수신:', items.length);
+      setLocalItems(items);
+    }
+  }, [items]);
   
   // 실제 새로고침 수행 함수
   const performRefresh = useCallback(async () => {
     if (isRefreshing) return;
     
     setIsRefreshing(true);
-    console.log('새로고침 시작');
+    console.log('새로고침 시작', { currentItems: items.length });
     setToastMessage('새로고침 중...');
     setShowToast(true);
     
@@ -235,13 +245,56 @@ export default function VirtualNewsList({
       // 최대 3번까지 재시도
       let retryCount = 0;
       const maxRetries = 3;
+      let initialItemCount = items.length;
       
       while (retryCount < maxRetries) {
         try {
-          await onRefresh();
+          console.log(`새로고침 시도 ${retryCount + 1} 시작`);
           
-          // 데이터가 성공적으로 반환되었는지 확인
-          if (items.length > 0) {
+          // onRefresh 함수가 Promise를 반환하는지 확인
+          if (typeof onRefresh !== 'function') {
+            console.error('onRefresh is not a function:', onRefresh);
+            throw new Error('onRefresh is not a function');
+          }
+          
+          // onRefresh 호출 및 결과 캡처
+          const result = await onRefresh();
+          console.log(`새로고침 응답 받음:`, result);
+          
+          // 결과에서 아이템 추출 시도 (onRefresh가 다양한 형태의 응답을 반환할 수 있음)
+          let newItems = [];
+          if (result) {
+            if (Array.isArray(result)) {
+              newItems = result;
+            } else if (result.items && Array.isArray(result.items)) {
+              newItems = result.items;
+            } else if (result.data && Array.isArray(result.data)) {
+              newItems = result.data;
+            }
+          }
+          
+          // 새 아이템이 있으면 로컬 상태 업데이트
+          if (newItems.length > 0) {
+            console.log(`새로 받은 아이템 수: ${newItems.length}`);
+            setLocalItems(newItems);
+            
+            console.log('새로고침 성공적으로 완료');
+            setToastMessage('새로고침 완료!');
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 1500);
+            break;
+          }
+          
+          // 데이터 로드 후 1초 대기 (상태 업데이트 확인)
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          console.log(`새로고침 후 아이템 수: ${items.length}, 이전: ${initialItemCount}`);
+          
+          // items 업데이트 확인 (부모 컴포넌트에서 업데이트되었을 경우)
+          if (items.length > 0 && (items.length !== initialItemCount || items !== localItems)) {
+            console.log('부모 컴포넌트에서 아이템 업데이트됨');
+            setLocalItems(items);
+            
             console.log('새로고침 성공적으로 완료');
             setToastMessage('새로고침 완료!');
             setShowToast(true);
@@ -267,7 +320,7 @@ export default function VirtualNewsList({
       }
       
       // 모든 재시도 후에도 데이터가 없는 경우
-      if (retryCount === maxRetries && items.length === 0) {
+      if (retryCount === maxRetries && localItems.length === 0) {
         console.log('모든 재시도 실패, 페이지 새로고침');
         setToastMessage('데이터를 불러오는데 실패했습니다. 페이지를 새로고침합니다.');
         setShowToast(true);
@@ -287,7 +340,7 @@ export default function VirtualNewsList({
         setIsRefreshing(false);
       }, 500);
     }
-  }, [isRefreshing, onRefresh, items]);
+  }, [isRefreshing, onRefresh, items, localItems]);
   
   // 최초 마운트 시 초기화
   useEffect(() => {
@@ -379,8 +432,29 @@ export default function VirtualNewsList({
         backgroundColor: '#ffffff'
       }}
     >
+      {/* 디버그 정보 (개발 환경에서만 표시) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          background: 'rgba(0,0,0,0.7)', 
+          color: 'white', 
+          padding: '4px 8px',
+          fontSize: '12px',
+          zIndex: 9999,
+          maxWidth: '100%',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap'
+        }}>
+          items: {items.length}, localItems: {localItems.length}, 
+          isLoading: {isLoading.toString()}, isRefreshing: {isRefreshing.toString()}
+        </div>
+      )}
+      
       <ReactWindowComponents
-        items={items}
+        items={localItems.length > 0 ? localItems : items}
         hasMore={hasMore}
         isLoading={isLoading || isRefreshing}
         onLoadMore={onLoadMore}
