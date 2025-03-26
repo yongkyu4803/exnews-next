@@ -19,6 +19,33 @@ const Container = styled.div`
   background-color: #ffffff;
 `;
 
+const PullToRefreshContainer = styled.div`
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  height: 100%;
+  
+  .refresh-indicator {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 10px;
+    color: #666;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 12px;
+    border-radius: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    
+    &.visible {
+      opacity: 1;
+    }
+  }
+`;
+
 const LoadingContainer = styled.div`
   height: 100%;
   width: 100%;
@@ -78,7 +105,7 @@ const EmptyView = styled.div`
   }
 `;
 
-const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
+const ActionButton = styled.button<{ color?: string; visible?: boolean; isRefreshing?: boolean }>`
   position: fixed;
   bottom: 20px;
   right: ${props => props.color === 'green' ? '20px' : '80px'};
@@ -104,6 +131,14 @@ const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
     width: 24px;
     height: 24px;
   }
+  
+  ${props => props.isRefreshing && `
+    animation: spin 1s linear infinite;
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `}
 `;
 
 const Toast = styled.div`
@@ -187,6 +222,9 @@ export default function VirtualNewsList({
   
   // 참조
   const itemsRef = useRef(items);
+  
+  // 새로운 참조 추가
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // 토스트 메시지 표시 함수
   const showToast = useCallback((message: string, duration = 3000) => {
@@ -333,6 +371,70 @@ export default function VirtualNewsList({
     }
   }, []);
   
+  // Pull-to-refresh 로직
+  useEffect(() => {
+    if (!containerRef.current || typeof window === 'undefined') return;
+    
+    let startY = 0;
+    let isPulling = false;
+    const pullThreshold = 80;
+    
+    // 인디케이터 생성
+    const indicator = document.createElement('div');
+    indicator.className = 'refresh-indicator';
+    indicator.textContent = '당겨서 새로고침';
+    containerRef.current.appendChild(indicator);
+    
+    const handleTouchStart = (e: TouchEvent) => {
+      if (window.scrollY <= 0) {
+        startY = e.touches[0].clientY;
+        isPulling = true;
+      }
+    };
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isPulling) return;
+      
+      const pullDistance = e.touches[0].clientY - startY;
+      if (pullDistance > 0) {
+        indicator.classList.add('visible');
+        if (pullDistance > pullThreshold) {
+          indicator.textContent = '놓아서 새로고침';
+        } else {
+          indicator.textContent = '당겨서 새로고침';
+        }
+      }
+    };
+    
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (!isPulling) return;
+      
+      const pullDistance = e.changedTouches[0].clientY - startY;
+      if (pullDistance > pullThreshold && !refreshing && typeof onRefresh === 'function') {
+        handleRefresh();
+      }
+      
+      isPulling = false;
+      indicator.classList.remove('visible');
+    };
+    
+    containerRef.current.addEventListener('touchstart', handleTouchStart);
+    containerRef.current.addEventListener('touchmove', handleTouchMove);
+    containerRef.current.addEventListener('touchend', handleTouchEnd);
+    
+    return () => {
+      if (containerRef.current) {
+        containerRef.current.removeEventListener('touchstart', handleTouchStart);
+        containerRef.current.removeEventListener('touchmove', handleTouchMove);
+        containerRef.current.removeEventListener('touchend', handleTouchEnd);
+        
+        if (indicator.parentNode === containerRef.current) {
+          containerRef.current.removeChild(indicator);
+        }
+      }
+    };
+  }, [handleRefresh, refreshing, onRefresh]);
+  
   // 비어있거나 로딩 중일 때 렌더링
   if (!mounted) {
     return <LoadingView />;
@@ -358,40 +460,41 @@ export default function VirtualNewsList({
   
   // 메인 컴포넌트 렌더링
   return (
-    <Container>
-      <SpinAnimation /> {/* 애니메이션 스타일 추가 */}
-      {/* 디버그 정보 (개발 환경) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ 
-          position: 'fixed', 
-          top: 0, 
-          left: 0, 
-          background: 'rgba(0,0,0,0.7)', 
-          color: 'white', 
-          padding: '4px 8px',
-          fontSize: '12px',
-          zIndex: 9999
-        }}>
-          items: {items.length}, local: {localItems.length}, 
-          loading: {isLoading.toString()}, refreshing: {refreshing.toString()}
-        </div>
-      )}
-      
-      {/* 로딩 상태 또는 가상 목록 */}
-      {isLoading && localItems.length === 0 ? (
-        <LoadingView />
-      ) : (
-        <ReactWindowComponents
-          items={localItems || []} /* null/undefined 방지 */
-          hasMore={hasMore}
-          isLoading={isLoading || refreshing}
-          onLoadMore={onLoadMore}
-          onRefresh={onRefresh}
-          selectedItems={(selectedKeys || []).map(key => key.toString())}
-          onSelectItem={handleSelectItem}
-          onScrollDirectionChange={handleScrollDirectionChange}
-        />
-      )}
+    <Container ref={containerRef}>
+      <PullToRefreshContainer className="window-container">
+        {/* 디버그 정보 (개발 환경) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            background: 'rgba(0,0,0,0.7)', 
+            color: 'white', 
+            padding: '4px 8px',
+            fontSize: '12px',
+            zIndex: 9999
+          }}>
+            items: {items.length}, local: {localItems.length}, 
+            loading: {isLoading.toString()}, refreshing: {refreshing.toString()}
+          </div>
+        )}
+        
+        {/* 로딩 상태 또는 가상 목록 */}
+        {isLoading && localItems.length === 0 ? (
+          <LoadingView />
+        ) : (
+          <ReactWindowComponents
+            items={localItems || []} /* null/undefined 방지 */
+            hasMore={hasMore}
+            isLoading={isLoading || refreshing}
+            onLoadMore={onLoadMore}
+            onRefresh={onRefresh}
+            selectedItems={(selectedKeys || []).map(key => key.toString())}
+            onSelectItem={handleSelectItem}
+            onScrollDirectionChange={handleScrollDirectionChange}
+          />
+        )}
+      </PullToRefreshContainer>
       
       {/* 복사 버튼 */}
       <ActionButton
@@ -407,11 +510,8 @@ export default function VirtualNewsList({
         color="green"
         onClick={handleRefresh}
         disabled={refreshing}
+        isRefreshing={refreshing}
         aria-label="뉴스 새로고침"
-        style={{
-          animation: refreshing ? 'spin 1s linear infinite' : 'none',
-          transform: refreshing ? 'initial' : 'none' // 애니메이션 중 transform 덮어쓰기 방지
-        }}
       >
         <RefreshIcon />
       </ActionButton>
