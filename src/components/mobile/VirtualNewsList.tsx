@@ -474,18 +474,20 @@ export default function VirtualNewsList({
   useEffect(() => {
     if (!containerRef.current || typeof window === 'undefined') return;
     
-    let startY = 0;
-    let isPulling = false;
-    let pullDistance = 0;
-    const pullThreshold = 80;
-    
-    // 인디케이터 생성
+    // 인디케이터 요소 생성
     const indicator = document.createElement('div');
     indicator.className = 'refresh-indicator';
     indicator.textContent = '당겨서 새로고침';
     containerRef.current.appendChild(indicator);
     
-    const handleTouchStart = (e: TouchEvent) => {
+    // 상태 변수들
+    let startY = 0;
+    let isPulling = false;
+    let pullDistance = 0;
+    const pullThreshold = 80;
+    
+    // 이벤트 핸들러 - 외부에서 정의하여 클로저 문제 방지
+    function handleTouchStart(e: TouchEvent) {
       const scrollTop = window.scrollY || document.documentElement.scrollTop;
       
       if (scrollTop <= 0) {
@@ -494,9 +496,9 @@ export default function VirtualNewsList({
         pullDistance = 0;
         visualLog('터치 시작: ' + startY, 'info');
       }
-    };
+    }
     
-    const handleTouchMove = (e: TouchEvent) => {
+    function handleTouchMove(e: TouchEvent) {
       if (!isPulling) return;
       
       pullDistance = e.touches[0].clientY - startY;
@@ -512,21 +514,27 @@ export default function VirtualNewsList({
           indicator.textContent = '당겨서 새로고침';
         }
         
-        // 브라우저 기본 당김 동작 방지를 위한 최소한의 스타일
+        // 브라우저 기본 당김 동작 방지
         document.body.style.overscrollBehavior = 'none';
       }
-    };
+    }
     
-    const handleTouchEnd = (e: TouchEvent) => {
+    function handleTouchEnd(e: TouchEvent) {
       if (!isPulling) return;
       
       visualLog('터치 종료, 당김 거리: ' + pullDistance, 'log');
       
-      if (pullDistance > pullThreshold && !refreshing && typeof onRefresh === 'function') {
+      if (pullDistance > pullThreshold) {
         // 새로고침 실행
         indicator.textContent = '새로고침 중...';
         visualLog('새로고침 시작', 'info');
-        handleRefresh();
+        
+        // 이벤트 핸들러에서 직접 setState를 호출하는 대신 setTimeout 사용
+        setTimeout(() => {
+          if (typeof onRefresh === 'function' && !refreshing) {
+            handleRefresh();
+          }
+        }, 0);
       }
       
       // 상태 및 스타일 초기화
@@ -542,7 +550,7 @@ export default function VirtualNewsList({
       
       // 브라우저 스타일 복원
       document.body.style.overscrollBehavior = '';
-    };
+    }
     
     // refreshing 상태 업데이트
     if (refreshing) {
@@ -557,20 +565,23 @@ export default function VirtualNewsList({
     document.addEventListener('touchmove', handleTouchMove, { passive: true });
     document.addEventListener('touchend', handleTouchEnd, { passive: true });
     
-    return () => {
-      // 이벤트 정리
+    // 클린업 함수
+    return function cleanup() {
       document.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
       
       if (containerRef.current && indicator.parentNode === containerRef.current) {
-        containerRef.current.removeChild(indicator);
+        try {
+          containerRef.current.removeChild(indicator);
+        } catch (err) {
+          console.log('인디케이터 제거 중 오류:', err);
+        }
       }
       
-      // 문서 스타일 복원
       document.body.style.overscrollBehavior = '';
     };
-  }, [handleRefresh, refreshing, onRefresh, visualLog]);
+  }, [refreshing, onRefresh]);
   
   // 비어있거나 로딩 중일 때 렌더링
   if (!mounted) {
@@ -625,25 +636,16 @@ export default function VirtualNewsList({
         {consoleVisible ? '×' : '?'}
       </button>
       
+      {/* 모바일 브라우저에서의 오버스크롤 방지를 위한 전역 스타일 */}
+      <style jsx global>{`
+        body, html {
+          overscroll-behavior-y: none;
+          -webkit-overflow-scrolling: touch;
+        }
+      `}</style>
+      
       <Container ref={containerRef}>
         <PullToRefreshContainer className="window-container">
-          {/* 디버그 정보 (개발 환경) */}
-          {process.env.NODE_ENV === 'development' && (
-            <div style={{ 
-              position: 'fixed', 
-              top: 30, 
-              left: 0, 
-              background: 'rgba(0,0,0,0.7)', 
-              color: 'white', 
-              padding: '4px 8px',
-              fontSize: '12px',
-              zIndex: 9999
-            }}>
-              items: {items.length}, local: {localItems.length}, 
-              loading: {isLoading.toString()}, refreshing: {refreshing.toString()}
-            </div>
-          )}
-          
           {/* 로딩 상태 또는 가상 목록 */}
           {isLoading && localItems.length === 0 ? (
             <LoadingView />
@@ -673,7 +675,7 @@ export default function VirtualNewsList({
         {/* 새로고침 버튼 - 아이콘만 회전하도록 수정 */}
         <ActionButton
           color="green"
-          onClick={handleRefresh}
+          onClick={() => !refreshing && handleRefresh()}
           disabled={refreshing}
           isRefreshing={refreshing}
           aria-label="뉴스 새로고침"
