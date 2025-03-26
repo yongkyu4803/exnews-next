@@ -19,28 +19,54 @@ const Container = styled.div`
   background-color: #ffffff;
 `;
 
+// 전역 오버스크롤 방지 스타일 (모바일 브라우저의 기본 당겨서 새로고침 비활성화)
+const GlobalStyle = styled.div`
+  /* 브라우저 기본 pull-to-refresh 동작 방지 */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: -1;
+`;
+
 const PullToRefreshContainer = styled.div`
   width: 100%;
   overflow: hidden;
   position: relative;
   height: 100%;
+  /* 모바일 브라우저에서 스크롤 동작 제어 */
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   
   .refresh-indicator {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    top: 10px;
+    top: 20px;
     color: #666;
     font-size: 14px;
-    opacity: 0;
-    transition: opacity 0.3s;
     background: rgba(255, 255, 255, 0.9);
-    padding: 4px 12px;
-    border-radius: 16px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    z-index: 100;
+    padding: 8px 16px;
+    border-radius: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
     
     &.visible {
+      opacity: 1;
+    }
+    
+    &.pulling {
+      transform: translate(-50%, 0);
+    }
+    
+    &.refreshing {
+      transform: translate(-50%, 0);
       opacity: 1;
     }
   }
@@ -133,10 +159,13 @@ const ActionButton = styled.button<{ color?: string; visible?: boolean; isRefres
   }
   
   ${props => props.isRefreshing && `
-    animation: spin 1s linear infinite;
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    svg {
+      animation: rotate 1s linear infinite;
+    }
+    
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
   `}
 `;
@@ -371,13 +400,22 @@ export default function VirtualNewsList({
     }
   }, []);
   
-  // Pull-to-refresh 로직
+  // Pull-to-refresh 로직 개선
   useEffect(() => {
     if (!containerRef.current || typeof window === 'undefined') return;
     
+    // iOS Safari에서 문서 전체 스크롤 방지
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    
     let startY = 0;
     let isPulling = false;
+    let pullDistance = 0;
     const pullThreshold = 80;
+    const maxPull = 120;
     
     // 인디케이터 생성
     const indicator = document.createElement('div');
@@ -385,23 +423,44 @@ export default function VirtualNewsList({
     indicator.textContent = '당겨서 새로고침';
     containerRef.current.appendChild(indicator);
     
+    // Passive: false로 설정하여 preventDefault 허용
     const handleTouchStart = (e: TouchEvent) => {
-      if (window.scrollY <= 0) {
+      // 컨테이너 내부 요소의 스크롤 위치 확인
+      const scrollElement = document.querySelector('.window-container') as HTMLElement;
+      const scrollTop = scrollElement?.scrollTop || window.scrollY;
+      
+      if (scrollTop <= 0) {
         startY = e.touches[0].clientY;
         isPulling = true;
+        pullDistance = 0;
       }
     };
     
     const handleTouchMove = (e: TouchEvent) => {
       if (!isPulling) return;
       
-      const pullDistance = e.touches[0].clientY - startY;
+      pullDistance = e.touches[0].clientY - startY;
+      
+      // 아래로 당기는 경우에만 처리 (위로 스크롤은 무시)
       if (pullDistance > 0) {
-        indicator.classList.add('visible');
-        if (pullDistance > pullThreshold) {
-          indicator.textContent = '놓아서 새로고침';
-        } else {
-          indicator.textContent = '당겨서 새로고침';
+        // 브라우저 기본 동작 방지 (중요)
+        e.preventDefault();
+        
+        // 저항 추가 (당길수록 움직임 감소)
+        const resistance = 0.4;
+        const visualPullDistance = Math.min(pullDistance * resistance, maxPull);
+        
+        // 시각적 피드백
+        if (visualPullDistance > 0) {
+          indicator.classList.add('visible');
+          indicator.classList.add('pulling');
+          indicator.style.transform = `translate(-50%, ${visualPullDistance * 0.5}px)`;
+          
+          if (visualPullDistance > pullThreshold) {
+            indicator.textContent = '놓아서 새로고침';
+          } else {
+            indicator.textContent = '당겨서 새로고침';
+          }
         }
       }
     };
@@ -409,20 +468,45 @@ export default function VirtualNewsList({
     const handleTouchEnd = (e: TouchEvent) => {
       if (!isPulling) return;
       
-      const pullDistance = e.changedTouches[0].clientY - startY;
       if (pullDistance > pullThreshold && !refreshing && typeof onRefresh === 'function') {
+        // 새로고침 애니메이션 표시
+        indicator.textContent = '새로고침 중...';
+        indicator.classList.add('refreshing');
+        
+        // 새로고침 실행
         handleRefresh();
       }
       
+      // 상태 및 스타일 초기화
       isPulling = false;
-      indicator.classList.remove('visible');
+      pullDistance = 0;
+      indicator.style.transform = '';
+      indicator.classList.remove('pulling');
+      
+      // 새로고침 중이 아닌 경우에만 인디케이터 숨김
+      if (!refreshing) {
+        indicator.classList.remove('visible');
+        indicator.classList.remove('refreshing');
+      }
     };
     
-    containerRef.current.addEventListener('touchstart', handleTouchStart);
-    containerRef.current.addEventListener('touchmove', handleTouchMove);
+    // refreshing 상태가 변경될 때 인디케이터 업데이트
+    if (refreshing) {
+      indicator.textContent = '새로고침 중...';
+      indicator.classList.add('visible');
+      indicator.classList.add('refreshing');
+    } else {
+      indicator.classList.remove('visible');
+      indicator.classList.remove('refreshing');
+    }
+    
+    // passive: false 옵션으로 이벤트 등록 (preventDefault 사용 가능)
+    containerRef.current.addEventListener('touchstart', handleTouchStart, { passive: false });
+    containerRef.current.addEventListener('touchmove', handleTouchMove, { passive: false });
     containerRef.current.addEventListener('touchend', handleTouchEnd);
     
     return () => {
+      // 이벤트 정리
       if (containerRef.current) {
         containerRef.current.removeEventListener('touchstart', handleTouchStart);
         containerRef.current.removeEventListener('touchmove', handleTouchMove);
@@ -432,6 +516,13 @@ export default function VirtualNewsList({
           containerRef.current.removeChild(indicator);
         }
       }
+      
+      // 문서 스타일 복원
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
     };
   }, [handleRefresh, refreshing, onRefresh]);
   
@@ -460,68 +551,71 @@ export default function VirtualNewsList({
   
   // 메인 컴포넌트 렌더링
   return (
-    <Container ref={containerRef}>
-      <PullToRefreshContainer className="window-container">
-        {/* 디버그 정보 (개발 환경) */}
-        {process.env.NODE_ENV === 'development' && (
-          <div style={{ 
-            position: 'fixed', 
-            top: 0, 
-            left: 0, 
-            background: 'rgba(0,0,0,0.7)', 
-            color: 'white', 
-            padding: '4px 8px',
-            fontSize: '12px',
-            zIndex: 9999
-          }}>
-            items: {items.length}, local: {localItems.length}, 
-            loading: {isLoading.toString()}, refreshing: {refreshing.toString()}
-          </div>
-        )}
+    <>
+      <GlobalStyle />
+      <Container ref={containerRef}>
+        <PullToRefreshContainer className="window-container">
+          {/* 디버그 정보 (개발 환경) */}
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{ 
+              position: 'fixed', 
+              top: 0, 
+              left: 0, 
+              background: 'rgba(0,0,0,0.7)', 
+              color: 'white', 
+              padding: '4px 8px',
+              fontSize: '12px',
+              zIndex: 9999
+            }}>
+              items: {items.length}, local: {localItems.length}, 
+              loading: {isLoading.toString()}, refreshing: {refreshing.toString()}
+            </div>
+          )}
+          
+          {/* 로딩 상태 또는 가상 목록 */}
+          {isLoading && localItems.length === 0 ? (
+            <LoadingView />
+          ) : (
+            <ReactWindowComponents
+              items={localItems || []} /* null/undefined 방지 */
+              hasMore={hasMore}
+              isLoading={isLoading || refreshing}
+              onLoadMore={onLoadMore}
+              onRefresh={onRefresh}
+              selectedItems={(selectedKeys || []).map(key => key.toString())}
+              onSelectItem={handleSelectItem}
+              onScrollDirectionChange={handleScrollDirectionChange}
+            />
+          )}
+        </PullToRefreshContainer>
         
-        {/* 로딩 상태 또는 가상 목록 */}
-        {isLoading && localItems.length === 0 ? (
-          <LoadingView />
-        ) : (
-          <ReactWindowComponents
-            items={localItems || []} /* null/undefined 방지 */
-            hasMore={hasMore}
-            isLoading={isLoading || refreshing}
-            onLoadMore={onLoadMore}
-            onRefresh={onRefresh}
-            selectedItems={(selectedKeys || []).map(key => key.toString())}
-            onSelectItem={handleSelectItem}
-            onScrollDirectionChange={handleScrollDirectionChange}
-          />
+        {/* 복사 버튼 */}
+        <ActionButton
+          visible={selectedKeys.length > 0}
+          onClick={handleCopySelected}
+          aria-label="선택한 뉴스 복사"
+        >
+          <CopyIcon />
+        </ActionButton>
+        
+        {/* 새로고침 버튼 - 아이콘만 회전하도록 수정 */}
+        <ActionButton
+          color="green"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          isRefreshing={refreshing}
+          aria-label="뉴스 새로고침"
+        >
+          <RefreshIcon />
+        </ActionButton>
+        
+        {/* 토스트 메시지 */}
+        {toast.visible && (
+          <Toast>
+            {toast.message}
+          </Toast>
         )}
-      </PullToRefreshContainer>
-      
-      {/* 복사 버튼 */}
-      <ActionButton
-        visible={selectedKeys.length > 0}
-        onClick={handleCopySelected}
-        aria-label="선택한 뉴스 복사"
-      >
-        <CopyIcon />
-      </ActionButton>
-      
-      {/* 새로고침 버튼 - 애니메이션 방식 수정 */}
-      <ActionButton
-        color="green"
-        onClick={handleRefresh}
-        disabled={refreshing}
-        isRefreshing={refreshing}
-        aria-label="뉴스 새로고침"
-      >
-        <RefreshIcon />
-      </ActionButton>
-      
-      {/* 토스트 메시지 */}
-      {toast.visible && (
-        <Toast>
-          {toast.message}
-        </Toast>
-      )}
-    </Container>
+      </Container>
+    </>
   );
 }
