@@ -284,6 +284,7 @@ const HomePage = () => {
                 
                 <div style={{ height: '60px' }}></div> {/* 하단 메뉴바 공간 */}
                 
+                {/* 하단 네비게이션 바 - 페이지네이션 일시적으로 비활성화 
                 <div style={{ 
                   position: 'fixed', 
                   bottom: 0, 
@@ -298,6 +299,7 @@ const HomePage = () => {
                     onPageChange={handlePageChange}
                   />
                 </div>
+                */}
               </>
             )}
           </>
