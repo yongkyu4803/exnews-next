@@ -13,7 +13,7 @@ const ReactWindowComponents = dynamic(() => import('./ReactWindowComponents'), {
 // 스타일 컴포넌트 정의
 const Container = styled.div`
   position: relative;
-  height: calc(100vh - 180px);
+  height: calc(100vh - 200px);
   width: 100%;
   overflow: visible;
   background-color: #ffffff;
@@ -37,10 +37,10 @@ const LoadingContainer = styled.div`
 `;
 
 const SkeletonCard = styled.div`
-  height: 145px;
+  height: 120px;
   width: 100%;
   background-color: #ffffff;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -154,7 +154,7 @@ const RefreshIcon = () => (
 const LoadingView = () => (
   <LoadingContainer>
     {[1, 2, 3, 4, 5, 6, 7].map(i => <SkeletonCard key={i} />)}
-    <div style={{ color: '#666', marginTop: '16px' }}>뉴스를 불러오는 중입니다...</div>
+    <div style={{ color: '#666', marginTop: '12px', fontSize: '13px' }}>뉴스를 불러오는 중입니다...</div>
   </LoadingContainer>
 );
 

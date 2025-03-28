@@ -22,9 +22,9 @@ const TouchCard = styled.div<{ isSelected?: boolean; isMounted?: boolean }>`
   background-color: ${props => props.isSelected ? 'rgba(26, 115, 232, 0.1)' : 'white'};
   border-radius: 8px;
   box-shadow: var(--card-shadow);
-  padding: 12px;
-  margin: 4px 0;
-  height: 180px;
+  padding: 8px;
+  margin: 3px 0;
+  height: 130px;
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
@@ -126,20 +126,20 @@ const SelectButton = styled.button<{ isSelected?: boolean }>`
 `;
 
 const CardHeader = styled.div`
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 `;
 
 const CardFooter = styled.div<{ isSelected?: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 8px;
+  margin-top: 6px;
   border-top: 1px solid #f0f0f0;
-  padding-top: 8px;
+  padding-top: 6px;
   position: absolute;
-  bottom: 12px;
-  left: 12px;
-  right: 12px;
+  bottom: 8px;
+  left: 8px;
+  right: 8px;
   background: ${props => props.isSelected ? 'rgba(26, 115, 232, 0.1)' : 'white'};
 `;
 
@@ -152,12 +152,17 @@ const Date = styled.span`
 `;
 
 const Title = styled.h3`
-  margin: 0 0 10px 0;
-  font-size: 16px;
+  margin: 0 0 4px 0;
+  font-size: 14px;
   font-weight: 600;
   overflow-wrap: break-word;
   word-break: break-word;
   color: #333;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-height: 42px;
 `;
 
 const Description = styled.p`
@@ -328,10 +333,6 @@ const NewsCard: React.FC<NewsCardProps> = ({
       <CardHeader>
         <Title>{safeTitle}</Title>
       </CardHeader>
-      
-      <CardContent>
-        <Description>{safeDescription}</Description>
-      </CardContent>
       
       <CardFooter isSelected={isSelected}>
         <Date>{safeDate}</Date>
