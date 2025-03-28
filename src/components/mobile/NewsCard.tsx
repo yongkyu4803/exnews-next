@@ -23,8 +23,8 @@ const TouchCard = styled.div<{ isSelected?: boolean; isMounted?: boolean }>`
   border-radius: 8px;
   box-shadow: var(--card-shadow);
   padding: 12px;
-  margin: 6px 0;
-  height: 204px;
+  margin: 4px 0;
+  height: 180px;
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
@@ -52,7 +52,7 @@ const CardDescription = styled.p`
   overflow-wrap: break-word;
   word-break: break-word;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 `;
@@ -167,17 +167,17 @@ const Description = styled.p`
   overflow-wrap: break-word;
   word-break: break-word;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  max-height: 63px;
+  max-height: 42px;
 `;
 
 const CardContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 3px;
-  height: 80px;
+  height: 70px;
   overflow: hidden;
   margin-bottom: 5px; /* Footer 공간 확보 - 줄임 */
 `;

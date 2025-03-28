@@ -153,7 +153,7 @@ const RefreshIcon = () => (
 // 로딩 뷰 컴포넌트
 const LoadingView = () => (
   <LoadingContainer>
-    {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
+    {[1, 2, 3, 4, 5, 6, 7].map(i => <SkeletonCard key={i} />)}
     <div style={{ color: '#666', marginTop: '16px' }}>뉴스를 불러오는 중입니다...</div>
   </LoadingContainer>
 );
@@ -435,16 +435,28 @@ export default function VirtualNewsList({
           {isLoading && localItems.length === 0 ? (
             <LoadingView />
           ) : (
-            <ReactWindowComponents
-              items={localItems || []} /* null/undefined 방지 */
-              hasMore={hasMore}
-              isLoading={isLoading}
-              onLoadMore={onLoadMore}
-              onRefresh={onRefresh}
-              selectedItems={(selectedKeys || []).map(key => key.toString())}
-              onSelectItem={handleSelectItem}
-              onScrollDirectionChange={handleScrollDirectionChange}
-            />
+            <>
+              <ReactWindowComponents
+                items={localItems || []}
+                hasMore={hasMore}
+                isLoading={isLoading}
+                onLoadMore={onLoadMore}
+                onRefresh={onRefresh}
+                selectedItems={(selectedKeys || []).map(key => key.toString())}
+                onSelectItem={handleSelectItem}
+                onScrollDirectionChange={handleScrollDirectionChange}
+              />
+              {hasMore && (
+                <div style={{ 
+                  padding: '16px', 
+                  textAlign: 'center',
+                  color: '#666',
+                  fontSize: '14px'
+                }}>
+                  다음 페이지로 이동하려면 스크롤하세요
+                </div>
+              )}
+            </>
           )}
         </PullToRefreshContainer>
         

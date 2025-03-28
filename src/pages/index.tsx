@@ -6,6 +6,8 @@ import VirtualNewsList from '@/components/mobile/VirtualNewsList';
 import { CopyOutlined } from '@ant-design/icons';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import { NewsItem, NewsResponse } from '@/types';
+import { Pagination } from 'antd';
+import BottomNav from '@/components/mobile/BottomNav';
 
 // 동적으로 Ant Design 컴포넌트 임포트
 const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
@@ -25,8 +27,8 @@ const NewsTable = dynamic(() => import('@/components/NewsTable'), {
 const HomePage = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(7); // 모바일에서 한 페이지당 7개 아이템
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<NewsItem[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
@@ -90,9 +92,31 @@ const HomePage = () => {
     }
   );
 
+  // 현재 페이지의 아이템만 필터링
+  const paginatedItems = React.useMemo(() => {
+    if (!data?.items) return [];
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return data.items.slice(startIndex, endIndex);
+  }, [data?.items, currentPage, pageSize]);
+
+  // 전체 페이지 수 계산
+  const totalPages = React.useMemo(() => {
+    if (!data?.items) return 0;
+    return Math.ceil(data.items.length / pageSize);
+  }, [data?.items, pageSize]);
+
+  // 페이지 변경 핸들러
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // 페이지 변경 시 스크롤을 맨 위로
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // 카테고리 변경 시 페이지 초기화
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category === 'all' ? undefined : category);
-    setPage(1);
+    setCurrentPage(1);
   };
 
   const handleCopyToClipboard = () => {
@@ -219,18 +243,61 @@ const HomePage = () => {
         )}
 
         {isMobile ? (
-          <VirtualNewsList
-            items={data?.items || []}
-            hasMore={false} // 모든 데이터를 한 번에 로드하므로 항상 false
-            isLoading={isLoading}
-            onLoadMore={() => {}} // 빈 함수로 대체
-            onRefresh={handleRefresh}
-            selectedKeys={selectedKeys}
-            onSelectChange={(keys, rows) => {
-              setSelectedKeys(keys);
-              setSelectedRows(rows);
-            }}
-          />
+          <>
+            <VirtualNewsList
+              items={paginatedItems}
+              hasMore={currentPage < totalPages}
+              isLoading={isLoading}
+              onLoadMore={() => handlePageChange(currentPage + 1)}
+              onRefresh={handleRefresh}
+              selectedKeys={selectedKeys}
+              onSelectChange={(keys, rows) => {
+                setSelectedKeys(keys);
+                setSelectedRows(rows);
+              }}
+            />
+            
+            {/* 페이지네이션 UI */}
+            {totalPages > 1 && (
+              <>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  marginTop: '16px',
+                  padding: '8px',
+                  backgroundColor: '#fff',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}>
+                  <Pagination
+                    current={currentPage}
+                    total={data?.items?.length || 0}
+                    pageSize={pageSize}
+                    onChange={handlePageChange}
+                    size="small"
+                    showSizeChanger={false}
+                  />
+                </div>
+                
+                <div style={{ height: '60px' }}></div> {/* 하단 메뉴바 공간 */}
+                
+                <div style={{ 
+                  position: 'fixed', 
+                  bottom: 0, 
+                  left: 0, 
+                  right: 0, 
+                  height: '60px',
+                  zIndex: 100
+                }}>
+                  <BottomNav 
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </div>
+              </>
+            )}
+          </>
         ) : (
           <NewsTable 
             items={data?.items || []}

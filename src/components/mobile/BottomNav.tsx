@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { HomeOutlined, UnorderedListOutlined, UserOutlined } from '@ant-design/icons';
+import { HomeOutlined, UnorderedListOutlined, UserOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import styled from '@emotion/styled';
 
 const NavContainer = styled.nav`
@@ -18,7 +18,7 @@ const NavItem = styled.button<{ active?: boolean }>`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 33.33%;
+  width: 20%;
   height: 100%;
   border: none;
   background: none;
@@ -31,9 +31,27 @@ const NavItem = styled.button<{ active?: boolean }>`
   }
 `;
 
-export default function BottomNav() {
+interface BottomNavProps {
+  currentPage?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+}
+
+export default function BottomNav({ currentPage = 1, totalPages = 1, onPageChange }: BottomNavProps) {
   const router = useRouter();
   const currentPath = router.pathname;
+
+  const handlePrevPage = () => {
+    if (onPageChange && currentPage > 1) {
+      onPageChange(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (onPageChange && currentPage < totalPages) {
+      onPageChange(currentPage + 1);
+    }
+  };
 
   return (
     <NavContainer>
@@ -45,18 +63,44 @@ export default function BottomNav() {
         <span>홈</span>
       </NavItem>
       <NavItem 
+        onClick={handlePrevPage}
+        disabled={currentPage <= 1}
+        style={{ opacity: currentPage <= 1 ? 0.5 : 1 }}
+      >
+        <LeftOutlined style={{ fontSize: '24px' }} />
+        <span>이전</span>
+      </NavItem>
+      <NavItem>
+        <div style={{ 
+          width: '28px', 
+          height: '28px', 
+          borderRadius: '50%', 
+          backgroundColor: '#1a4b8c', 
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '14px',
+          fontWeight: 'bold'
+        }}>
+          {currentPage}
+        </div>
+        <span style={{ marginTop: '3px' }}>{totalPages}쪽</span>
+      </NavItem>
+      <NavItem 
+        onClick={handleNextPage}
+        disabled={currentPage >= totalPages}
+        style={{ opacity: currentPage >= totalPages ? 0.5 : 1 }}
+      >
+        <RightOutlined style={{ fontSize: '24px' }} />
+        <span>다음</span>
+      </NavItem>
+      <NavItem 
         active={currentPath === '/categories'} 
         onClick={() => router.push('/categories')}
       >
         <UnorderedListOutlined style={{ fontSize: '24px' }} />
         <span>카테고리</span>
-      </NavItem>
-      <NavItem 
-        active={currentPath === '/admin'} 
-        onClick={() => router.push('/admin')}
-      >
-        <UserOutlined style={{ fontSize: '24px' }} />
-        <span>관리자</span>
       </NavItem>
     </NavContainer>
   );

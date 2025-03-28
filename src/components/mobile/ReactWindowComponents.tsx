@@ -5,7 +5,7 @@ import InfiniteLoader from 'react-window-infinite-loader';
 import NewsCard from './NewsCard';
 
 // 상수 정의
-const ITEM_HEIGHT = 220; // 카드 아이템 높이 (픽셀)
+const ITEM_HEIGHT = 200; // 카드 아이템 높이 조정 (픽셀)
 const LOADING_ITEM_HEIGHT = 100; // 로딩 아이템 높이 (픽셀)
 
 const WindowContainer = styled.div`
@@ -24,6 +24,7 @@ const ListContainer = styled.div`
   position: relative;
   will-change: transform;
   transform: translateZ(0);
+  padding-bottom: 16px; // 하단 여백 추가
 `;
 
 // 로딩 인디케이터 스타일
@@ -180,7 +181,7 @@ export default function ReactWindowComponents({
       if (!item) {
         console.warn('유효하지 않은 아이템', { index, itemsLength: currentItems.length });
         return (
-          <div style={{ ...style, height: ITEM_HEIGHT, padding: '16px' }}>
+          <div style={{ ...style, height: ITEM_HEIGHT, padding: '8px 16px' }}>
             <div style={{ 
               backgroundColor: '#f5f5f5', 
               padding: '16px', 
@@ -204,7 +205,7 @@ export default function ReactWindowComponents({
       }
       
       return (
-        <div style={{ ...style, height: ITEM_HEIGHT, paddingBottom: '16px' }}>
+        <div style={{ ...style, height: ITEM_HEIGHT, padding: '8px 16px' }}>
           <NewsCard 
             key={item.id} 
             title={item.title || '제목 없음'}
