@@ -181,7 +181,7 @@ const CardContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 3px;
-  height: 70px;
+  height: 100px;
   overflow: hidden;
   margin-bottom: 5px; /* Footer 공간 확보 - 줄임 */
 `;
