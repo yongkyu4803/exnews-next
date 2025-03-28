@@ -88,13 +88,13 @@ const EmptyView = styled.div`
 const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   position: fixed;
   bottom: 16px;
-  right: ${props => props.color === 'green' ? '16px' : '56px'};
-  width: 24px !important;
-  height: 24px !important;
-  min-width: 24px !important;
-  min-height: 24px !important;
-  max-width: 24px !important;
-  max-height: 24px !important;
+  right: ${props => props.color === 'green' ? '16px' : '36px'};
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+  max-width: 16px !important;
+  max-height: 16px !important;
   padding: 0 !important;
   border-radius: 50%;
   background-color: ${props => props.color === 'green' ? '#4CAF50' : 'var(--primary-color, #1a73e8)'};
@@ -113,10 +113,10 @@ const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   }
   
   svg {
-    width: 12px !important;
-    height: 12px !important;
-    max-width: 12px !important;
-    max-height: 12px !important;
+    width: 8px !important;
+    height: 8px !important;
+    max-width: 8px !important;
+    max-height: 8px !important;
   }
 `;
 
@@ -142,14 +142,14 @@ const Toast = styled.div`
 
 // 아이콘 컴포넌트
 const CopyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="6" height="6">
     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
   </svg>
 );
 
 const RefreshIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="6" height="6">
     <path d="M23 4v6h-6"></path>
     <path d="M1 20v-6h6"></path>
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
@@ -218,6 +218,31 @@ const VisualConsole = styled.div<{ visible: boolean }>`
   }
 `;
 
+const MicroButton = styled.button`
+  width: 10px !important;
+  height: 10px !important;
+  min-width: 10px !important;
+  min-height: 10px !important;
+  max-width: 10px !important;
+  max-height: 10px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 50% !important;
+  color: white !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16) !important;
+  
+  svg {
+    width: 6px !important;
+    height: 6px !important;
+    max-width: 6px !important;
+    max-height: 6px !important;
+  }
+`;
+
 export default function VirtualNewsList({
   items,
   hasMore,
@@ -239,6 +264,10 @@ export default function VirtualNewsList({
   const itemsRef = useRef(items);
   const containerRef = useRef<HTMLDivElement>(null);
   const mountedRef = useRef(true);
+  
+  // DOM 요소 직접 조작을 위한 참조
+  const refreshBtnRef = useRef<HTMLButtonElement>(null);
+  const copyBtnRef = useRef<HTMLButtonElement>(null);
   
   // 시각적 콘솔 로그 함수
   const visualLog = useCallback((message: any, type?: 'log' | 'info' | 'warn' | 'error') => {
@@ -300,6 +329,38 @@ export default function VirtualNewsList({
       setLocalItems(items);
     }
   }, [items, visualLog]);
+  
+  // DOM 요소 크기 직접 설정
+  useEffect(() => {
+    // 함수 정의 및 호출
+    const applyButtonStyles = (element: HTMLElement | null) => {
+      if (!element) return;
+      
+      // 인라인 스타일 직접 적용
+      element.style.cssText = `
+        width: 16px !important; 
+        height: 16px !important; 
+        min-width: 16px !important; 
+        min-height: 16px !important;
+        max-width: 16px !important;
+        max-height: 16px !important;
+        padding: 0 !important;
+        border-radius: 50% !important;
+      `;
+      
+      // 아이콘 크기 조정
+      const svg = element.querySelector('svg');
+      if (svg) {
+        svg.style.cssText = `
+          width: 8px !important;
+          height: 8px !important;
+        `;
+      }
+    };
+    
+    applyButtonStyles(refreshBtnRef.current);
+    applyButtonStyles(copyBtnRef.current);
+  }, []);  // 비어있는 의존성 배열
   
   // 아이템 선택 처리
   const handleSelectItem = useCallback((id: string | number, isSelected: boolean) => {
@@ -456,41 +517,48 @@ export default function VirtualNewsList({
         </PullToRefreshContainer>
         
         {/* 새로고침 버튼 */}
-        <ActionButton
-          color="green"
-          visible={true}
-          onClick={handleRefresh}
-          aria-label="새로고침"
-          className="small-action-button"
-          style={{ 
-            opacity: refreshing ? 0.7 : 1,
-            animation: refreshing ? 'rotate 1s linear infinite' : 'none',
+        <div
+          style={{
+            position: 'fixed',
             bottom: '80px',
-            width: '20px !important',
-            height: '20px !important',
-            minWidth: '20px !important',
-            minHeight: '20px !important'
+            right: '16px',
+            zIndex: 1000,
           }}
         >
-          <RefreshIcon />
-        </ActionButton>
+          <MicroButton
+            onClick={handleRefresh}
+            aria-label="새로고침"
+            style={{ 
+              opacity: refreshing ? 0.7 : 1,
+              animation: refreshing ? 'rotate 1s linear infinite' : 'none',
+              backgroundColor: '#4CAF50',
+            }}
+          >
+            <RefreshIcon />
+          </MicroButton>
+        </div>
         
         {/* 복사 버튼 */}
-        <ActionButton
-          visible={selectedKeys.length > 0}
-          onClick={handleCopySelected}
-          aria-label="선택한 뉴스 복사"
-          className="small-action-button"
-          style={{ 
-            bottom: '80px',
-            width: '20px !important',
-            height: '20px !important',
-            minWidth: '20px !important',
-            minHeight: '20px !important'
-          }}
-        >
-          <CopyIcon />
-        </ActionButton>
+        {selectedKeys.length > 0 && (
+          <div
+            style={{
+              position: 'fixed',
+              bottom: '80px',
+              right: '36px',
+              zIndex: 1000,
+            }}
+          >
+            <MicroButton
+              onClick={handleCopySelected}
+              aria-label="선택한 뉴스 복사"
+              style={{ 
+                backgroundColor: 'var(--primary-color, #1a73e8)',
+              }}
+            >
+              <CopyIcon />
+            </MicroButton>
+          </div>
+        )}
         
         {/* 토스트 메시지 */}
         {toast.visible && (
@@ -499,6 +567,26 @@ export default function VirtualNewsList({
           </Toast>
         )}
       </Container>
+      
+      {/* 마이크로 버튼 스타일 */}
+      <style jsx global>{`
+        .micro-button {
+          width: 16px !important;
+          height: 16px !important;
+          min-width: 16px !important;
+          min-height: 16px !important;
+          max-width: 16px !important;
+          max-height: 16px !important;
+          padding: 0 !important;
+        }
+        
+        .micro-button svg {
+          width: 8px !important;
+          height: 8px !important;
+          max-width: 8px !important;
+          max-height: 8px !important;
+        }
+      `}</style>
       
       {/* 회전 애니메이션 스타일 */}
       <style jsx global>{`
