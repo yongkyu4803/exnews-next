@@ -6,7 +6,7 @@ import NewsCard from './NewsCard';
 
 // 상수 정의
 const ITEM_HEIGHT = 80; // 새로운 카드 높이에 맞춤
-const LOADING_ITEM_HEIGHT = 100; // 로딩 아이템 높이 조정
+const LOADING_ITEM_HEIGHT = 60; // 로딩 아이템 높이 조정
 
 const WindowContainer = styled.div`
   width: 100%;
@@ -176,7 +176,8 @@ export default function ReactWindowComponents({
               height: '100%',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              fontSize: '13px'
             }}>
               항목 로드 오류
             </div>

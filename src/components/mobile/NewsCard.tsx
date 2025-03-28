@@ -24,7 +24,7 @@ const TouchCard = styled.div<{ isSelected?: boolean; isMounted?: boolean }>`
   box-shadow: var(--card-shadow);
   padding: 8px;
   margin: 1px 0;
-  height: 70px;
+  height: 80px;
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
@@ -126,7 +126,7 @@ const SelectButton = styled.button<{ isSelected?: boolean }>`
 `;
 
 const CardHeader = styled.div`
-  margin-bottom: 4px;
+  margin-bottom: 28px;
 `;
 
 const CardFooter = styled.div<{ isSelected?: boolean }>`
@@ -134,16 +134,16 @@ const CardFooter = styled.div<{ isSelected?: boolean }>`
   justify-content: space-between;
   align-items: center;
   margin-top: 2px;
-  padding-top: 3px;
+  padding-top: 2px;
   position: absolute;
-  bottom: 5px;
+  bottom: 8px;
   left: 8px;
   right: 8px;
   background: ${props => props.isSelected ? 'rgba(26, 115, 232, 0.1)' : 'white'};
 `;
 
 const Date = styled.span`
-  font-size: 11px;
+  font-size: 10px;
   color: #666;
   background-color: #f5f5f5;
   padding: 1px 4px;
@@ -152,7 +152,8 @@ const Date = styled.span`
 
 const Title = styled.h3`
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
+  line-height: 1.3;
   font-weight: 600;
   overflow-wrap: break-word;
   word-break: break-word;
@@ -161,7 +162,7 @@ const Title = styled.h3`
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  max-height: 40px;
+  max-height: 34px;
 `;
 
 const Description = styled.p`
