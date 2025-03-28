@@ -5,7 +5,7 @@ import InfiniteLoader from 'react-window-infinite-loader';
 import NewsCard from './NewsCard';
 
 // 상수 정의
-const ITEM_HEIGHT = 80; // 새로운 카드 높이에 맞춤
+const ITEM_HEIGHT = 120; // 새로운 카드 높이에 맞춤
 const LOADING_ITEM_HEIGHT = 60; // 로딩 아이템 높이 조정
 
 const WindowContainer = styled.div`
