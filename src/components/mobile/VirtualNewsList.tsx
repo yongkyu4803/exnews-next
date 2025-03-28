@@ -348,8 +348,22 @@ export default function VirtualNewsList({
       // 이벤트 트래킹
       trackEvent('refresh_news_list', {});
     } catch (error) {
-      visualLog('[VirtualNewsList] 새로고침 실패: ' + error, 'error');
-      showToast('새로고침 실패');
+      // 오류 정보를 더 자세하게 로깅
+      console.error('새로고침 오류:', error);
+      
+      // 오류 객체 상세 분석
+      const errorMessage = error instanceof Error 
+        ? `${error.name}: ${error.message}` 
+        : String(error);
+      
+      const errorDetails = error instanceof Error && error.stack 
+        ? error.stack 
+        : '스택 정보 없음';
+      
+      visualLog(`[VirtualNewsList] 새로고침 실패: ${errorMessage}`, 'error');
+      visualLog(`오류 세부정보: ${errorDetails}`, 'error');
+      
+      showToast(`새로고침 실패: ${errorMessage}`);
     } finally {
       setRefreshing(false);
     }
@@ -393,11 +407,13 @@ export default function VirtualNewsList({
           background: '#333',
           color: 'white',
           border: 'none',
-          fontSize: '16px'
+          fontSize: '16px',
+          borderRadius: '0 0 0 8px',
+          opacity: 0.8
         }}
         onClick={() => setConsoleVisible(!consoleVisible)}
       >
-        {consoleVisible ? '×' : '?'}
+        {consoleVisible ? '×' : '디버그'}
       </button>
       
       <Container ref={containerRef}>
@@ -425,7 +441,10 @@ export default function VirtualNewsList({
           visible={true}
           onClick={handleRefresh}
           aria-label="새로고침"
-          style={{ opacity: refreshing ? 0.7 : 1 }}
+          style={{ 
+            opacity: refreshing ? 0.7 : 1,
+            animation: refreshing ? 'rotate 1s linear infinite' : 'none'
+          }}
         >
           <RefreshIcon />
         </ActionButton>
@@ -446,6 +465,14 @@ export default function VirtualNewsList({
           </Toast>
         )}
       </Container>
+      
+      {/* 회전 애니메이션 스타일 */}
+      <style jsx global>{`
+        @keyframes rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </>
   );
 }
