@@ -30,6 +30,7 @@ const HomePage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<NewsItem[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+  const queryClient = useQueryClient();
 
   // 클라이언트 사이드 마운트 체크
   useEffect(() => {
@@ -141,9 +142,13 @@ const HomePage = () => {
   }, [data]);
 
   const handleRefresh = async () => {
-    const queryClient = useQueryClient();
-    await queryClient.invalidateQueries(['newsItems']);
-    return Promise.resolve();
+    try {
+      await queryClient.invalidateQueries(['newsItems', selectedCategory]);
+      return Promise.resolve();
+    } catch (error) {
+      console.error('새로고침 중 오류 발생:', error);
+      return Promise.reject(error);
+    }
   };
 
   // 서버 사이드 렌더링 시 로딩 UI 표시
