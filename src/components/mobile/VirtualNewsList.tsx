@@ -87,10 +87,10 @@ const EmptyView = styled.div`
 
 const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   position: fixed;
-  bottom: 20px;
-  right: ${props => props.color === 'green' ? '20px' : '70px'};
-  width: 40px;
-  height: 40px;
+  bottom: 16px;
+  right: ${props => props.color === 'green' ? '16px' : '56px'};
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background-color: ${props => props.color === 'green' ? '#4CAF50' : 'var(--primary-color, #1a73e8)'};
   color: white;
@@ -98,7 +98,7 @@ const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   align-items: center;
   justify-content: center;
   border: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
   z-index: 100;
   transition: all 0.3s ease;
   
@@ -108,8 +108,8 @@ const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   }
   
   svg {
-    width: 20px;
-    height: 20px;
+    width: 14px;
+    height: 14px;
   }
 `;
 
@@ -135,14 +135,14 @@ const Toast = styled.div`
 
 // 아이콘 컴포넌트
 const CopyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
   </svg>
 );
 
 const RefreshIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M23 4v6h-6"></path>
     <path d="M1 20v-6h6"></path>
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
