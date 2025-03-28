@@ -336,37 +336,40 @@ export default function VirtualNewsList({
   const handleRefresh = useCallback(async () => {
     if (refreshing || isLoading) return;
     
+    let isMounted = true;
+    setRefreshing(true);
+    
     try {
-      setRefreshing(true);
       visualLog('[VirtualNewsList] 새로고침 시작', 'info');
       showToast('새로고침 중...');
       
-      await onRefresh();
+      // 컴포넌트가 마운트된 상태일 때만 작업 수행
+      const result = await onRefresh();
       
-      showToast('새로고침 완료');
-      visualLog('[VirtualNewsList] 새로고침 완료', 'info');
-      // 이벤트 트래킹
-      trackEvent('refresh_news_list', {});
+      if (isMounted) {
+        showToast('새로고침 완료');
+        visualLog('[VirtualNewsList] 새로고침 완료', 'info');
+        trackEvent('refresh_news_list', {});
+      }
     } catch (error) {
-      // 오류 정보를 더 자세하게 로깅
-      console.error('새로고침 오류:', error);
-      
-      // 오류 객체 상세 분석
-      const errorMessage = error instanceof Error 
-        ? `${error.name}: ${error.message}` 
-        : String(error);
-      
-      const errorDetails = error instanceof Error && error.stack 
-        ? error.stack 
-        : '스택 정보 없음';
-      
-      visualLog(`[VirtualNewsList] 새로고침 실패: ${errorMessage}`, 'error');
-      visualLog(`오류 세부정보: ${errorDetails}`, 'error');
-      
-      showToast(`새로고침 실패: ${errorMessage}`);
+      if (isMounted) {
+        console.error('새로고침 오류:', error);
+        
+        const errorMessage = error instanceof Error 
+          ? `${error.name}: ${error.message}` 
+          : String(error);
+        
+        visualLog(`[VirtualNewsList] 새로고침 실패: ${errorMessage}`, 'error');
+        showToast(`새로고침 실패: ${errorMessage}`);
+      }
     } finally {
-      setRefreshing(false);
+      if (isMounted) {
+        setRefreshing(false);
+      }
     }
+    
+    // 컴포넌트가 언마운트되면 isMounted 플래그 변경
+    return () => { isMounted = false; };
   }, [refreshing, isLoading, onRefresh, showToast, visualLog]);
   
   // 비어있거나 로딩 중일 때 렌더링
