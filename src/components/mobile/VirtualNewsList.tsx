@@ -142,14 +142,14 @@ const Toast = styled.div`
 
 // 아이콘 컴포넌트
 const CopyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="6" height="6">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="4" height="4">
     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
   </svg>
 );
 
 const RefreshIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="6" height="6">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="4" height="4">
     <path d="M23 4v6h-6"></path>
     <path d="M1 20v-6h6"></path>
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
@@ -219,12 +219,12 @@ const VisualConsole = styled.div<{ visible: boolean }>`
 `;
 
 const MicroButton = styled.button`
-  width: 10px !important;
-  height: 10px !important;
-  min-width: 10px !important;
-  min-height: 10px !important;
-  max-width: 10px !important;
-  max-height: 10px !important;
+  width: 8px !important;
+  height: 8px !important;
+  min-width: 8px !important;
+  min-height: 8px !important;
+  max-width: 8px !important;
+  max-height: 8px !important;
   padding: 0 !important;
   margin: 0 !important;
   border: none !important;
@@ -236,10 +236,10 @@ const MicroButton = styled.button`
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16) !important;
   
   svg {
-    width: 6px !important;
-    height: 6px !important;
-    max-width: 6px !important;
-    max-height: 6px !important;
+    width: 4px !important;
+    height: 4px !important;
+    max-width: 4px !important;
+    max-height: 4px !important;
   }
 `;
 
@@ -520,8 +520,8 @@ export default function VirtualNewsList({
         <div
           style={{
             position: 'fixed',
-            bottom: '80px',
-            right: '16px',
+            bottom: '70px',
+            right: '10px',
             zIndex: 1000,
           }}
         >
@@ -543,8 +543,8 @@ export default function VirtualNewsList({
           <div
             style={{
               position: 'fixed',
-              bottom: '80px',
-              right: '36px',
+              bottom: '70px',
+              right: '25px',
               zIndex: 1000,
             }}
           >
@@ -571,20 +571,20 @@ export default function VirtualNewsList({
       {/* 마이크로 버튼 스타일 */}
       <style jsx global>{`
         .micro-button {
-          width: 16px !important;
-          height: 16px !important;
-          min-width: 16px !important;
-          min-height: 16px !important;
-          max-width: 16px !important;
-          max-height: 16px !important;
+          width: 8px !important;
+          height: 8px !important;
+          min-width: 8px !important;
+          min-height: 8px !important;
+          max-width: 8px !important;
+          max-height: 8px !important;
           padding: 0 !important;
         }
         
         .micro-button svg {
-          width: 8px !important;
-          height: 8px !important;
-          max-width: 8px !important;
-          max-height: 8px !important;
+          width: 4px !important;
+          height: 4px !important;
+          max-width: 4px !important;
+          max-height: 4px !important;
         }
       `}</style>
       

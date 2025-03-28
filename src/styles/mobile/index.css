@@ -5,13 +5,13 @@
   --mobile-bottom-nav-height: 56px;
   --primary-color: #1a4b8c;
   --card-border-radius: 16px;
-  --min-touch-size: 44px; /* 최소 터치 영역 크기 */
+  --min-touch-size: 10px; /* 최소 터치 영역 크기 */
   --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* 터치 영역 최적화 - 모든 클릭 가능한 요소에 적용 */
-button, 
-.ant-btn,
+/* 터치 영역 최적화 - 모든 클릭 가능한 요소에 적용, 마이크로 버튼 제외 */
+button:not(.MicroButton):not([class*="micro-button"]), 
+.ant-btn:not(.MicroButton):not([class*="micro-button"]),
 a,
 .clickable,
 [role="button"],
@@ -25,6 +25,19 @@ select {
   padding: 12px;
   /* 터치 피드백 효과 */
   touch-action: manipulation;
+}
+
+/* 마이크로 버튼 스타일 예외 처리 */
+.MicroButton, 
+button.MicroButton,
+[class*="micro-button"], 
+button[class*="micro-button"] {
+  min-height: 10px !important;
+  min-width: 10px !important;
+  height: 10px !important;
+  width: 10px !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
 /* 터치 상태 표시 */

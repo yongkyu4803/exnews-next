@@ -497,29 +497,29 @@ body.no-scroll {
 /* 모바일 및 터치 최적화 */
 button.micro-button,
 .micro-button {
-  min-width: 16px !important;
-  min-height: 16px !important;
-  width: 16px !important;
-  height: 16px !important;
+  min-width: 8px !important;
+  min-height: 8px !important;
+  width: 8px !important;
+  height: 8px !important;
   padding: 0 !important;
   border: none !important;
   border-radius: 50% !important;
 }
 
 .micro-button svg {
-  width: 8px !important;
-  height: 8px !important;
+  width: 4px !important;
+  height: 4px !important;
 }
 
 @media (max-width: 768px) {
   button.micro-button,
   .micro-button {
-    min-height: 16px !important;
-    min-width: 16px !important;
-    max-height: 16px !important;
-    max-width: 16px !important;
-    height: 16px !important;
-    width: 16px !important;
+    min-height: 8px !important;
+    min-width: 8px !important;
+    max-height: 8px !important;
+    max-width: 8px !important;
+    height: 8px !important;
+    width: 8px !important;
     padding: 0 !important;
   }
 }

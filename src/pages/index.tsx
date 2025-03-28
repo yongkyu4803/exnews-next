@@ -193,24 +193,24 @@ const HomePage = () => {
       <style jsx global>{`
         /* 작은 버튼 스타일 오버라이드 */
         .small-action-button {
-          min-width: 16px !important;
-          min-height: 16px !important;
-          width: 16px !important;
-          height: 16px !important;
+          min-width: 8px !important;
+          min-height: 8px !important;
+          width: 8px !important;
+          height: 8px !important;
           padding: 0 !important;
           border: none !important;
         }
         
         .small-action-button svg {
-          width: 8px !important;
-          height: 8px !important;
+          width: 4px !important;
+          height: 4px !important;
         }
         
         /* 터치 영역 최적화 수정 */
         @media (hover: none) {
           .micro-button {
-            min-height: 16px !important;
-            min-width: 16px !important;
+            min-height: 8px !important;
+            min-width: 8px !important;
             padding: 0 !important;
           }
         }
