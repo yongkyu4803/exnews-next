@@ -9,6 +9,7 @@ type EventType =
   | 'select_news' 
   | 'load_more' 
   | 'refresh_news'
+  | 'refresh_news_list'
   | 'page_view'
   | 'copy_selected_news'
   | 'share_selected_news';

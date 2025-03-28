@@ -141,6 +141,15 @@ const CopyIcon = () => (
   </svg>
 );
 
+const RefreshIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M23 4v6h-6"></path>
+    <path d="M1 20v-6h6"></path>
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
+    <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
+  </svg>
+);
+
 // 로딩 뷰 컴포넌트
 const LoadingView = () => (
   <LoadingContainer>
@@ -217,6 +226,7 @@ export default function VirtualNewsList({
   const [toast, setToast] = useState({ visible: false, message: '' });
   const [consoleVisible, setConsoleVisible] = useState(false);
   const [logs, setLogs] = useState<{type: string; message: string; timestamp: string}[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
   
   // 참조
   const itemsRef = useRef(items);
@@ -322,6 +332,29 @@ export default function VirtualNewsList({
     }
   }, []);
   
+  // 새로고침 처리 함수
+  const handleRefresh = useCallback(async () => {
+    if (refreshing || isLoading) return;
+    
+    try {
+      setRefreshing(true);
+      visualLog('[VirtualNewsList] 새로고침 시작', 'info');
+      showToast('새로고침 중...');
+      
+      await onRefresh();
+      
+      showToast('새로고침 완료');
+      visualLog('[VirtualNewsList] 새로고침 완료', 'info');
+      // 이벤트 트래킹
+      trackEvent('refresh_news_list', {});
+    } catch (error) {
+      visualLog('[VirtualNewsList] 새로고침 실패: ' + error, 'error');
+      showToast('새로고침 실패');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshing, isLoading, onRefresh, showToast, visualLog]);
+  
   // 비어있거나 로딩 중일 때 렌더링
   if (!mounted) {
     return <LoadingView />;
@@ -385,6 +418,17 @@ export default function VirtualNewsList({
             />
           )}
         </PullToRefreshContainer>
+        
+        {/* 새로고침 버튼 */}
+        <ActionButton
+          color="green"
+          visible={true}
+          onClick={handleRefresh}
+          aria-label="새로고침"
+          style={{ opacity: refreshing ? 0.7 : 1 }}
+        >
+          <RefreshIcon />
+        </ActionButton>
         
         {/* 복사 버튼 */}
         <ActionButton
