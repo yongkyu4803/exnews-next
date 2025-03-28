@@ -64,7 +64,7 @@ export default function ReactWindowComponents({
   const listRef = useRef<any>(null);
   const [windowHeight, setWindowHeight] = useState(typeof window !== 'undefined' ? window.innerHeight - 180 : 600);
   const [lastScrollOffset, setLastScrollOffset] = useState(0);
-  const itemCount = hasMore ? (Array.isArray(items) ? items.length + 1 : 1) : (Array.isArray(items) ? items.length : 0);
+  const itemCount = Array.isArray(items) ? items.length : 0;
   const [isFirstRender, setIsFirstRender] = useState(true);
   const itemsRef = useRef<any[]>([]); // 아이템 참조 저장
   
@@ -133,6 +133,11 @@ export default function ReactWindowComponents({
     return Promise.resolve();
   }, [isLoading, onLoadMore]);
   
+  // 아이템이 로드되었는지 확인하는 함수 - 페이지네이션에서는 항상 true
+  const isItemLoaded = useCallback(() => {
+    return true;
+  }, []);
+  
   // 행 렌더링 함수
   const Row = useCallback(({ index, style }: { index: number, style: React.CSSProperties }) => {
     // 먼저 items 배열 유효성 검사
@@ -155,24 +160,6 @@ export default function ReactWindowComponents({
           </div>
         );
       }
-    }
-    
-    // 마지막 아이템이면서 hasMore이면 로딩 인디케이터 표시
-    if (index === currentItems.length) {
-      if (!isLoading && hasMore) {
-        // 비동기적으로 다음 아이템 로드 요청
-        setTimeout(() => {
-          loadMoreItems();
-        }, 100);
-      }
-      
-      return (
-        <div style={{ ...style, height: LOADING_ITEM_HEIGHT }}>
-          <LoadingIndicator>
-            {isLoading ? '더 불러오는 중...' : '스크롤하여 더 불러오기'}
-          </LoadingIndicator>
-        </div>
-      );
     }
     
     // 일반 아이템 렌더링
@@ -222,12 +209,7 @@ export default function ReactWindowComponents({
     }
     
     return null;
-  }, [items, isLoading, hasMore, loadMoreItems, selectedItems, onSelectItem]);
-  
-  // 아이템이 로드되었는지 확인하는 함수
-  const isItemLoaded = useCallback((index: number) => {
-    return !hasMore || (Array.isArray(items) && index < items.length);
-  }, [hasMore, items]);
+  }, [items, isLoading, loadMoreItems, selectedItems, onSelectItem]);
   
   // 아이템이 없는 경우의 처리
   if (!Array.isArray(items) || items.length === 0 && !isLoading) {

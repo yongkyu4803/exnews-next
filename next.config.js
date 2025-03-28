@@ -8,6 +8,7 @@ const withPWA = nextPWA({
   disable: !isProd,
   register: true,
   skipWaiting: true,
+  buildExcludes: [/dynamic-css-manifest\.json$/],
   runtimeCaching: [
     {
       urlPattern: /^https?.*/,

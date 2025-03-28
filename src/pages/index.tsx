@@ -108,6 +108,8 @@ const HomePage = () => {
 
   // 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
+    console.log('페이지 변경:', page, '전체 페이지:', totalPages);
+    if (page < 1 || page > totalPages) return;
     setCurrentPage(page);
     // 페이지 변경 시 스크롤을 맨 위로
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -246,9 +248,9 @@ const HomePage = () => {
           <>
             <VirtualNewsList
               items={paginatedItems}
-              hasMore={currentPage < totalPages}
+              hasMore={false}
               isLoading={isLoading}
-              onLoadMore={() => handlePageChange(currentPage + 1)}
+              onLoadMore={() => {}}
               onRefresh={handleRefresh}
               selectedKeys={selectedKeys}
               onSelectChange={(keys, rows) => {
@@ -276,6 +278,7 @@ const HomePage = () => {
                     onChange={handlePageChange}
                     size="small"
                     showSizeChanger={false}
+                    simple
                   />
                 </div>
                 

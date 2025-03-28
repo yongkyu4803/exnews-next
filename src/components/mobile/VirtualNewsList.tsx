@@ -435,28 +435,16 @@ export default function VirtualNewsList({
           {isLoading && localItems.length === 0 ? (
             <LoadingView />
           ) : (
-            <>
-              <ReactWindowComponents
-                items={localItems || []}
-                hasMore={hasMore}
-                isLoading={isLoading}
-                onLoadMore={onLoadMore}
-                onRefresh={onRefresh}
-                selectedItems={(selectedKeys || []).map(key => key.toString())}
-                onSelectItem={handleSelectItem}
-                onScrollDirectionChange={handleScrollDirectionChange}
-              />
-              {hasMore && (
-                <div style={{ 
-                  padding: '16px', 
-                  textAlign: 'center',
-                  color: '#666',
-                  fontSize: '14px'
-                }}>
-                  다음 페이지로 이동하려면 스크롤하세요
-                </div>
-              )}
-            </>
+            <ReactWindowComponents
+              items={localItems || []}
+              hasMore={false}
+              isLoading={isLoading}
+              onLoadMore={() => {}}
+              onRefresh={onRefresh}
+              selectedItems={(selectedKeys || []).map(key => key.toString())}
+              onSelectItem={handleSelectItem}
+              onScrollDirectionChange={handleScrollDirectionChange}
+            />
           )}
         </PullToRefreshContainer>
         
@@ -468,7 +456,8 @@ export default function VirtualNewsList({
           aria-label="새로고침"
           style={{ 
             opacity: refreshing ? 0.7 : 1,
-            animation: refreshing ? 'rotate 1s linear infinite' : 'none'
+            animation: refreshing ? 'rotate 1s linear infinite' : 'none',
+            bottom: '80px'
           }}
         >
           <RefreshIcon />
@@ -479,6 +468,7 @@ export default function VirtualNewsList({
           visible={selectedKeys.length > 0}
           onClick={handleCopySelected}
           aria-label="선택한 뉴스 복사"
+          style={{ bottom: '80px' }}
         >
           <CopyIcon />
         </ActionButton>

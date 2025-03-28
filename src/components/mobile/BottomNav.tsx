@@ -53,6 +53,13 @@ export default function BottomNav({ currentPage = 1, totalPages = 1, onPageChang
     }
   };
 
+  // 표시할 페이지 범위 계산
+  const pageDisplay = React.useMemo(() => {
+    if (totalPages <= 1) return `${currentPage}`;
+    
+    return `${currentPage} / ${totalPages}`;
+  }, [currentPage, totalPages]);
+
   return (
     <NavContainer>
       <NavItem 
@@ -72,8 +79,8 @@ export default function BottomNav({ currentPage = 1, totalPages = 1, onPageChang
       </NavItem>
       <NavItem>
         <div style={{ 
-          width: '28px', 
-          height: '28px', 
+          width: '36px', 
+          height: '36px', 
           borderRadius: '50%', 
           backgroundColor: '#1a4b8c', 
           color: 'white',
@@ -85,7 +92,7 @@ export default function BottomNav({ currentPage = 1, totalPages = 1, onPageChang
         }}>
           {currentPage}
         </div>
-        <span style={{ marginTop: '3px' }}>{totalPages}쪽</span>
+        <span style={{ marginTop: '3px' }}>{pageDisplay}</span>
       </NavItem>
       <NavItem 
         onClick={handleNextPage}
