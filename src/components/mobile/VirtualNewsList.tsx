@@ -231,6 +231,7 @@ export default function VirtualNewsList({
   // 참조
   const itemsRef = useRef(items);
   const containerRef = useRef<HTMLDivElement>(null);
+  const mountedRef = useRef(true);
   
   // 시각적 콘솔 로그 함수
   const visualLog = useCallback((message: any, type?: 'log' | 'info' | 'warn' | 'error') => {
@@ -266,6 +267,7 @@ export default function VirtualNewsList({
   
   // 마운트 처리
   useEffect(() => {
+    mountedRef.current = true;
     setMounted(true);
     
     // 초기 데이터 처리
@@ -273,11 +275,16 @@ export default function VirtualNewsList({
       setLocalItems(items);
     }
     
-    return () => setMounted(false);
-  }, [items]);
+    return () => {
+      mountedRef.current = false;
+      setMounted(false);
+    };
+  }, []);
   
   // items prop 변경 감지
   useEffect(() => {
+    if (!mountedRef.current) return;
+    
     // 참조 업데이트
     itemsRef.current = items;
     
@@ -334,25 +341,31 @@ export default function VirtualNewsList({
   
   // 새로고침 처리 함수
   const handleRefresh = useCallback(async () => {
-    if (refreshing || isLoading) return;
-    
-    let isMounted = true;
-    setRefreshing(true);
+    if (refreshing || isLoading || !mountedRef.current) return;
     
     try {
+      setRefreshing(true);
       visualLog('[VirtualNewsList] 새로고침 시작', 'info');
       showToast('새로고침 중...');
       
-      // 컴포넌트가 마운트된 상태일 때만 작업 수행
-      const result = await onRefresh();
+      // onRefresh 함수를 Promise로 래핑
+      const refreshPromise = Promise.resolve().then(() => onRefresh());
       
-      if (isMounted) {
+      // 타임아웃 설정
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('새로고침 시간 초과')), 10000);
+      });
+      
+      // Promise.race를 사용하여 타임아웃 처리
+      await Promise.race([refreshPromise, timeoutPromise]);
+      
+      if (mountedRef.current) {
         showToast('새로고침 완료');
         visualLog('[VirtualNewsList] 새로고침 완료', 'info');
         trackEvent('refresh_news_list', {});
       }
     } catch (error) {
-      if (isMounted) {
+      if (mountedRef.current) {
         console.error('새로고침 오류:', error);
         
         const errorMessage = error instanceof Error 
@@ -363,13 +376,10 @@ export default function VirtualNewsList({
         showToast(`새로고침 실패: ${errorMessage}`);
       }
     } finally {
-      if (isMounted) {
+      if (mountedRef.current) {
         setRefreshing(false);
       }
     }
-    
-    // 컴포넌트가 언마운트되면 isMounted 플래그 변경
-    return () => { isMounted = false; };
   }, [refreshing, isLoading, onRefresh, showToast, visualLog]);
   
   // 비어있거나 로딩 중일 때 렌더링
