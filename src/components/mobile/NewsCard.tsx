@@ -23,8 +23,8 @@ const TouchCard = styled.div<{ isSelected?: boolean; isMounted?: boolean }>`
   border-radius: 8px;
   box-shadow: var(--card-shadow);
   padding: 8px;
-  margin: 3px 0;
-  height: 130px;
+  margin: 1px 0;
+  height: 70px;
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
@@ -92,14 +92,14 @@ const IconButton = styled.button`
   border: none;
   color: #666;
   cursor: pointer;
-  padding: 4px;
-  font-size: 14px;
+  padding: 2px;
+  font-size: 12px;
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   
   &:hover, &:active {
     background-color: rgba(0,0,0,0.05);
@@ -107,8 +107,8 @@ const IconButton = styled.button`
 `;
 
 const SelectButton = styled.button<{ isSelected?: boolean }>`
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   background: ${props => props.isSelected ? 'var(--primary-color)' : 'rgba(0,0,0,0.05)'};
   border: ${props => props.isSelected ? 'none' : '1px solid rgba(0,0,0,0.1)'};
   border-radius: 50%;
@@ -116,7 +116,7 @@ const SelectButton = styled.button<{ isSelected?: boolean }>`
   align-items: center;
   justify-content: center;
   color: ${props => props.isSelected ? 'white' : '#666'};
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
   cursor: pointer;
   
@@ -133,26 +133,25 @@ const CardFooter = styled.div<{ isSelected?: boolean }>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 6px;
-  border-top: 1px solid #f0f0f0;
-  padding-top: 6px;
+  margin-top: 2px;
+  padding-top: 3px;
   position: absolute;
-  bottom: 8px;
+  bottom: 5px;
   left: 8px;
   right: 8px;
   background: ${props => props.isSelected ? 'rgba(26, 115, 232, 0.1)' : 'white'};
 `;
 
 const Date = styled.span`
-  font-size: 12px;
+  font-size: 11px;
   color: #666;
   background-color: #f5f5f5;
-  padding: 2px 6px;
+  padding: 1px 4px;
   border-radius: 4px;
 `;
 
 const Title = styled.h3`
-  margin: 0 0 4px 0;
+  margin: 0;
   font-size: 14px;
   font-weight: 600;
   overflow-wrap: break-word;
@@ -162,7 +161,7 @@ const Title = styled.h3`
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  max-height: 42px;
+  max-height: 40px;
 `;
 
 const Description = styled.p`
@@ -189,7 +188,7 @@ const CardContent = styled.div`
 
 // 아이콘 컴포넌트
 const ShareIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 5.12548 15.0077 5.24917 15.0227 5.37069L8.08261 9.26989C7.54305 8.48993 6.6582 8 5.66667 8C4.19391 8 3 9.19391 3 10.6667C3 12.1394 4.19391 13.3333 5.66667 13.3333C6.6582 13.3333 7.54305 12.8434 8.08261 12.0635L15.0227 15.9627C15.0077 16.0842 15 16.2079 15 16.3333C15 17.8061 16.1939 19 17.6667 19C19.1394 19 20.3333 17.8061 20.3333 16.3333C20.3333 14.8606 19.1394 13.6667 17.6667 13.6667C16.6751 13.6667 15.7903 14.1566 15.2507 14.9365L8.31065 11.0373C8.32565 10.9158 8.33333 10.7921 8.33333 10.6667C8.33333 10.5412 8.32565 10.4175 8.31065 10.2961L15.2507 6.3968C15.7903 7.17676 16.6751 7.66667 17.6667 7.66667" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );

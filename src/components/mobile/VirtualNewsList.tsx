@@ -37,10 +37,10 @@ const LoadingContainer = styled.div`
 `;
 
 const SkeletonCard = styled.div`
-  height: 120px;
+  height: 70px;
   width: 100%;
   background-color: #ffffff;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -88,9 +88,9 @@ const EmptyView = styled.div`
 const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   position: fixed;
   bottom: 20px;
-  right: ${props => props.color === 'green' ? '20px' : '80px'};
-  width: 50px;
-  height: 50px;
+  right: ${props => props.color === 'green' ? '20px' : '70px'};
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background-color: ${props => props.color === 'green' ? '#4CAF50' : 'var(--primary-color, #1a73e8)'};
   color: white;
@@ -98,7 +98,7 @@ const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   align-items: center;
   justify-content: center;
   border: none;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.16);
   z-index: 100;
   transition: all 0.3s ease;
   
@@ -108,8 +108,8 @@ const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   }
   
   svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
 `;
 
@@ -153,8 +153,8 @@ const RefreshIcon = () => (
 // 로딩 뷰 컴포넌트
 const LoadingView = () => (
   <LoadingContainer>
-    {[1, 2, 3, 4, 5, 6, 7].map(i => <SkeletonCard key={i} />)}
-    <div style={{ color: '#666', marginTop: '12px', fontSize: '13px' }}>뉴스를 불러오는 중입니다...</div>
+    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => <SkeletonCard key={i} />)}
+    <div style={{ color: '#666', marginTop: '8px', fontSize: '12px' }}>뉴스를 불러오는 중입니다...</div>
   </LoadingContainer>
 );
 
