@@ -89,8 +89,13 @@ const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   position: fixed;
   bottom: 16px;
   right: ${props => props.color === 'green' ? '16px' : '56px'};
-  width: 28px;
-  height: 28px;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  max-width: 24px !important;
+  max-height: 24px !important;
+  padding: 0 !important;
   border-radius: 50%;
   background-color: ${props => props.color === 'green' ? '#4CAF50' : 'var(--primary-color, #1a73e8)'};
   color: white;
@@ -108,8 +113,10 @@ const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   }
   
   svg {
-    width: 14px;
-    height: 14px;
+    width: 12px !important;
+    height: 12px !important;
+    max-width: 12px !important;
+    max-height: 12px !important;
   }
 `;
 
@@ -135,14 +142,14 @@ const Toast = styled.div`
 
 // 아이콘 컴포넌트
 const CopyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
   </svg>
 );
 
 const RefreshIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="12" height="12">
     <path d="M23 4v6h-6"></path>
     <path d="M1 20v-6h6"></path>
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
@@ -454,10 +461,15 @@ export default function VirtualNewsList({
           visible={true}
           onClick={handleRefresh}
           aria-label="새로고침"
+          className="small-action-button"
           style={{ 
             opacity: refreshing ? 0.7 : 1,
             animation: refreshing ? 'rotate 1s linear infinite' : 'none',
-            bottom: '80px'
+            bottom: '80px',
+            width: '20px !important',
+            height: '20px !important',
+            minWidth: '20px !important',
+            minHeight: '20px !important'
           }}
         >
           <RefreshIcon />
@@ -468,7 +480,14 @@ export default function VirtualNewsList({
           visible={selectedKeys.length > 0}
           onClick={handleCopySelected}
           aria-label="선택한 뉴스 복사"
-          style={{ bottom: '80px' }}
+          className="small-action-button"
+          style={{ 
+            bottom: '80px',
+            width: '20px !important',
+            height: '20px !important',
+            minWidth: '20px !important',
+            minHeight: '20px !important'
+          }}
         >
           <CopyIcon />
         </ActionButton>

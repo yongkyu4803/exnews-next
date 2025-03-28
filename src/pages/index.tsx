@@ -190,6 +190,21 @@ const HomePage = () => {
 
   return (
     <div style={{ padding: isMobile ? '16px' : '20px' }}>
+      <style jsx global>{`
+        /* 작은 버튼 스타일 오버라이드 */
+        .small-action-button {
+          min-width: 28px !important;
+          min-height: 28px !important;
+          width: 28px !important;
+          height: 28px !important;
+          padding: 0 !important;
+        }
+        
+        .small-action-button svg {
+          width: 14px !important;
+          height: 14px !important;
+        }
+      `}</style>
       <Space direction="vertical" style={{ width: '100%' }}>
         <div style={{ 
           display: 'flex', 
