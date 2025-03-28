@@ -83,7 +83,7 @@ const CardCategory = styled.span`
 
 const ActionButtons = styled.div`
   display: flex;
-  gap: 20px;
+  gap: 8px;
   margin-left: auto;
 `;
 
@@ -98,7 +98,7 @@ const IconButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
+  min-width: 24px;
   height: 24px;
   
   &:hover, &:active {
@@ -189,7 +189,7 @@ const CardContent = styled.div`
 
 // 아이콘 컴포넌트
 const ShareIcon = () => (
-  <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M18 8C19.6569 8 21 6.65685 21 5C21 3.34315 19.6569 2 18 2C16.3431 2 15 3.34315 15 5C15 5.12548 15.0077 5.24917 15.0227 5.37069L8.08261 9.26989C7.54305 8.48993 6.6582 8 5.66667 8C4.19391 8 3 9.19391 3 10.6667C3 12.1394 4.19391 13.3333 5.66667 13.3333C6.6582 13.3333 7.54305 12.8434 8.08261 12.0635L15.0227 15.9627C15.0077 16.0842 15 16.2079 15 16.3333C15 17.8061 16.1939 19 17.6667 19C19.1394 19 20.3333 17.8061 20.3333 16.3333C20.3333 14.8606 19.1394 13.6667 17.6667 13.6667C16.6751 13.6667 15.7903 14.1566 15.2507 14.9365L8.31065 11.0373C8.32565 10.9158 8.33333 10.7921 8.33333 10.6667C8.33333 10.5412 8.32565 10.4175 8.31065 10.2961L15.2507 6.3968C15.7903 7.17676 16.6751 7.66667 17.6667 7.66667" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
   </svg>
 );
@@ -337,7 +337,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
       <CardFooter isSelected={isSelected}>
         <Date>{safeDate}</Date>
         <ActionButtons>
-          <IconButton onClick={handleClickShare} aria-label="공유">
+          <IconButton onClick={handleClickShare} aria-label="공유" style={{ opacity: 1, visibility: 'visible' }}>
             <ShareIcon />
           </IconButton>
           <SelectButton onClick={handleSelectClick} isSelected={isSelected}>
