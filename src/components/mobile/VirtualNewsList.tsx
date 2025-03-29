@@ -142,14 +142,14 @@ const Toast = styled.div`
 
 // 아이콘 컴포넌트
 const CopyIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="4" height="4">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
   </svg>
 );
 
 const RefreshIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="4" height="4">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
     <path d="M23 4v6h-6"></path>
     <path d="M1 20v-6h6"></path>
     <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
@@ -219,13 +219,13 @@ const VisualConsole = styled.div<{ visible: boolean }>`
 `;
 
 const MicroButton = styled.button`
-  width: 8px !important;
-  height: 8px !important;
-  min-width: 8px !important;
-  min-height: 8px !important;
-  max-width: 8px !important;
-  max-height: 8px !important;
-  padding: 0 !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  max-width: 40px !important;
+  max-height: 40px !important;
+  padding: 8px !important;
   margin: 0 !important;
   border: none !important;
   border-radius: 50% !important;
@@ -233,13 +233,13 @@ const MicroButton = styled.button`
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
   
   svg {
-    width: 4px !important;
-    height: 4px !important;
-    max-width: 4px !important;
-    max-height: 4px !important;
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
   }
 `;
 
@@ -338,29 +338,30 @@ export default function VirtualNewsList({
       
       // 인라인 스타일 직접 적용
       element.style.cssText = `
-        width: 16px !important; 
-        height: 16px !important; 
-        min-width: 16px !important; 
-        min-height: 16px !important;
-        max-width: 16px !important;
-        max-height: 16px !important;
-        padding: 0 !important;
+        width: 40px !important; 
+        height: 40px !important; 
+        min-width: 40px !important; 
+        min-height: 40px !important;
+        max-width: 40px !important;
+        max-height: 40px !important;
+        padding: 8px !important;
         border-radius: 50% !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
       `;
       
       // 아이콘 크기 조정
       const svg = element.querySelector('svg');
       if (svg) {
         svg.style.cssText = `
-          width: 8px !important;
-          height: 8px !important;
+          width: 20px !important;
+          height: 20px !important;
         `;
       }
     };
     
     applyButtonStyles(refreshBtnRef.current);
     applyButtonStyles(copyBtnRef.current);
-  }, []);  // 비어있는 의존성 배열
+  }, []);
   
   // 아이템 선택 처리
   const handleSelectItem = useCallback((id: string | number, isSelected: boolean) => {
@@ -521,7 +522,7 @@ export default function VirtualNewsList({
           style={{
             position: 'fixed',
             bottom: '70px',
-            right: '10px',
+            right: '16px',
             zIndex: 1000,
           }}
         >
@@ -544,7 +545,7 @@ export default function VirtualNewsList({
             style={{
               position: 'fixed',
               bottom: '70px',
-              right: '25px',
+              right: '66px',
               zIndex: 1000,
             }}
           >
@@ -571,20 +572,20 @@ export default function VirtualNewsList({
       {/* 마이크로 버튼 스타일 */}
       <style jsx global>{`
         .micro-button {
-          width: 8px !important;
-          height: 8px !important;
-          min-width: 8px !important;
-          min-height: 8px !important;
-          max-width: 8px !important;
-          max-height: 8px !important;
-          padding: 0 !important;
+          width: 40px !important;
+          height: 40px !important;
+          min-width: 40px !important;
+          min-height: 40px !important;
+          max-width: 40px !important;
+          max-height: 40px !important;
+          padding: 8px !important;
         }
         
         .micro-button svg {
-          width: 4px !important;
-          height: 4px !important;
-          max-width: 4px !important;
-          max-height: 4px !important;
+          width: 20px !important;
+          height: 20px !important;
+          max-width: 20px !important;
+          max-height: 20px !important;
         }
       `}</style>
       
