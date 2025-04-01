@@ -259,11 +259,13 @@ export default function VirtualNewsList({
   const [consoleVisible, setConsoleVisible] = useState(false);
   const [logs, setLogs] = useState<{type: string; message: string; timestamp: string}[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [isFirstRender, setIsFirstRender] = useState(true);
   
   // 참조
   const itemsRef = useRef(items);
   const containerRef = useRef<HTMLDivElement>(null);
   const mountedRef = useRef(true);
+  const listRef = useRef<any>(null);
   
   // DOM 요소 직접 조작을 위한 참조
   const refreshBtnRef = useRef<HTMLButtonElement>(null);
@@ -311,11 +313,21 @@ export default function VirtualNewsList({
       setLocalItems(items);
     }
     
+    // 초기 렌더링 플래그 설정
+    setIsFirstRender(true);
+    // 렌더링 후 플래그 해제를 위한 타이머 설정
+    const timer = setTimeout(() => {
+      if (mountedRef.current) {
+        setIsFirstRender(false);
+      }
+    }, 500);
+    
     return () => {
       mountedRef.current = false;
       setMounted(false);
+      clearTimeout(timer);
     };
-  }, []);
+  }, [items]);
   
   // items prop 변경 감지
   useEffect(() => {
@@ -324,11 +336,17 @@ export default function VirtualNewsList({
     // 참조 업데이트
     itemsRef.current = items;
     
-    if (items.length > 0) {
-      visualLog('[VirtualNewsList] 아이템 업데이트: ' + items.length, 'info');
-      setLocalItems(items);
+    // 즉시 상태 업데이트하도록 수정
+    visualLog('[VirtualNewsList] 아이템 업데이트: ' + items.length, 'info');
+    setLocalItems(items);
+    
+    // 리스트 참조가 있으면 스크롤 초기화 시도
+    // 실제 스크롤 처리는 ReactWindowComponents 내부에서 수행되므로
+    // 여기서는 로그만 출력
+    if (!isFirstRender) {
+      visualLog('아이템 목록 변경됨. 스크롤 리셋 필요', 'info');
     }
-  }, [items, visualLog]);
+  }, [items, isFirstRender, visualLog]);
   
   // DOM 요소 크기 직접 설정
   useEffect(() => {
@@ -451,6 +469,15 @@ export default function VirtualNewsList({
     }
   }, [refreshing, isLoading, onRefresh, showToast, visualLog]);
   
+  // 무한 스크롤 로드 함수 개선
+  const loadMoreItems = useCallback(() => {
+    if (!isLoading && hasMore) {
+      console.log('추가 아이템 로드 요청');
+      return Promise.resolve(onLoadMore());
+    }
+    return Promise.resolve();
+  }, [isLoading, hasMore, onLoadMore]);
+  
   // 비어있거나 로딩 중일 때 렌더링
   if (!mounted) {
     return <LoadingView />;
@@ -506,9 +533,9 @@ export default function VirtualNewsList({
           ) : (
             <ReactWindowComponents
               items={localItems || []}
-              hasMore={false}
+              hasMore={hasMore}
               isLoading={isLoading}
-              onLoadMore={() => {}}
+              onLoadMore={onLoadMore}
               onRefresh={onRefresh}
               selectedItems={(selectedKeys || []).map(key => key.toString())}
               onSelectItem={handleSelectItem}
