@@ -10,8 +10,23 @@ export interface NewsItem {
   [key: string]: any; // 추가 필드 허용
 }
 
+// RankingNewsItem 정의 추가
+export interface RankingNewsItem {
+  id?: number | string;
+  title: string;
+  link: string;
+  media_name: string;
+  [key: string]: any; // 추가 필드 허용
+}
+
 export interface NewsResponse {
   items: NewsItem[];
+  totalCount: number;
+}
+
+// RankingNewsResponse 정의 추가
+export interface RankingNewsResponse {
+  items: RankingNewsItem[];
   totalCount: number;
 }
 

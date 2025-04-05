@@ -12,7 +12,12 @@ type EventType =
   | 'refresh_news_list'
   | 'page_view'
   | 'copy_selected_news'
-  | 'share_selected_news';
+  | 'share_selected_news'
+  | 'click_ranking_news'
+  | 'share_ranking_news'
+  | 'select_ranking_news'
+  | 'refresh_ranking_news'
+  | 'copy_selected_ranking_news';
 
 // 이벤트 속성 타입
 interface EventProps {
