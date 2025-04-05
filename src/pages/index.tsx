@@ -10,6 +10,7 @@ import { NewsItem, NewsResponse, RankingNewsItem, RankingNewsResponse } from '@/
 import { Pagination } from 'antd';
 import BottomNav from '@/components/mobile/BottomNav';
 import TopNavBar from '@/components/mobile/TopNavBar';
+import SimpleTabs from '@/components/mobile/SimpleTabs';
 
 // 동적으로 Ant Design 컴포넌트 임포트
 const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
@@ -154,7 +155,14 @@ const HomePage = () => {
 
   // 탭 변경 핸들러
   const handleTabChange = (key: string) => {
-    console.log('탭 변경:', key);
+    console.log('메인 페이지에서 탭 변경:', key, '(현재:', activeTab, ')');
+    
+    // 이미 같은 탭이 선택된 경우 중복 처리 방지
+    if (key === activeTab) {
+      console.log('이미 선택된 탭입니다.');
+      return;
+    }
+    
     setActiveTab(key);
     
     // 탭 변경 시 필요한 데이터 로드
@@ -164,6 +172,8 @@ const HomePage = () => {
         itemCount: rankingData?.items?.length || 0,
         isLoading: rankingIsLoading
       });
+      
+      // 데이터 다시 로드
       queryClient.invalidateQueries('rankingNewsItems');
     }
   };
@@ -325,14 +335,25 @@ const HomePage = () => {
         }
       `}</style>
       
-      <TopNavBar 
+      {/* 기존 TopNavBar는 주석 처리 */}
+      {/* <TopNavBar 
         activeTab={activeTab} 
         onTabChange={handleTabChange} 
-      />
+      /> */}
       
       <div style={{ padding: isMobile ? '16px' : '20px' }}>
         <Space direction="vertical" style={{ width: '100%' }}>
           <PwaInstallPrompt />
+          
+          {/* 새로운 간단한 탭 컴포넌트 추가 */}
+          <SimpleTabs
+            items={[
+              { key: 'exclusive', label: '🚨 단독 뉴스' },
+              { key: 'ranking', label: '📊 랭킹 뉴스' }
+            ]}
+            activeKey={activeTab}
+            onChange={handleTabChange}
+          />
           
           {activeTab === 'exclusive' && (
             <>

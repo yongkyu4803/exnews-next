@@ -46,6 +46,13 @@ const NavMenu = styled(Menu)`
     line-height: 40px !important;
     margin: 0 8px !important;
     font-size: 14px;
+    cursor: pointer !important;
+    user-select: none;
+    touch-action: manipulation;
+  }
+  
+  .ant-menu-item:active {
+    background-color: rgba(0, 0, 0, 0.05);
   }
   
   .ant-menu-item-selected {
@@ -64,9 +71,11 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
   
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    console.log('TopNavBar 마운트됨, 활성 탭:', activeTab);
+  }, [activeTab]);
   
   const handleTabChange = (info: { key: string }) => {
+    console.log('탭 변경 시도:', info.key);
     if (onTabChange) {
       onTabChange(info.key);
     }
@@ -87,7 +96,11 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
       <NavMenu 
         mode="horizontal" 
         selectedKeys={[activeTab]}
-        onChange={handleTabChange as any}
+        onSelect={handleTabChange}
+        onClick={(info: { key: string, domEvent: React.MouseEvent<HTMLElement> }) => {
+          console.log('탭 클릭됨:', info.key);
+          handleTabChange(info);
+        }}
         items={[
           {
             key: 'exclusive',

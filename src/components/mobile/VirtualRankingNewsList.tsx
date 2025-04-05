@@ -14,10 +14,15 @@ const FixedSizeList = dynamic(
 // 스타일 컴포넌트 정의
 const Container = styled.div`
   position: relative;
-  height: calc(100vh - 200px);
+  height: calc(100vh - 250px);
+  min-height: 400px;
   width: 100%;
   overflow: visible;
   background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 8px 0;
+  margin-top: 8px;
 `;
 
 const LoadingContainer = styled.div`
@@ -312,7 +317,7 @@ export default function VirtualRankingNewsList({
 
   // 화면에 표시할 고정 높이 값 사용
   const listHeight = typeof window !== 'undefined' ? 
-    Math.max(400, window.innerHeight - 250) : 400;
+    Math.max(400, window.innerHeight - 280) : 400;
   
   console.log('랭킹 뉴스 목록 렌더링:', { 
     itemsLength: items.length, 
@@ -321,7 +326,7 @@ export default function VirtualRankingNewsList({
 
   return (
     <Container ref={listContainerRef}>
-      <div style={{ height: '100%', width: '100%' }}>
+      <div style={{ height: '100%', width: '100%', padding: '0 8px' }}>
         {items.length > 0 && (
           <FixedSizeList
             ref={listRef}
@@ -330,6 +335,7 @@ export default function VirtualRankingNewsList({
             itemSize={86} // 카드 높이 + 마진
             itemCount={items.length}
             overscanCount={5}
+            style={{ paddingBottom: '16px' }}
           >
             {renderNewsItem}
           </FixedSizeList>
