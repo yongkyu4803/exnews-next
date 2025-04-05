@@ -19,6 +19,19 @@ export interface RankingNewsItem {
   [key: string]: any; // 추가 필드 허용
 }
 
+// Restaurant 정보 인터페이스 추가
+export interface RestaurantItem {
+  id?: number | string;
+  category: string;
+  name: string;
+  location: string;
+  pnum: string;
+  price: string;
+  remark?: string;
+  link?: string;
+  [key: string]: any; // 추가 필드 허용
+}
+
 export interface NewsResponse {
   items: NewsItem[];
   totalCount: number;
@@ -27,6 +40,12 @@ export interface NewsResponse {
 // RankingNewsResponse 정의 추가
 export interface RankingNewsResponse {
   items: RankingNewsItem[];
+  totalCount: number;
+}
+
+// RestaurantResponse 정의 추가
+export interface RestaurantResponse {
+  items: RestaurantItem[];
   totalCount: number;
 }
 

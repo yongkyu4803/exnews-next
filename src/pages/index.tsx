@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 // Remove unused import since LoadMoreButton component is not being used
 import VirtualNewsList from '@/components/mobile/VirtualNewsList';
 import VirtualRankingNewsList from '@/components/mobile/VirtualRankingNewsList';
-import { CopyOutlined } from '@ant-design/icons';
+import { CopyOutlined, ShopOutlined } from '@ant-design/icons';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import { NewsItem, NewsResponse, RankingNewsItem, RankingNewsResponse } from '@/types';
 import { Pagination } from 'antd';
@@ -360,6 +361,21 @@ const HomePage = () => {
             activeKey={activeTab}
             onChange={handleTabChange}
           />
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <Title level={2} style={{ margin: 0 }}>
+              {activeTab === 'exclusive' ? '단독 뉴스' : '랭킹 뉴스'}
+            </Title>
+            <Link href="/restaurants" passHref>
+              <Button 
+                type="primary" 
+                icon={<ShopOutlined />}
+                style={{ marginLeft: '8px' }}
+              >
+                국회앞 식당
+              </Button>
+            </Link>
+          </div>
           
           {activeTab === 'exclusive' && (
             <>
