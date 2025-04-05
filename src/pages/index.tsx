@@ -101,17 +101,25 @@ const HomePage = () => {
   const { data: rankingData, isLoading: rankingIsLoading, error: rankingError } = useQuery<RankingNewsResponse, Error>(
     'rankingNewsItems',
     async () => {
+      console.log('랭킹 뉴스 데이터 요청 시작');
       const response = await fetch('/api/ranking-news?all=true');
       if (!response.ok) {
-        throw new Error('Failed to fetch ranking news items');
+        const errorText = await response.text();
+        console.error('랭킹 뉴스 API 응답 오류:', response.status, errorText);
+        throw new Error(`Failed to fetch ranking news items: ${response.status} ${errorText}`);
       }
       const result = await response.json();
-      console.log('Ranking API Response:', result.items.length);
+      console.log('랭킹 API 응답:', result?.items?.length || 0, '개 항목');
       return result;
     },
     {
       keepPreviousData: true,
-      enabled: isMounted && activeTab === 'ranking' // 랭킹 탭이 활성화된 경우에만 실행
+      enabled: isMounted, // 항상 로드되도록 수정
+      // 재시도 옵션 추가
+      retry: 2,
+      onError: (error) => {
+        console.error('랭킹 뉴스 쿼리 오류:', error);
+      }
     }
   );
 
@@ -146,10 +154,16 @@ const HomePage = () => {
 
   // 탭 변경 핸들러
   const handleTabChange = (key: string) => {
+    console.log('탭 변경:', key);
     setActiveTab(key);
     
     // 탭 변경 시 필요한 데이터 로드
-    if (key === 'ranking' && !rankingData) {
+    if (key === 'ranking') {
+      console.log('랭킹 뉴스 탭 활성화: 데이터 상태 확인', {
+        hasData: !!rankingData,
+        itemCount: rankingData?.items?.length || 0,
+        isLoading: rankingIsLoading
+      });
       queryClient.invalidateQueries('rankingNewsItems');
     }
   };
@@ -259,6 +273,18 @@ const HomePage = () => {
       return Promise.reject(error);
     }
   };
+
+  // 렌더링 전 랭킹 뉴스 데이터 상태 확인
+  useEffect(() => {
+    if (activeTab === 'ranking') {
+      console.log('랭킹 뉴스 데이터 상태:', {
+        hasData: !!rankingData,
+        itemCount: rankingData?.items?.length || 0,
+        isLoading: rankingIsLoading,
+        hasError: !!rankingError
+      });
+    }
+  }, [activeTab, rankingData, rankingIsLoading, rankingError]);
 
   // 서버 사이드 렌더링 시 로딩 UI 표시
   if (!isMounted) {
@@ -449,8 +475,14 @@ const HomePage = () => {
               {isMobile ? (
                 <VirtualRankingNewsList 
                   items={(rankingData && rankingData.items) ? 
-                    // 유효하지 않은 아이템 필터링
-                    rankingData.items.filter(item => item && item.id && item.title && item.link) : 
+                    // 유효하지 않은 아이템 필터링 (필터링 결과 로깅 추가)
+                    rankingData.items.filter(item => {
+                      const isValid = item && item.id && item.title && item.link;
+                      if (!isValid) {
+                        console.warn('유효하지 않은 랭킹 뉴스 아이템 필터링:', item);
+                      }
+                      return isValid;
+                    }) : 
                     []
                   }
                   isLoading={rankingIsLoading}

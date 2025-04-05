@@ -150,6 +150,13 @@ const RankingNewsCard: React.FC<RankingNewsCardProps> = ({
     return () => setIsMounted(false);
   }, []);
 
+  // 디버깅을 위한 로그 추가
+  useEffect(() => {
+    if (isMounted) {
+      console.log('RankingNewsCard 렌더링:', { id, title: title?.slice(0, 20) });
+    }
+  }, [id, title, isMounted]);
+
   const handleClickShare = (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -217,6 +224,7 @@ const RankingNewsCard: React.FC<RankingNewsCardProps> = ({
       isSelected={isSelected}
       isMounted={isMounted}
       className={isSelected ? 'selected-ranking-news-card' : ''}
+      style={{ cursor: 'pointer' }} // 클릭 가능함을 시각적으로 표시
     >
       <CardHeader>
         <Title>{safeTitle}</Title>

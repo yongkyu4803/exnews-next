@@ -174,6 +174,15 @@ export default function VirtualRankingNewsList({
   const listContainerRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 항목 수 확인을 위한 디버깅 로그
+  useEffect(() => {
+    console.log('VirtualRankingNewsList 렌더링:', { 
+      itemCount: items.length, 
+      isLoading, 
+      selectedKeysCount: selectedKeys.length 
+    });
+  }, [items, isLoading, selectedKeys]);
+
   // 토스트 메시지 표시 함수
   const showToast = useCallback((message: string, duration = 2000) => {
     setToastMessage(message);
@@ -270,6 +279,7 @@ export default function VirtualRankingNewsList({
 
   // 데이터가 없는 경우
   if (items.length === 0 && !isLoading) {
+    console.log('랭킹 뉴스 데이터 없음 표시');
     return (
       <Container>
         <EmptyView>
@@ -296,8 +306,18 @@ export default function VirtualRankingNewsList({
 
   // 로딩 중인 경우
   if (isLoading) {
+    console.log('랭킹 뉴스 로딩 표시');
     return <LoadingView />;
   }
+
+  // 화면에 표시할 고정 높이 값 사용
+  const listHeight = typeof window !== 'undefined' ? 
+    Math.max(400, window.innerHeight - 250) : 400;
+  
+  console.log('랭킹 뉴스 목록 렌더링:', { 
+    itemsLength: items.length, 
+    listHeight 
+  });
 
   return (
     <Container ref={listContainerRef}>
@@ -305,7 +325,7 @@ export default function VirtualRankingNewsList({
         {items.length > 0 && (
           <FixedSizeList
             ref={listRef}
-            height={window.innerHeight - 200} // 적절한 높이 조정
+            height={listHeight} // 고정 높이 값 사용
             width="100%"
             itemSize={86} // 카드 높이 + 마진
             itemCount={items.length}
