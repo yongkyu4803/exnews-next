@@ -1,7 +1,7 @@
 {
-  "name": "단독 뉴스",
-  "short_name": "단독뉴스",
-  "description": "실시간 단독 뉴스 모음",
+  "name": "NewsLens",
+  "short_name": "NewsLens",
+  "description": "실시간 단독 및 랭킹 뉴스 모음",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
