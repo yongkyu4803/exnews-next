@@ -51,6 +51,23 @@ export default async function handler(
       
       let items: RankingNewsItem[] = dataResult.data || [];
       
+      // 필수 필드가 없는 아이템 제거
+      items = items.filter(item => 
+        item && 
+        item.id !== undefined && 
+        item.id !== null && 
+        item.title && 
+        item.link
+      );
+      
+      // 필드 확인 및 기본값 제공
+      items = items.map(item => ({
+        id: item.id,
+        title: item.title || '제목 없음',
+        link: item.link || '#',
+        media_name: item.media_name || '미상',
+      }));
+      
       // 실제 총 개수
       const totalCount = countResult.count || 0;
       

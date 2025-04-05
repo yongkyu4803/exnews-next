@@ -229,6 +229,28 @@ export default function VirtualRankingNewsList({
     const item = items[index];
     if (!item) return null;
     
+    // null check 추가 - 아이템이 유효한지 먼저 확인
+    if (!item.id || !item.title || !item.link) {
+      console.warn('유효하지 않은 랭킹 뉴스 아이템:', item);
+      return (
+        <div style={{ ...style, paddingRight: '8px', paddingLeft: '8px' }}>
+          <div style={{ 
+            height: '80px', 
+            backgroundColor: '#f5f5f5', 
+            borderRadius: '8px', 
+            padding: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '12px',
+            color: '#666'
+          }}>
+            데이터 오류
+          </div>
+        </div>
+      );
+    }
+    
     const isSelected = selectedKeys.includes(String(item.id));
     
     return (
@@ -236,9 +258,9 @@ export default function VirtualRankingNewsList({
         <RankingNewsCard
           key={item.id}
           id={String(item.id)}
-          title={item.title}
-          link={item.link}
-          media_name={item.media_name}
+          title={item.title || ''}
+          link={item.link || '#'}
+          media_name={item.media_name || '알 수 없는 매체'}
           isSelected={isSelected}
           onSelect={handleSelectItem}
         />

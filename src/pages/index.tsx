@@ -448,7 +448,11 @@ const HomePage = () => {
               
               {isMobile ? (
                 <VirtualRankingNewsList 
-                  items={rankingData?.items || []}
+                  items={(rankingData && rankingData.items) ? 
+                    // 유효하지 않은 아이템 필터링
+                    rankingData.items.filter(item => item && item.id && item.title && item.link) : 
+                    []
+                  }
                   isLoading={rankingIsLoading}
                   onRefresh={handleRankingRefresh}
                   selectedKeys={rankingSelectedKeys}

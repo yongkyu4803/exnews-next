@@ -109,11 +109,19 @@ export const setupWebFontOptimization = () => {
   ];
   
   fontLinks.forEach(linkData => {
+    // null/undefined 체크 추가
+    if (!linkData) return;
+    
     const link = document.createElement('link');
-    Object.entries(linkData).forEach(([key, value]) => {
-      link.setAttribute(key, value);
-    });
-    document.head.appendChild(link);
+    // Object.entries에 안전장치 추가
+    if (linkData && typeof linkData === 'object') {
+      Object.entries(linkData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          link.setAttribute(key, value);
+        }
+      });
+      document.head.appendChild(link);
+    }
   });
 };
 
