@@ -26,6 +26,12 @@ const NewsTable = dynamic(() => import('@/components/NewsTable'), {
   loading: () => <div style={{ height: '600px', width: '100%' }}>테이블 로딩 중...</div>
 });
 
+// 랭킹 뉴스 테이블 컴포넌트를 동적으로 불러옴
+const RankingNewsTable = dynamic(() => import('@/components/RankingNewsTable'), { 
+  ssr: false,
+  loading: () => <div style={{ height: '600px', width: '100%' }}>테이블 로딩 중...</div>
+});
+
 // 전체 컴포넌트를 클라이언트 사이드에서만 렌더링
 const HomePage = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -515,8 +521,24 @@ const HomePage = () => {
                   }}
                 />
               ) : (
-                <div style={{ padding: '20px', textAlign: 'center' }}>
-                  <p>데스크톱 버전은 준비 중입니다.</p>
+                <div>
+                  {rankingIsLoading ? (
+                    <div style={{ padding: '20px', textAlign: 'center' }}>
+                      <div>데이터를 불러오는 중입니다...</div>
+                    </div>
+                  ) : (
+                    <RankingNewsTable 
+                      items={(rankingData && rankingData.items) ? 
+                        rankingData.items.filter(item => item && item.id && item.title && item.link) : 
+                        []
+                      }
+                      selectedKeys={rankingSelectedKeys}
+                      onSelectChange={(keys, rows) => {
+                        setRankingSelectedKeys(keys);
+                        setRankingSelectedRows(rows);
+                      }}
+                    />
+                  )}
                 </div>
               )}
             </>
