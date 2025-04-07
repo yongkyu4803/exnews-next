@@ -370,7 +370,7 @@ function RestaurantContent(props: RestaurantContentProps) {
       <div className="mb-6">
         <Tabs 
           activeKey={selectedCategory} 
-          onChange={(key) => setSelectedCategory(key)}
+          onChange={(key: string) => setSelectedCategory(key)}
           type="card"
           items={categories.map(cat => ({ key: cat, label: cat === 'all' ? '전체' : cat }))}
         />
