@@ -33,23 +33,37 @@ export default function RestaurantsPage() {
   const [setupError, setSetupError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [apiMode, setApiMode] = useState<string>('normal');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [categories, setCategories] = useState<string[]>([]);
   
   // 데이터 로드 함수
-  const fetchData = async () => {
+  const fetchData = async (categoryFilter: string = selectedCategory) => {
     try {
       setLoading(true);
       setError(null);
       setDebugInfo(null);
-      console.log('식당 데이터 요청 시작...');
+      console.log(`식당 데이터 요청 시작... (카테고리: ${categoryFilter})`);
       
       // API 모드에 따라 쿼리 파라미터 조정
       let url = '/api/restaurants';
+      const params = new URLSearchParams();
+      
       if (apiMode === 'sample') {
-        url += '?debug=sample';
+        params.append('debug', 'sample');
       } else if (apiMode === 'direct') {
         // 직접 API 호출 테스트는 별도 함수로 처리
         await fetchDirectApiCall();
         return;
+      }
+      
+      // 카테고리 필터 추가 (all이 아닐 경우)
+      if (categoryFilter !== 'all') {
+        params.append('category', categoryFilter);
+      }
+      
+      const queryString = params.toString();
+      if (queryString) {
+        url += `?${queryString}`;
       }
       
       const response = await fetch(url);
@@ -75,7 +89,18 @@ export default function RestaurantsPage() {
       }
       
       setRestaurants(data.items || []);
-      setIsRealData(data.source !== 'sample-fallback');
+      setIsRealData(data.source !== 'sample-fallback' && data.source !== 'sample-error');
+      
+      // 카테고리 목록 추출 및 업데이트 (최초 로드 시 또는 필요 시)
+      if (data.items && data.items.length > 0 && categories.length === 0) {
+        const uniqueCategories: string[] = data.items.reduce((acc: string[], item: RestaurantItem) => {
+          if (item.category && !acc.includes(item.category)) {
+            acc.push(item.category);
+          }
+          return acc;
+        }, ['all']); // 초기값으로 'all' 포함
+        setCategories(uniqueCategories);
+      }
       
       // 디버그 정보 저장
       if (data.debug) {
@@ -163,9 +188,8 @@ export default function RestaurantsPage() {
   };
 
   useEffect(() => {
-    // 데이터 로드
-    fetchData();
-  }, [apiMode]);
+    fetchData(selectedCategory);
+  }, [apiMode, selectedCategory]);
 
   const showSuccessMessage = (content: string) => {
     if (typeof window !== 'undefined') {
@@ -244,6 +268,9 @@ export default function RestaurantsPage() {
                   isRealData={isRealData}
                   apiMode={apiMode}
                   setApiMode={setApiMode}
+                  selectedCategory={selectedCategory}
+                  setSelectedCategory={setSelectedCategory}
+                  categories={categories}
                   fetchData={fetchData}
                   setupLoading={setupLoading}
                   setupSuccess={setupSuccess}
@@ -267,7 +294,10 @@ interface RestaurantContentProps {
   isRealData: boolean;
   apiMode: string;
   setApiMode: (mode: string) => void;
-  fetchData: () => Promise<void>;
+  selectedCategory: string;
+  setSelectedCategory: (category: string) => void;
+  categories: string[];
+  fetchData: (categoryFilter?: string) => Promise<void>;
   setupLoading: boolean;
   setupSuccess: boolean;
   setupError: string | null;
@@ -280,7 +310,7 @@ function RestaurantContent(props: RestaurantContentProps) {
   // 클라이언트 사이드에서만 import 
   const { 
     Alert, Button, Card, Collapse, List, Radio, 
-    Spin, Tag, Typography 
+    Spin, Tag, Typography, Tabs
   } = React.useMemo(() => {
     if (typeof window !== 'undefined') {
       return {
@@ -292,16 +322,19 @@ function RestaurantContent(props: RestaurantContentProps) {
         Radio: require('antd/lib/radio').default,
         Spin: require('antd/lib/spin').default,
         Tag: require('antd/lib/tag').default,
-        Typography: require('antd/lib/typography').default
+        Typography: require('antd/lib/typography').default,
+        Tabs: require('antd/lib/tabs').default
       };
     }
     return {};
   }, []);
 
-  if (!Alert || !Radio || !Button) return null;
+  // Tabs 컴포넌트 로드 확인
+  if (!Alert || !Radio || !Button || !Tabs) return null; 
 
   const { 
     restaurants, loading, error, isRealData, apiMode, setApiMode,
+    selectedCategory, setSelectedCategory, categories,
     fetchData, setupLoading, setupSuccess, setupError, debugInfo, setupTable
   } = props;
 
@@ -325,12 +358,22 @@ function RestaurantContent(props: RestaurantContentProps) {
           
           <Button 
             type="primary" 
-            onClick={fetchData}
+            onClick={() => fetchData(selectedCategory)}
             loading={loading}
           >
             새로고침
           </Button>
         </div>
+      </div>
+      
+      {/* 카테고리 탭 */}
+      <div className="mb-6">
+        <Tabs 
+          activeKey={selectedCategory} 
+          onChange={(key) => setSelectedCategory(key)}
+          type="card"
+          items={categories.map(cat => ({ key: cat, label: cat === 'all' ? '전체' : cat }))}
+        />
       </div>
       
       {/* 상태 표시 */}
