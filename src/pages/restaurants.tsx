@@ -45,10 +45,11 @@ export default function RestaurantsPage() {
         <h1 style={{ textAlign: 'center', marginBottom: '24px' }}>국회앞 식당</h1>
         
         <div style={{ marginBottom: '20px' }}>
-          <Link href="/">
-            <span style={{ display: 'inline-block', padding: '8px 16px', backgroundColor: '#1a4b8c', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>
-              ← 메인으로 돌아가기
-            </span>
+          <Link 
+            href="/"
+            style={{ display: 'inline-block', padding: '8px 16px', backgroundColor: '#1a4b8c', color: 'white', borderRadius: '4px', textDecoration: 'none' }}
+          >
+            ← 메인으로 돌아가기
           </Link>
         </div>
         
@@ -67,10 +68,10 @@ export default function RestaurantsPage() {
             <p>식당 정보가 없습니다. 나중에 다시 시도해주세요.</p>
           </div>
         ) : (
-          <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', overflowX: 'auto' }}>
+          <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
             <h2>국회앞 식당 목록 ({restaurants.length}개)</h2>
-            <div style={{ overflowX: 'auto', width: '100%' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '650px' }}>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid #ddd' }}>
                     <th style={{ padding: '8px', textAlign: 'left' }}>카테고리</th>
@@ -82,8 +83,8 @@ export default function RestaurantsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {restaurants.map((restaurant, index) => (
-                    <tr key={restaurant.id || index} style={{ borderBottom: '1px solid #eee' }}>
+                  {restaurants.map(restaurant => (
+                    <tr key={restaurant.id || restaurant.name} style={{ borderBottom: '1px solid #eee' }}>
                       <td style={{ padding: '8px' }}>{restaurant.category}</td>
                       <td style={{ padding: '8px' }}>
                         {restaurant.link ? (
@@ -97,7 +98,7 @@ export default function RestaurantsPage() {
                       <td style={{ padding: '8px' }}>{restaurant.location}</td>
                       <td style={{ padding: '8px' }}>{restaurant.pnum}</td>
                       <td style={{ padding: '8px' }}>{restaurant.price}</td>
-                      <td style={{ padding: '8px' }}>{restaurant.remark || '-'}</td>
+                      <td style={{ padding: '8px' }}>{restaurant.remark || ''}</td>
                     </tr>
                   ))}
                 </tbody>

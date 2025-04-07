@@ -366,11 +366,13 @@ const HomePage = () => {
             <Title level={2} style={{ margin: 0 }}>
               {activeTab === 'exclusive' ? '단독 뉴스' : '랭킹 뉴스'}
             </Title>
-            <Link href="/restaurants" passHref>
+            <Link 
+              href="/restaurants" 
+              style={{ marginLeft: '8px' }}
+            >
               <Button 
                 type="primary" 
                 icon={<ShopOutlined />}
-                style={{ marginLeft: '8px' }}
               >
                 국회앞 식당
               </Button>
