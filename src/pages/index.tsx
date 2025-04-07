@@ -91,17 +91,24 @@ const HomePage = () => {
   const { data, isLoading, error } = useQuery<NewsResponse, Error>(
     ['newsItems', selectedCategory],
     async () => {
+      console.log('뉴스 데이터 요청 시작:', { category: selectedCategory });
       const response = await fetch(`/api/news?all=true${selectedCategory ? `&category=${selectedCategory}` : ''}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch news items');
+        const errorText = await response.text();
+        console.error('뉴스 API 응답 오류:', response.status, errorText);
+        throw new Error(`Failed to fetch news items: ${response.status} ${errorText}`);
       }
       const result = await response.json();
-      console.log('API Response:', result.items.length); // 전체 아이템 수 로그
+      console.log('뉴스 API 응답:', result?.items?.length || 0, '개 항목');
       return result;
     },
     { 
       keepPreviousData: true,
-      enabled: isMounted // 클라이언트 사이드에서만 실행
+      enabled: isMounted, // 클라이언트 사이드에서만 실행
+      retry: 2, // 재시도 횟수 추가
+      onError: (error) => {
+        console.error('뉴스 쿼리 오류:', error);
+      }
     }
   );
 
