@@ -46,7 +46,7 @@ export default async function handler(
     
     try {
       const { error: checkError } = await supabase
-        .from('na-res')
+        .from('nares')
         .select('id', { count: 'exact', head: true })
         .limit(1);
 
@@ -58,7 +58,7 @@ export default async function handler(
         if (checkError.code === 'PGRST116' || checkError.message?.includes('does not exist')) {
           console.log('테이블이 없습니다. Supabase 대시보드에서 테이블을 생성해야 합니다.');
           const sqlScript = `
-            CREATE TABLE "na-res" (
+            CREATE TABLE "nares" (
               id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
               category TEXT,
               name TEXT NOT NULL,
@@ -94,7 +94,7 @@ export default async function handler(
     // 기존 데이터 확인
     try {
       const { data: existingData, error: countError } = await supabase
-        .from('na-res')
+        .from('nares')
         .select('id', { count: 'exact' });
       
       if (countError) {
@@ -173,7 +173,7 @@ export default async function handler(
     try {
       console.log('데이터 삽입 시작...');
       const { data, error } = await supabase
-        .from('na-res')
+        .from('nares')
         .insert(sampleData)
         .select();
 

@@ -37,7 +37,7 @@ export default async function handler(
       // 먼저 전체 카운트를 계산하기 위한 쿼리
       console.log('카운트 쿼리 시작...');
       let countQuery = supabase
-        .from('na-res')
+        .from('nares')
         .select('id', { count: 'exact', head: true });
       
       if (category && category !== 'all') {
@@ -47,7 +47,7 @@ export default async function handler(
       // 데이터를 가져오는 쿼리
       console.log('데이터 쿼리 시작...');
       let dataQuery = supabase
-        .from('na-res')
+        .from('nares')
         .select('id, category, name, location, pnum, price, remark, link');
       
       if (category && category !== 'all') {
@@ -75,7 +75,7 @@ export default async function handler(
       }
       
       // 두 쿼리 동시 실행
-      console.log('Supabase 쿼리 실행 중... 테이블: na-res');
+      console.log('Supabase 쿼리 실행 중... 테이블: nares');
       
       let countResult, dataResult;
       try {
@@ -104,7 +104,7 @@ export default async function handler(
         errorDetails = countResult.error;
         
         if (countResult.error.code === 'PGRST116' || countResult.error.message?.includes('does not exist')) {
-          console.error('테이블이 존재하지 않습니다. na-res 테이블을 생성해야 합니다.');
+          console.error('테이블이 존재하지 않습니다. nares 테이블을 생성해야 합니다.');
           useBackupData = true;
         } else {
           throw countResult.error;
@@ -116,7 +116,7 @@ export default async function handler(
         errorDetails = dataResult.error;
         
         if (dataResult.error.code === 'PGRST116' || dataResult.error.message?.includes('does not exist')) {
-          console.error('테이블이 존재하지 않습니다. na-res 테이블을 생성해야 합니다.');
+          console.error('테이블이 존재하지 않습니다. nares 테이블을 생성해야 합니다.');
           useBackupData = true;
         } else {
           throw dataResult.error;
