@@ -92,13 +92,31 @@ export default function RestaurantsPage() {
       setIsRealData(data.source !== 'sample-fallback' && data.source !== 'sample-error');
       
       // 카테고리 목록 추출 및 업데이트 (최초 로드 시 또는 필요 시)
-      if (data.items && data.items.length > 0 && categories.length === 0) {
-        const uniqueCategories: string[] = data.items.reduce((acc: string[], item: RestaurantItem) => {
+      if (data.items && data.items.length > 0 && categories.length <= 1) {
+        // 기본 카테고리 목록
+        const defaultCategories = ['all', '한식', '중식', '일식/해산물', '이탈리안', '카페', '기타'];
+        
+        // API에서 가져온 카테고리 목록
+        const apiCategories = data.items.reduce((acc: string[], item: RestaurantItem) => {
           if (item.category && !acc.includes(item.category)) {
             acc.push(item.category);
           }
           return acc;
-        }, ['all']); // 초기값으로 'all' 포함
+        }, []);
+        
+        // 두 목록을 합치고 중복 제거
+        let uniqueCategories = ['all'];
+        defaultCategories.forEach((cat: string) => {
+          if (cat !== 'all' && !uniqueCategories.includes(cat)) {
+            uniqueCategories.push(cat);
+          }
+        });
+        apiCategories.forEach((cat: string) => {
+          if (cat !== 'all' && !uniqueCategories.includes(cat)) {
+            uniqueCategories.push(cat);
+          }
+        });
+        
         setCategories(uniqueCategories);
       }
       
@@ -346,8 +364,22 @@ function RestaurantContent(props: RestaurantContentProps) {
       {/* 상단 헤더 섹션 */}
       <div className="bg-gray-50 py-6 mb-8 rounded-lg shadow-sm">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">국회 주변 맛집 카테고리</h2>
-          <p className="text-gray-600 mb-4">원하시는 카테고리를 선택하여 맛집 정보를 확인하세요</p>
+          <div className="flex flex-col md:flex-row justify-between items-center mb-4">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">국회 주변 맛집 카테고리</h2>
+              <p className="text-gray-600 mb-4">원하시는 카테고리를 선택하여 맛집 정보를 확인하세요</p>
+            </div>
+            
+            {/* 새로고침 버튼 - 헤더 영역으로 이동 */}
+            <Button
+              onClick={() => fetchData(selectedCategory)}
+              loading={loading}
+              type="primary"
+              icon={<span className="mr-1">🔄</span>}
+            >
+              새로고침
+            </Button>
+          </div>
           
           {/* 카테고리 탭 */}
           <Tabs 
@@ -451,18 +483,6 @@ function RestaurantContent(props: RestaurantContentProps) {
           </Typography.Text>
         </div>
       )}
-      
-      {/* 새로고침 버튼은 오른쪽 상단에 작게 배치 */}
-      <div className="flex justify-end mb-4">
-        <Button
-          onClick={() => fetchData(selectedCategory)}
-          loading={loading}
-          icon={<span className="mr-1">🔄</span>}
-          size="small"
-        >
-          새로고침
-        </Button>
-      </div>
       
       {loading ? (
         <div className="flex justify-center items-center py-20">
