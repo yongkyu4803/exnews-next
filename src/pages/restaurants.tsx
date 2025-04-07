@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
@@ -7,39 +7,19 @@ import { RestaurantItem } from '@/types';
 import Header from '@/components/Layout/Header';
 import Image from 'next/image';
 
-// NoSSR 래퍼 컴포넌트
-const NoSSR = dynamic(
-  () => Promise.resolve(({ children }: { children: React.ReactNode }) => <>{children}</>), 
-  { ssr: false }
-);
-
-// 동적 임포트 with type assertion
-const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
-const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
-const Card = dynamic(() => import('antd/lib/card'), { ssr: false }) as any;
-const Collapse = dynamic(() => import('antd/lib/collapse'), { ssr: false }) as any;
-const List = dynamic(() => import('antd/lib/list'), { ssr: false }) as any;
-const Radio = dynamic(() => import('antd/lib/radio'), { ssr: false }) as any;
-const Spin = dynamic(() => import('antd/lib/spin'), { ssr: false }) as any;
-const Tag = dynamic(() => import('antd/lib/tag'), { ssr: false }) as any;
-const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
-
-// message는 별도로 관리
-const messageApi = {
-  success: (content: string) => {
-    if (typeof window !== 'undefined') {
-      import('antd/lib/message').then(({ default: message }) => {
-        message.success(content);
-      });
-    }
-  },
-  error: (content: string) => {
-    if (typeof window !== 'undefined') {
-      import('antd/lib/message').then(({ default: message }) => {
-        message.error(content);
-      });
-    }
+// 클라이언트 컴포넌트 
+const ClientOnly = ({ children, ...delegated }: { children: ReactNode; [key: string]: any }) => {
+  const [hasMounted, setHasMounted] = useState(false);
+  
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+  
+  if (!hasMounted) {
+    return <div className="text-center p-20">로딩 중...</div>;
   }
+  
+  return <div {...delegated}>{children}</div>;
 };
 
 export default function RestaurantsPage() {
@@ -193,6 +173,21 @@ export default function RestaurantsPage() {
     }
   };
 
+  useEffect(() => {
+    // 데이터 로드
+    fetchData();
+  }, [apiMode]);
+
+  const showSuccessMessage = (content: string) => {
+    if (typeof window !== 'undefined') {
+      // 동적 import 후 message 사용
+      import('antd/lib/message').then(mod => {
+        const message = mod.default;
+        message.success(content);
+      });
+    }
+  };
+
   const setupTable = async () => {
     try {
       setSetupLoading(true);
@@ -211,7 +206,7 @@ export default function RestaurantsPage() {
       
       if (response.ok) {
         setSetupSuccess(true);
-        messageApi.success('테이블 설정이 완료되었습니다.');
+        showSuccessMessage('테이블 설정이 완료되었습니다.');
         
         // 데이터 다시 불러오기
         setTimeout(() => {
@@ -237,11 +232,6 @@ export default function RestaurantsPage() {
     }
   };
 
-  useEffect(() => {
-    // 데이터 로드
-    fetchData();
-  }, [apiMode]);
-
   return (
     <>
       <Head>
@@ -254,171 +244,242 @@ export default function RestaurantsPage() {
         
         <div className="container mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold mb-6">국회 주변 맛집</h1>
-          
-          <NoSSR>
-            <div>
-              <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-                <div className="flex space-x-2 mt-4 md:mt-0">
-                  <Radio.Group 
-                    value={apiMode} 
-                    onChange={(e: any) => {
-                      if (e.target) {
-                        setApiMode(e.target.value);
-                      }
-                    }}
-                    buttonStyle="solid"
-                  >
-                    <Radio.Button value="normal">기본 모드</Radio.Button>
-                    <Radio.Button value="sample">샘플 데이터</Radio.Button>
-                    <Radio.Button value="direct">직접 API</Radio.Button>
-                  </Radio.Group>
-                  
-                  <Button 
-                    type="primary" 
-                    onClick={fetchData}
-                    loading={loading}
-                  >
-                    새로고침
-                  </Button>
-                </div>
-              </div>
-              
-              {/* 상태 표시 */}
-              {!isRealData && !loading && (
-                <Alert
-                  message="샘플 데이터 표시 중"
-                  description={
-                    <div>
-                      <p>실제 데이터베이스에서 가져온 데이터가 아닌 샘플 데이터를 표시하고 있습니다.</p>
-                      <p>아래 '테이블 초기화' 버튼을 클릭하여 데이터베이스를 설정하세요.</p>
-                    </div>
-                  }
-                  type="warning"
-                  showIcon
-                  className="mb-4"
+
+          <ClientOnly>
+            <div className="w-full">
+              {typeof window !== 'undefined' && (
+                <RestaurantContent 
+                  restaurants={restaurants}
+                  loading={loading}
+                  error={error}
+                  isRealData={isRealData}
+                  apiMode={apiMode}
+                  setApiMode={setApiMode}
+                  fetchData={fetchData}
+                  setupLoading={setupLoading}
+                  setupSuccess={setupSuccess}
+                  setupError={setupError}
+                  debugInfo={debugInfo}
+                  setupTable={setupTable}
                 />
-              )}
-              
-              {error && (
-                <Alert
-                  message="오류 발생"
-                  description={error}
-                  type="error"
-                  showIcon
-                  className="mb-4"
-                />
-              )}
-              
-              {/* 설정 상태 */}
-              {setupLoading && (
-                <Alert
-                  message="테이블 설정 중..."
-                  description="데이터베이스 테이블을 설정하고 있습니다. 잠시만 기다려주세요."
-                  type="info"
-                  showIcon
-                  className="mb-4"
-                />
-              )}
-              
-              {setupSuccess && (
-                <Alert
-                  message="설정 완료"
-                  description="데이터베이스 테이블이 성공적으로 설정되었습니다."
-                  type="success"
-                  showIcon
-                  className="mb-4"
-                />
-              )}
-              
-              {setupError && (
-                <Alert
-                  message="설정 오류"
-                  description={setupError}
-                  type="error"
-                  showIcon
-                  className="mb-4"
-                />
-              )}
-              
-              {/* 디버그 정보 */}
-              {debugInfo && (
-                <Collapse className="mb-4">
-                  <Collapse.Panel header="디버깅 정보" key="1">
-                    <pre className="bg-gray-100 p-4 rounded overflow-auto">
-                      {JSON.stringify(debugInfo, null, 2)}
-                    </pre>
-                  </Collapse.Panel>
-                </Collapse>
-              )}
-              
-              {/* 관리자 설정 버튼 */}
-              {!isRealData && !setupLoading && (
-                <div className="mb-4">
-                  <Button 
-                    type="primary" 
-                    danger
-                    onClick={setupTable}
-                    loading={setupLoading}
-                  >
-                    테이블 초기화 (관리자)
-                  </Button>
-                  <Typography.Text type="secondary" className="ml-2">
-                    ※ 이 버튼은 관리자만 사용해야 합니다.
-                  </Typography.Text>
-                </div>
-              )}
-              
-              {loading ? (
-                <div className="flex justify-center items-center py-20">
-                  <Spin size="large" tip="데이터를 불러오는 중..." />
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <List
-                    grid={{
-                      gutter: 16,
-                      xs: 1,
-                      sm: 2,
-                      md: 3,
-                      lg: 3,
-                      xl: 4,
-                      xxl: 5,
-                    }}
-                    dataSource={restaurants}
-                    renderItem={(item: RestaurantItem) => (
-                      <List.Item>
-                        <Card
-                          title={
-                            <div className="flex justify-between items-center">
-                              <span>{item.name}</span>
-                              {item.category && (
-                                <Tag color="blue">{item.category}</Tag>
-                              )}
-                            </div>
-                          }
-                          hoverable
-                        >
-                          <p><strong>위치:</strong> {item.location}</p>
-                          {item.pnum && <p><strong>전화:</strong> {item.pnum}</p>}
-                          {item.price && <p><strong>가격대:</strong> {item.price}</p>}
-                          {item.remark && <p><strong>비고:</strong> {item.remark}</p>}
-                          {item.link && (
-                            <p>
-                              <a href={item.link} target="_blank" rel="noopener noreferrer">
-                                식당 정보 바로가기
-                              </a>
-                            </p>
-                          )}
-                        </Card>
-                      </List.Item>
-                    )}
-                  />
-                </div>
               )}
             </div>
-          </NoSSR>
+          </ClientOnly>
         </div>
       </main>
+    </>
+  );
+}
+
+interface RestaurantContentProps {
+  restaurants: RestaurantItem[];
+  loading: boolean;
+  error: string | null;
+  isRealData: boolean;
+  apiMode: string;
+  setApiMode: (mode: string) => void;
+  fetchData: () => Promise<void>;
+  setupLoading: boolean;
+  setupSuccess: boolean;
+  setupError: string | null;
+  debugInfo: any;
+  setupTable: () => Promise<void>;
+}
+
+// 클라이언트 컴포넌트 분리
+function RestaurantContent(props: RestaurantContentProps) {
+  // 클라이언트 사이드에서만 import 
+  const { 
+    Alert, Button, Card, Collapse, List, Radio, 
+    Spin, Tag, Typography 
+  } = React.useMemo(() => {
+    if (typeof window !== 'undefined') {
+      return {
+        Alert: require('antd/lib/alert').default,
+        Button: require('antd/lib/button').default,
+        Card: require('antd/lib/card').default,
+        Collapse: require('antd/lib/collapse').default,
+        List: require('antd/lib/list').default,
+        Radio: require('antd/lib/radio').default,
+        Spin: require('antd/lib/spin').default,
+        Tag: require('antd/lib/tag').default,
+        Typography: require('antd/lib/typography').default
+      };
+    }
+    return {};
+  }, []);
+
+  if (!Alert || !Radio || !Button) return null;
+
+  const { 
+    restaurants, loading, error, isRealData, apiMode, setApiMode,
+    fetchData, setupLoading, setupSuccess, setupError, debugInfo, setupTable
+  } = props;
+
+  return (
+    <>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+        <div className="flex space-x-2 mt-4 md:mt-0">
+          <Radio.Group 
+            value={apiMode} 
+            onChange={(e: any) => {
+              if (e.target) {
+                setApiMode(e.target.value);
+              }
+            }}
+            buttonStyle="solid"
+          >
+            <Radio.Button value="normal">기본 모드</Radio.Button>
+            <Radio.Button value="sample">샘플 데이터</Radio.Button>
+            <Radio.Button value="direct">직접 API</Radio.Button>
+          </Radio.Group>
+          
+          <Button 
+            type="primary" 
+            onClick={fetchData}
+            loading={loading}
+          >
+            새로고침
+          </Button>
+        </div>
+      </div>
+      
+      {/* 상태 표시 */}
+      {!isRealData && !loading && (
+        <Alert
+          message="샘플 데이터 표시 중"
+          description={
+            <div>
+              <p>실제 데이터베이스에서 가져온 데이터가 아닌 샘플 데이터를 표시하고 있습니다.</p>
+              <p>아래 '테이블 초기화' 버튼을 클릭하여 데이터베이스를 설정하세요.</p>
+            </div>
+          }
+          type="warning"
+          showIcon
+          className="mb-4"
+        />
+      )}
+      
+      {error && (
+        <Alert
+          message="오류 발생"
+          description={error}
+          type="error"
+          showIcon
+          className="mb-4"
+        />
+      )}
+      
+      {/* 설정 상태 */}
+      {setupLoading && (
+        <Alert
+          message="테이블 설정 중..."
+          description="데이터베이스 테이블을 설정하고 있습니다. 잠시만 기다려주세요."
+          type="info"
+          showIcon
+          className="mb-4"
+        />
+      )}
+      
+      {setupSuccess && (
+        <Alert
+          message="설정 완료"
+          description="데이터베이스 테이블이 성공적으로 설정되었습니다."
+          type="success"
+          showIcon
+          className="mb-4"
+        />
+      )}
+      
+      {setupError && (
+        <Alert
+          message="설정 오류"
+          description={setupError}
+          type="error"
+          showIcon
+          className="mb-4"
+        />
+      )}
+      
+      {/* 디버그 정보 */}
+      {debugInfo && Collapse && (
+        <Collapse className="mb-4">
+          <Collapse.Panel header="디버깅 정보" key="1">
+            <pre className="bg-gray-100 p-4 rounded overflow-auto">
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
+          </Collapse.Panel>
+        </Collapse>
+      )}
+      
+      {/* 관리자 설정 버튼 */}
+      {!isRealData && !setupLoading && Button && Typography && (
+        <div className="mb-4">
+          <Button 
+            type="primary" 
+            danger
+            onClick={setupTable}
+            loading={setupLoading}
+          >
+            테이블 초기화 (관리자)
+          </Button>
+          <Typography.Text type="secondary" className="ml-2">
+            ※ 이 버튼은 관리자만 사용해야 합니다.
+          </Typography.Text>
+        </div>
+      )}
+      
+      {loading ? (
+        <div className="flex justify-center items-center py-20">
+          {Spin && <Spin size="large" tip="데이터를 불러오는 중..." />}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          {List && (
+            <List
+              grid={{
+                gutter: 16,
+                xs: 1,
+                sm: 2,
+                md: 3,
+                lg: 3,
+                xl: 4,
+                xxl: 5,
+              }}
+              dataSource={restaurants}
+              renderItem={(item: RestaurantItem) => (
+                <List.Item>
+                  {Card && (
+                    <Card
+                      title={
+                        <div className="flex justify-between items-center">
+                          <span>{item.name}</span>
+                          {item.category && Tag && (
+                            <Tag color="blue">{item.category}</Tag>
+                          )}
+                        </div>
+                      }
+                      hoverable
+                    >
+                      <p><strong>위치:</strong> {item.location}</p>
+                      {item.pnum && <p><strong>전화:</strong> {item.pnum}</p>}
+                      {item.price && <p><strong>가격대:</strong> {item.price}</p>}
+                      {item.remark && <p><strong>비고:</strong> {item.remark}</p>}
+                      {item.link && (
+                        <p>
+                          <a href={item.link} target="_blank" rel="noopener noreferrer">
+                            식당 정보 바로가기
+                          </a>
+                        </p>
+                      )}
+                    </Card>
+                  )}
+                </List.Item>
+              )}
+            />
+          )}
+        </div>
+      )}
     </>
   );
 }
