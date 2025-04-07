@@ -18,17 +18,8 @@ const Spin = dynamic(() => import('antd/lib/spin'), { ssr: false }) as any;
 const Tag = dynamic(() => import('antd/lib/tag'), { ssr: false }) as any;
 const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
 
-// message를 동적으로 임포트
+// message 임포트
 let message: any = { success: () => {}, error: () => {} };
-if (typeof window !== 'undefined') {
-  import('antd/lib/message').then(mod => {
-    message = mod.default;
-  });
-}
-
-// Panel과 Text 정의
-const Panel = Collapse ? Collapse.Panel : null;
-const Text = Typography ? Typography.Text : null;
 
 export default function RestaurantsPage() {
   const [restaurants, setRestaurants] = useState<RestaurantItem[]>([]);
@@ -41,6 +32,17 @@ export default function RestaurantsPage() {
   const [setupError, setSetupError] = useState<string | null>(null);
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [apiMode, setApiMode] = useState<string>('normal');
+  
+  // 클라이언트 사이드 렌더링 제어
+  const [isBrowser, setIsBrowser] = useState<boolean>(false);
+  
+  // 브라우저 환경에서 message 모듈 로드
+  useEffect(() => {
+    setIsBrowser(true);
+    import('antd/lib/message').then((mod) => {
+      message = mod.default;
+    });
+  }, []);
 
   // 데이터 로드 함수
   const fetchData = async () => {
@@ -240,168 +242,174 @@ export default function RestaurantsPage() {
       <main className="flex min-h-screen flex-col items-center justify-between">
         <Header />
         
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">국회 주변 맛집</h1>
-            
-            <div className="flex space-x-2 mt-4 md:mt-0">
-              <Radio.Group 
-                value={apiMode} 
-                onChange={(e: any) => {
-                  if (e.target) {
-                    setApiMode(e.target.value);
-                  }
-                }}
-                buttonStyle="solid"
-              >
-                <Radio.Button value="normal">기본 모드</Radio.Button>
-                <Radio.Button value="sample">샘플 데이터</Radio.Button>
-                <Radio.Button value="direct">직접 API</Radio.Button>
-              </Radio.Group>
+        {isBrowser ? (
+          <div className="container mx-auto px-4 py-8">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+              <h1 className="text-3xl font-bold">국회 주변 맛집</h1>
               
-              <Button 
-                type="primary" 
-                onClick={fetchData}
-                loading={loading}
-              >
-                새로고침
-              </Button>
+              <div className="flex space-x-2 mt-4 md:mt-0">
+                <Radio.Group 
+                  value={apiMode} 
+                  onChange={(e: any) => {
+                    if (e.target) {
+                      setApiMode(e.target.value);
+                    }
+                  }}
+                  buttonStyle="solid"
+                >
+                  <Radio.Button value="normal">기본 모드</Radio.Button>
+                  <Radio.Button value="sample">샘플 데이터</Radio.Button>
+                  <Radio.Button value="direct">직접 API</Radio.Button>
+                </Radio.Group>
+                
+                <Button 
+                  type="primary" 
+                  onClick={fetchData}
+                  loading={loading}
+                >
+                  새로고침
+                </Button>
+              </div>
             </div>
-          </div>
-          
-          {/* 상태 표시 */}
-          {!isRealData && !loading && (
-            <Alert
-              message="샘플 데이터 표시 중"
-              description={
-                <div>
-                  <p>실제 데이터베이스에서 가져온 데이터가 아닌 샘플 데이터를 표시하고 있습니다.</p>
-                  <p>아래 '테이블 초기화' 버튼을 클릭하여 데이터베이스를 설정하세요.</p>
-                </div>
-              }
-              type="warning"
-              showIcon
-              className="mb-4"
-            />
-          )}
-          
-          {error && (
-            <Alert
-              message="오류 발생"
-              description={error}
-              type="error"
-              showIcon
-              className="mb-4"
-            />
-          )}
-          
-          {/* 설정 상태 */}
-          {setupLoading && (
-            <Alert
-              message="테이블 설정 중..."
-              description="데이터베이스 테이블을 설정하고 있습니다. 잠시만 기다려주세요."
-              type="info"
-              showIcon
-              className="mb-4"
-            />
-          )}
-          
-          {setupSuccess && (
-            <Alert
-              message="설정 완료"
-              description="데이터베이스 테이블이 성공적으로 설정되었습니다."
-              type="success"
-              showIcon
-              className="mb-4"
-            />
-          )}
-          
-          {setupError && (
-            <Alert
-              message="설정 오류"
-              description={setupError}
-              type="error"
-              showIcon
-              className="mb-4"
-            />
-          )}
-          
-          {/* 디버그 정보 */}
-          {debugInfo && (
-            <Collapse className="mb-4">
-              <Panel header="디버깅 정보" key="1">
-                <pre className="bg-gray-100 p-4 rounded overflow-auto">
-                  {JSON.stringify(debugInfo, null, 2)}
-                </pre>
-              </Panel>
-            </Collapse>
-          )}
-          
-          {/* 관리자 설정 버튼 */}
-          {!isRealData && !setupLoading && (
-            <div className="mb-4">
-              <Button 
-                type="primary" 
-                danger
-                onClick={setupTable}
-                loading={setupLoading}
-              >
-                테이블 초기화 (관리자)
-              </Button>
-              <Text type="secondary" className="ml-2">
-                ※ 이 버튼은 관리자만 사용해야 합니다.
-              </Text>
-            </div>
-          )}
-          
-          {loading ? (
-            <div className="flex justify-center items-center py-20">
-              <Spin size="large" tip="데이터를 불러오는 중..." />
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <List
-                grid={{
-                  gutter: 16,
-                  xs: 1,
-                  sm: 2,
-                  md: 3,
-                  lg: 3,
-                  xl: 4,
-                  xxl: 5,
-                }}
-                dataSource={restaurants}
-                renderItem={(item: RestaurantItem) => (
-                  <List.Item>
-                    <Card
-                      title={
-                        <div className="flex justify-between items-center">
-                          <span>{item.name}</span>
-                          {item.category && (
-                            <Tag color="blue">{item.category}</Tag>
-                          )}
-                        </div>
-                      }
-                      hoverable
-                    >
-                      <p><strong>위치:</strong> {item.location}</p>
-                      {item.pnum && <p><strong>전화:</strong> {item.pnum}</p>}
-                      {item.price && <p><strong>가격대:</strong> {item.price}</p>}
-                      {item.remark && <p><strong>비고:</strong> {item.remark}</p>}
-                      {item.link && (
-                        <p>
-                          <a href={item.link} target="_blank" rel="noopener noreferrer">
-                            식당 정보 바로가기
-                          </a>
-                        </p>
-                      )}
-                    </Card>
-                  </List.Item>
-                )}
+            
+            {/* 상태 표시 */}
+            {!isRealData && !loading && (
+              <Alert
+                message="샘플 데이터 표시 중"
+                description={
+                  <div>
+                    <p>실제 데이터베이스에서 가져온 데이터가 아닌 샘플 데이터를 표시하고 있습니다.</p>
+                    <p>아래 '테이블 초기화' 버튼을 클릭하여 데이터베이스를 설정하세요.</p>
+                  </div>
+                }
+                type="warning"
+                showIcon
+                className="mb-4"
               />
-            </div>
-          )}
-        </div>
+            )}
+            
+            {error && (
+              <Alert
+                message="오류 발생"
+                description={error}
+                type="error"
+                showIcon
+                className="mb-4"
+              />
+            )}
+            
+            {/* 설정 상태 */}
+            {setupLoading && (
+              <Alert
+                message="테이블 설정 중..."
+                description="데이터베이스 테이블을 설정하고 있습니다. 잠시만 기다려주세요."
+                type="info"
+                showIcon
+                className="mb-4"
+              />
+            )}
+            
+            {setupSuccess && (
+              <Alert
+                message="설정 완료"
+                description="데이터베이스 테이블이 성공적으로 설정되었습니다."
+                type="success"
+                showIcon
+                className="mb-4"
+              />
+            )}
+            
+            {setupError && (
+              <Alert
+                message="설정 오류"
+                description={setupError}
+                type="error"
+                showIcon
+                className="mb-4"
+              />
+            )}
+            
+            {/* 디버그 정보 */}
+            {debugInfo && (
+              <Collapse className="mb-4">
+                <Collapse.Panel header="디버깅 정보" key="1">
+                  <pre className="bg-gray-100 p-4 rounded overflow-auto">
+                    {JSON.stringify(debugInfo, null, 2)}
+                  </pre>
+                </Collapse.Panel>
+              </Collapse>
+            )}
+            
+            {/* 관리자 설정 버튼 */}
+            {!isRealData && !setupLoading && (
+              <div className="mb-4">
+                <Button 
+                  type="primary" 
+                  danger
+                  onClick={setupTable}
+                  loading={setupLoading}
+                >
+                  테이블 초기화 (관리자)
+                </Button>
+                <Typography.Text type="secondary" className="ml-2">
+                  ※ 이 버튼은 관리자만 사용해야 합니다.
+                </Typography.Text>
+              </div>
+            )}
+            
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <Spin size="large" tip="데이터를 불러오는 중..." />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <List
+                  grid={{
+                    gutter: 16,
+                    xs: 1,
+                    sm: 2,
+                    md: 3,
+                    lg: 3,
+                    xl: 4,
+                    xxl: 5,
+                  }}
+                  dataSource={restaurants}
+                  renderItem={(item: RestaurantItem) => (
+                    <List.Item>
+                      <Card
+                        title={
+                          <div className="flex justify-between items-center">
+                            <span>{item.name}</span>
+                            {item.category && (
+                              <Tag color="blue">{item.category}</Tag>
+                            )}
+                          </div>
+                        }
+                        hoverable
+                      >
+                        <p><strong>위치:</strong> {item.location}</p>
+                        {item.pnum && <p><strong>전화:</strong> {item.pnum}</p>}
+                        {item.price && <p><strong>가격대:</strong> {item.price}</p>}
+                        {item.remark && <p><strong>비고:</strong> {item.remark}</p>}
+                        {item.link && (
+                          <p>
+                            <a href={item.link} target="_blank" rel="noopener noreferrer">
+                              식당 정보 바로가기
+                            </a>
+                          </p>
+                        )}
+                      </Card>
+                    </List.Item>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="container mx-auto px-4 py-8 flex justify-center items-center">
+            <p>로딩중...</p>
+          </div>
+        )}
       </main>
     </>
   );
