@@ -2,38 +2,185 @@ import React, { useState, useEffect } from 'react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import { RestaurantItem } from '@/types';
+import Header from '@/components/Layout/Header';
+import Image from 'next/image';
+
+// 동적 임포트
+const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
+const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
+const Card = dynamic(() => import('antd/lib/card'), { ssr: false }) as any;
+const Collapse = dynamic(() => import('antd/lib/collapse'), { ssr: false }) as any;
+const List = dynamic(() => import('antd/lib/list'), { ssr: false }) as any;
+const Radio = dynamic(() => import('antd/lib/radio'), { ssr: false }) as any;
+const Spin = dynamic(() => import('antd/lib/spin'), { ssr: false }) as any;
+const Tag = dynamic(() => import('antd/lib/tag'), { ssr: false }) as any;
+const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
+
+// message를 동적으로 임포트
+let message: any = { success: () => {}, error: () => {} };
+if (typeof window !== 'undefined') {
+  import('antd/lib/message').then(mod => {
+    message = mod.default;
+  });
+}
+
+// Panel과 Text 정의
+const Panel = Collapse ? Collapse.Panel : null;
+const Text = Typography ? Typography.Text : null;
 
 export default function RestaurantsPage() {
   const [restaurants, setRestaurants] = useState<RestaurantItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [setupLoading, setSetupLoading] = useState(false);
-  const [setupSuccess, setSetupSuccess] = useState(false);
+  const [isRealData, setIsRealData] = useState<boolean>(true);
+  
+  const [setupLoading, setSetupLoading] = useState<boolean>(false);
+  const [setupSuccess, setSetupSuccess] = useState<boolean>(false);
   const [setupError, setSetupError] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [apiMode, setApiMode] = useState<string>('normal');
 
   // 데이터 로드 함수
   const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('/api/restaurants?all=true');
+      setDebugInfo(null);
+      console.log('식당 데이터 요청 시작...');
       
-      if (!response.ok) {
-        throw new Error('식당 정보를 불러오는데 실패했습니다');
+      // API 모드에 따라 쿼리 파라미터 조정
+      let url = '/api/restaurants';
+      if (apiMode === 'sample') {
+        url += '?debug=sample';
+      } else if (apiMode === 'direct') {
+        // 직접 API 호출 테스트는 별도 함수로 처리
+        await fetchDirectApiCall();
+        return;
       }
       
-      const data = await response.json();
+      const response = await fetch(url);
+      console.log('응답 상태:', response.status, response.statusText);
+      
+      // 응답의 raw 텍스트 추출
+      const responseText = await response.text();
+      console.log('응답 데이터(raw):', responseText);
+      
+      // JSON 형식인지 확인
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('파싱된 데이터:', data);
+      } catch (e: any) {
+        throw new Error(`응답이 유효한 JSON 형식이 아닙니다: ${e.message}`);
+      }
+      
+      // items 필드가 있는지 확인
+      if (!data.items) {
+        setIsRealData(false);
+        throw new Error('응답에 items 필드가 없습니다.');
+      }
+      
       setRestaurants(data.items || []);
-    } catch (err) {
-      console.error('식당 정보 로드 오류:', err);
-      setError(err instanceof Error ? err.message : '데이터 로드 오류');
+      setIsRealData(data.source !== 'sample-fallback');
+      
+      // 디버그 정보 저장
+      if (data.debug) {
+        setDebugInfo(data.debug);
+      }
+      
+      if (data.error) {
+        setError(data.error);
+      }
+    } catch (err: any) {
+      console.error('데이터 가져오기 오류:', err);
+      setError(err.message || '알 수 없는 오류가 발생했습니다.');
+      setRestaurants([]);
+      setIsRealData(false);
     } finally {
       setLoading(false);
     }
   };
 
-  // 테이블 설정 및 샘플 데이터 초기화
+  // 직접 API 호출 테스트
+  const fetchDirectApiCall = async () => {
+    try {
+      setLoading(true);
+      console.log('Supabase 직접 호출 테스트...');
+      
+      // 클라이언트 측에서 직접 Supabase API 호출
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error('Supabase 연결 정보가 설정되지 않았습니다.');
+      }
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      console.log('Supabase 클라이언트 생성:', supabase ? '성공' : '실패');
+      
+      // 테이블 존재 확인
+      const { data: testData, error: testError } = await supabase
+        .from('na-res')
+        .select('id', { count: 'exact', head: true });
+      
+      console.log('테이블 확인 결과:', testError ? '테이블 없음' : '테이블 존재');
+      
+      if (testError) {
+        // 테이블 없음 오류 처리
+        setDebugInfo({
+          error: testError,
+          message: '테이블이 존재하지 않습니다.',
+          supabaseConnected: true
+        });
+        setError('테이블이 존재하지 않습니다. 관리자에게 문의하세요.');
+        setIsRealData(false);
+        setRestaurants([]);
+        return;
+      }
+      
+      // 실제 데이터 조회
+      const { data, error, count } = await supabase
+        .from('na-res')
+        .select('*', { count: 'exact' });
+      
+      console.log('데이터 조회 결과:', error ? '오류 발생' : `${count}개 항목 조회됨`);
+      
+      if (error) {
+        setDebugInfo({
+          error,
+          message: '데이터 조회 중 오류가 발생했습니다.',
+          supabaseConnected: true
+        });
+        setError(`데이터 조회 오류: ${error.message}`);
+        setIsRealData(false);
+        setRestaurants([]);
+      } else {
+        // 데이터 성공적으로 가져옴
+        setRestaurants(data || []);
+        setIsRealData(true);
+        setDebugInfo({
+          count,
+          supabaseConnected: true,
+          dataFound: data?.length > 0
+        });
+      }
+    } catch (err: any) {
+      console.error('직접 API 호출 오류:', err);
+      setError(err.message || '직접 API 호출 중 오류가 발생했습니다.');
+      setRestaurants([]);
+      setIsRealData(false);
+      setDebugInfo({
+        error: err.message,
+        directApiError: true
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const setupTable = async () => {
     try {
       setSetupLoading(true);
@@ -43,25 +190,36 @@ export default function RestaurantsPage() {
       const response = await fetch('/api/setup-restaurant', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-        },
+          'Content-Type': 'application/json'
+        }
       });
       
-      const result = await response.json();
+      const data = await response.json();
+      console.log('테이블 설정 응답:', data);
       
-      if (!response.ok) {
-        throw new Error(result.error || '테이블 설정 오류');
+      if (response.ok) {
+        setSetupSuccess(true);
+        message.success('테이블 설정이 완료되었습니다.');
+        
+        // 데이터 다시 불러오기
+        setTimeout(() => {
+          fetchData();
+        }, 1000);
+      } else {
+        setSetupError(data.message || '테이블 설정 중 오류가 발생했습니다.');
+        
+        // SQL 스크립트가 있는 경우 디버그 정보에 추가
+        if (data.sqlScript) {
+          setDebugInfo({
+            ...debugInfo,
+            sqlScript: data.sqlScript,
+            setupResponse: data
+          });
+        }
       }
-      
-      console.log('설정 결과:', result);
-      setSetupSuccess(true);
-      
-      // 데이터 다시 로드
-      await fetchData();
-    } catch (err) {
+    } catch (err: any) {
       console.error('테이블 설정 오류:', err);
-      setSetupError(err instanceof Error ? err.message : '테이블 설정 오류');
-      setSetupSuccess(false);
+      setSetupError(err.message || '테이블 설정 중 오류가 발생했습니다.');
     } finally {
       setSetupLoading(false);
     }
@@ -70,125 +228,181 @@ export default function RestaurantsPage() {
   useEffect(() => {
     // 데이터 로드
     fetchData();
-  }, []);
-
-  // 실제 샘플 데이터인지 실제 데이터인지 확인
-  const isRealData = restaurants.length > 0 && !restaurants[0].id?.toString().includes('sample');
+  }, [apiMode]);
 
   return (
     <>
       <Head>
-        <title>국회앞 식당 | 식당 정보</title>
-        <meta name="description" content="국회앞 식당 정보 목록" />
+        <title>국회 주변 맛집 - ExNews</title>
+        <meta name="description" content="국회 주변 맛집 정보를 제공합니다." />
       </Head>
 
-      <div style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto' }}>
-        <h1 style={{ textAlign: 'center', marginBottom: '24px' }}>국회앞 식당</h1>
+      <main className="flex min-h-screen flex-col items-center justify-between">
+        <Header />
         
-        <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link 
-            href="/"
-            style={{ display: 'inline-block', padding: '8px 16px', backgroundColor: '#1a4b8c', color: 'white', borderRadius: '4px', textDecoration: 'none' }}
-          >
-            ← 메인으로 돌아가기
-          </Link>
-          
-          {(!isRealData && !setupLoading) && (
-            <button 
-              onClick={setupTable}
-              style={{
-                padding: '8px 16px',
-                backgroundColor: '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer'
-              }}
-              disabled={setupLoading}
-            >
-              테이블 초기화 및 샘플 데이터 추가
-            </button>
-          )}
-        </div>
-        
-        {setupLoading && (
-          <div style={{ backgroundColor: '#f0f8ff', padding: '16px', marginBottom: '16px', borderRadius: '4px', textAlign: 'center' }}>
-            <p>데이터베이스 테이블 초기화 중...</p>
-          </div>
-        )}
-        
-        {setupSuccess && (
-          <div style={{ backgroundColor: '#f0fff0', padding: '16px', marginBottom: '16px', borderRadius: '4px' }}>
-            <p>테이블 초기화 및 샘플 데이터 추가 완료!</p>
-          </div>
-        )}
-        
-        {setupError && (
-          <div style={{ backgroundColor: '#fff0f0', padding: '16px', marginBottom: '16px', borderRadius: '4px' }}>
-            <p>테이블 초기화 오류: {setupError}</p>
-            <p>Supabase 대시보드에서 직접 테이블을 생성해야 할 수 있습니다.</p>
-          </div>
-        )}
-        
-        {loading ? (
-          <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center' }}>
-            <p>식당 정보를 불러오는 중입니다...</p>
-          </div>
-        ) : error ? (
-          <div style={{ backgroundColor: '#fff0f0', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-            <h2>오류가 발생했습니다</h2>
-            <p>{error}</p>
-          </div>
-        ) : restaurants.length === 0 ? (
-          <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-            <h2>데이터가 없습니다</h2>
-            <p>식당 정보가 없습니다. 나중에 다시 시도해주세요.</p>
-          </div>
-        ) : (
-          <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-            <h2>국회앞 식당 목록 ({restaurants.length}개)</h2>
-            {!isRealData && (
-              <div style={{ backgroundColor: '#ffffd0', padding: '10px', marginBottom: '10px', borderRadius: '4px' }}>
-                <p>현재 샘플 데이터가 표시되고 있습니다. 실제 데이터베이스 테이블이 생성되지 않았습니다.</p>
-              </div>
-            )}
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #ddd' }}>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>카테고리</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>이름</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>위치</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>연락처</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>가격대</th>
-                    <th style={{ padding: '8px', textAlign: 'left' }}>비고</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {restaurants.map(restaurant => (
-                    <tr key={restaurant.id || restaurant.name} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={{ padding: '8px' }}>{restaurant.category}</td>
-                      <td style={{ padding: '8px' }}>
-                        {restaurant.link ? (
-                          <a href={restaurant.link} target="_blank" rel="noopener noreferrer" style={{ color: '#1a4b8c', textDecoration: 'none' }}>
-                            {restaurant.name}
-                          </a>
-                        ) : (
-                          restaurant.name
-                        )}
-                      </td>
-                      <td style={{ padding: '8px' }}>{restaurant.location}</td>
-                      <td style={{ padding: '8px' }}>{restaurant.pnum}</td>
-                      <td style={{ padding: '8px' }}>{restaurant.price}</td>
-                      <td style={{ padding: '8px' }}>{restaurant.remark || ''}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">국회 주변 맛집</h1>
+            
+            <div className="flex space-x-2 mt-4 md:mt-0">
+              <Radio.Group 
+                value={apiMode} 
+                onChange={(e: any) => {
+                  if (e.target) {
+                    setApiMode(e.target.value);
+                  }
+                }}
+                buttonStyle="solid"
+              >
+                <Radio.Button value="normal">기본 모드</Radio.Button>
+                <Radio.Button value="sample">샘플 데이터</Radio.Button>
+                <Radio.Button value="direct">직접 API</Radio.Button>
+              </Radio.Group>
+              
+              <Button 
+                type="primary" 
+                onClick={fetchData}
+                loading={loading}
+              >
+                새로고침
+              </Button>
             </div>
           </div>
-        )}
-      </div>
+          
+          {/* 상태 표시 */}
+          {!isRealData && !loading && (
+            <Alert
+              message="샘플 데이터 표시 중"
+              description={
+                <div>
+                  <p>실제 데이터베이스에서 가져온 데이터가 아닌 샘플 데이터를 표시하고 있습니다.</p>
+                  <p>아래 '테이블 초기화' 버튼을 클릭하여 데이터베이스를 설정하세요.</p>
+                </div>
+              }
+              type="warning"
+              showIcon
+              className="mb-4"
+            />
+          )}
+          
+          {error && (
+            <Alert
+              message="오류 발생"
+              description={error}
+              type="error"
+              showIcon
+              className="mb-4"
+            />
+          )}
+          
+          {/* 설정 상태 */}
+          {setupLoading && (
+            <Alert
+              message="테이블 설정 중..."
+              description="데이터베이스 테이블을 설정하고 있습니다. 잠시만 기다려주세요."
+              type="info"
+              showIcon
+              className="mb-4"
+            />
+          )}
+          
+          {setupSuccess && (
+            <Alert
+              message="설정 완료"
+              description="데이터베이스 테이블이 성공적으로 설정되었습니다."
+              type="success"
+              showIcon
+              className="mb-4"
+            />
+          )}
+          
+          {setupError && (
+            <Alert
+              message="설정 오류"
+              description={setupError}
+              type="error"
+              showIcon
+              className="mb-4"
+            />
+          )}
+          
+          {/* 디버그 정보 */}
+          {debugInfo && (
+            <Collapse className="mb-4">
+              <Panel header="디버깅 정보" key="1">
+                <pre className="bg-gray-100 p-4 rounded overflow-auto">
+                  {JSON.stringify(debugInfo, null, 2)}
+                </pre>
+              </Panel>
+            </Collapse>
+          )}
+          
+          {/* 관리자 설정 버튼 */}
+          {!isRealData && !setupLoading && (
+            <div className="mb-4">
+              <Button 
+                type="primary" 
+                danger
+                onClick={setupTable}
+                loading={setupLoading}
+              >
+                테이블 초기화 (관리자)
+              </Button>
+              <Text type="secondary" className="ml-2">
+                ※ 이 버튼은 관리자만 사용해야 합니다.
+              </Text>
+            </div>
+          )}
+          
+          {loading ? (
+            <div className="flex justify-center items-center py-20">
+              <Spin size="large" tip="데이터를 불러오는 중..." />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <List
+                grid={{
+                  gutter: 16,
+                  xs: 1,
+                  sm: 2,
+                  md: 3,
+                  lg: 3,
+                  xl: 4,
+                  xxl: 5,
+                }}
+                dataSource={restaurants}
+                renderItem={(item: RestaurantItem) => (
+                  <List.Item>
+                    <Card
+                      title={
+                        <div className="flex justify-between items-center">
+                          <span>{item.name}</span>
+                          {item.category && (
+                            <Tag color="blue">{item.category}</Tag>
+                          )}
+                        </div>
+                      }
+                      hoverable
+                    >
+                      <p><strong>위치:</strong> {item.location}</p>
+                      {item.pnum && <p><strong>전화:</strong> {item.pnum}</p>}
+                      {item.price && <p><strong>가격대:</strong> {item.price}</p>}
+                      {item.remark && <p><strong>비고:</strong> {item.remark}</p>}
+                      {item.link && (
+                        <p>
+                          <a href={item.link} target="_blank" rel="noopener noreferrer">
+                            식당 정보 바로가기
+                          </a>
+                        </p>
+                      )}
+                    </Card>
+                  </List.Item>
+                )}
+              />
+            </div>
+          )}
+        </div>
+      </main>
     </>
   );
 }
