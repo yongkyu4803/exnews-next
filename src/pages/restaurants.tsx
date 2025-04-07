@@ -256,7 +256,10 @@ export default function RestaurantsPage() {
         <Header />
         
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold mb-6">국회 주변 맛집</h1>
+          <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white py-8 px-6 rounded-lg shadow-md mb-8">
+            <h1 className="text-3xl font-bold mb-2">국회 주변 맛집</h1>
+            <p className="text-blue-100">국회 주변의 다양한 맛집 정보를 카테고리별로 확인해보세요.</p>
+          </div>
 
           <ClientOnly>
             <div className="w-full">
@@ -330,7 +333,7 @@ function RestaurantContent(props: RestaurantContentProps) {
   }, []);
 
   // Tabs 컴포넌트 로드 확인
-  if (!Alert || !Radio || !Button || !Tabs) return null; 
+  if (!Alert || !Button || !Tabs) return null; 
 
   const { 
     restaurants, loading, error, isRealData, apiMode, setApiMode,
@@ -340,40 +343,26 @@ function RestaurantContent(props: RestaurantContentProps) {
 
   return (
     <>
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6">
-        <div className="flex space-x-2 mt-4 md:mt-0">
-          <Radio.Group 
-            value={apiMode} 
-            onChange={(e: any) => {
-              if (e.target) {
-                setApiMode(e.target.value);
-              }
-            }}
-            buttonStyle="solid"
-          >
-            <Radio.Button value="normal">기본 모드</Radio.Button>
-            <Radio.Button value="sample">샘플 데이터</Radio.Button>
-            <Radio.Button value="direct">직접 API</Radio.Button>
-          </Radio.Group>
+      {/* 상단 헤더 섹션 */}
+      <div className="bg-gray-50 py-6 mb-8 rounded-lg shadow-sm">
+        <div className="container mx-auto px-4">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">국회 주변 맛집 카테고리</h2>
+          <p className="text-gray-600 mb-4">원하시는 카테고리를 선택하여 맛집 정보를 확인하세요</p>
           
-          <Button 
-            type="primary" 
-            onClick={() => fetchData(selectedCategory)}
-            loading={loading}
-          >
-            새로고침
-          </Button>
+          {/* 카테고리 탭 */}
+          <Tabs 
+            activeKey={selectedCategory} 
+            onChange={(key: string) => setSelectedCategory(key)}
+            type="card"
+            size="large"
+            className="custom-tabs"
+            items={categories.map(cat => ({ 
+              key: cat, 
+              label: cat === 'all' ? '전체' : cat,
+              className: selectedCategory === cat ? 'font-bold' : ''
+            }))}
+          />
         </div>
-      </div>
-      
-      {/* 카테고리 탭 */}
-      <div className="mb-6">
-        <Tabs 
-          activeKey={selectedCategory} 
-          onChange={(key: string) => setSelectedCategory(key)}
-          type="card"
-          items={categories.map(cat => ({ key: cat, label: cat === 'all' ? '전체' : cat }))}
-        />
       </div>
       
       {/* 상태 표시 */}
@@ -433,15 +422,17 @@ function RestaurantContent(props: RestaurantContentProps) {
         />
       )}
       
-      {/* 디버그 정보 */}
+      {/* 디버그 정보는 숨김 처리 - 필요시 관리자만 볼 수 있게 */}
       {debugInfo && Collapse && (
-        <Collapse className="mb-4">
-          <Collapse.Panel header="디버깅 정보" key="1">
-            <pre className="bg-gray-100 p-4 rounded overflow-auto">
-              {JSON.stringify(debugInfo, null, 2)}
-            </pre>
-          </Collapse.Panel>
-        </Collapse>
+        <div className="mb-4 opacity-60 hover:opacity-100 transition-opacity">
+          <Collapse>
+            <Collapse.Panel header="디버깅 정보 (관리자용)" key="1">
+              <pre className="bg-gray-100 p-4 rounded overflow-auto">
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
+            </Collapse.Panel>
+          </Collapse>
+        </div>
       )}
       
       {/* 관리자 설정 버튼 */}
@@ -461,6 +452,18 @@ function RestaurantContent(props: RestaurantContentProps) {
         </div>
       )}
       
+      {/* 새로고침 버튼은 오른쪽 상단에 작게 배치 */}
+      <div className="flex justify-end mb-4">
+        <Button
+          onClick={() => fetchData(selectedCategory)}
+          loading={loading}
+          icon={<span className="mr-1">🔄</span>}
+          size="small"
+        >
+          새로고침
+        </Button>
+      </div>
+      
       {loading ? (
         <div className="flex justify-center items-center py-20">
           {Spin && <Spin size="large" tip="데이터를 불러오는 중..." />}
@@ -470,7 +473,7 @@ function RestaurantContent(props: RestaurantContentProps) {
           {List && (
             <List
               grid={{
-                gutter: 16,
+                gutter: 24,
                 xs: 1,
                 sm: 2,
                 md: 3,
@@ -485,22 +488,30 @@ function RestaurantContent(props: RestaurantContentProps) {
                     <Card
                       title={
                         <div className="flex justify-between items-center">
-                          <span>{item.name}</span>
+                          <span className="text-lg font-bold">{item.name}</span>
                           {item.category && Tag && (
                             <Tag color="blue">{item.category}</Tag>
                           )}
                         </div>
                       }
                       hoverable
+                      className="h-full shadow-md hover:shadow-lg transition-shadow"
+                      bordered={false}
                     >
-                      <p><strong>위치:</strong> {item.location}</p>
-                      {item.pnum && <p><strong>전화:</strong> {item.pnum}</p>}
-                      {item.price && <p><strong>가격대:</strong> {item.price}</p>}
-                      {item.remark && <p><strong>비고:</strong> {item.remark}</p>}
+                      <p className="mb-2"><strong>위치:</strong> {item.location}</p>
+                      {item.pnum && <p className="mb-2"><strong>전화:</strong> {item.pnum}</p>}
+                      {item.price && <p className="mb-2"><strong>가격대:</strong> {item.price}</p>}
+                      {item.remark && <p className="mb-2"><strong>비고:</strong> {item.remark}</p>}
                       {item.link && (
-                        <p>
-                          <a href={item.link} target="_blank" rel="noopener noreferrer">
-                            식당 정보 바로가기
+                        <p className="mt-4">
+                          <a 
+                            href={item.link} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:text-blue-700 flex items-center"
+                          >
+                            <span>식당 정보 바로가기</span>
+                            <span className="ml-1">→</span>
                           </a>
                         </p>
                       )}

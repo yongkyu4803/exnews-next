@@ -523,3 +523,60 @@ button.micro-button,
     padding: 0 !important;
   }
 }
+
+/* 식당 페이지 스타일 */
+.custom-tabs .ant-tabs-nav {
+  margin-bottom: 16px !important;
+  display: flex;
+  justify-content: center;
+}
+
+.custom-tabs .ant-tabs-nav::before {
+  border: none !important;
+}
+
+.custom-tabs .ant-tabs-tab {
+  margin: 0 4px !important;
+  transition: all 0.3s ease;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  font-weight: 500;
+}
+
+.custom-tabs .ant-tabs-tab-active {
+  background-color: #1a73e8 !important;
+}
+
+.custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.custom-tabs .ant-tabs-tab:hover {
+  color: #1a73e8;
+}
+
+.custom-tabs .ant-tabs-ink-bar {
+  display: none !important;
+}
+
+/* 맛집 카드 스타일 */
+.ant-card.h-full {
+  transition: all 0.3s ease;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.ant-card.h-full .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #fafafa;
+}
+
+.ant-card.h-full:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.ant-card.h-full .ant-card-body {
+  padding: 16px;
+}
