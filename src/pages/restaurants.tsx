@@ -8,31 +8,72 @@ export default function RestaurantsPage() {
   const [restaurants, setRestaurants] = useState<RestaurantItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [setupLoading, setSetupLoading] = useState(false);
+  const [setupSuccess, setSetupSuccess] = useState(false);
+  const [setupError, setSetupError] = useState<string | null>(null);
+
+  // 데이터 로드 함수
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('/api/restaurants?all=true');
+      
+      if (!response.ok) {
+        throw new Error('식당 정보를 불러오는데 실패했습니다');
+      }
+      
+      const data = await response.json();
+      setRestaurants(data.items || []);
+    } catch (err) {
+      console.error('식당 정보 로드 오류:', err);
+      setError(err instanceof Error ? err.message : '데이터 로드 오류');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 테이블 설정 및 샘플 데이터 초기화
+  const setupTable = async () => {
+    try {
+      setSetupLoading(true);
+      setSetupError(null);
+      setSetupSuccess(false);
+      
+      const response = await fetch('/api/setup-restaurant', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(result.error || '테이블 설정 오류');
+      }
+      
+      console.log('설정 결과:', result);
+      setSetupSuccess(true);
+      
+      // 데이터 다시 로드
+      await fetchData();
+    } catch (err) {
+      console.error('테이블 설정 오류:', err);
+      setSetupError(err instanceof Error ? err.message : '테이블 설정 오류');
+      setSetupSuccess(false);
+    } finally {
+      setSetupLoading(false);
+    }
+  };
 
   useEffect(() => {
     // 데이터 로드
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/restaurants?all=true');
-        
-        if (!response.ok) {
-          throw new Error('식당 정보를 불러오는데 실패했습니다');
-        }
-        
-        const data = await response.json();
-        setRestaurants(data.items || []);
-        setError(null);
-      } catch (err) {
-        console.error('식당 정보 로드 오류:', err);
-        setError(err instanceof Error ? err.message : '데이터 로드 오류');
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchData();
   }, []);
+
+  // 실제 샘플 데이터인지 실제 데이터인지 확인
+  const isRealData = restaurants.length > 0 && !restaurants[0].id?.toString().includes('sample');
 
   return (
     <>
@@ -44,14 +85,50 @@ export default function RestaurantsPage() {
       <div style={{ padding: '16px', maxWidth: '1200px', margin: '0 auto' }}>
         <h1 style={{ textAlign: 'center', marginBottom: '24px' }}>국회앞 식당</h1>
         
-        <div style={{ marginBottom: '20px' }}>
+        <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link 
             href="/"
             style={{ display: 'inline-block', padding: '8px 16px', backgroundColor: '#1a4b8c', color: 'white', borderRadius: '4px', textDecoration: 'none' }}
           >
             ← 메인으로 돌아가기
           </Link>
+          
+          {(!isRealData && !setupLoading) && (
+            <button 
+              onClick={setupTable}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+              disabled={setupLoading}
+            >
+              테이블 초기화 및 샘플 데이터 추가
+            </button>
+          )}
         </div>
+        
+        {setupLoading && (
+          <div style={{ backgroundColor: '#f0f8ff', padding: '16px', marginBottom: '16px', borderRadius: '4px', textAlign: 'center' }}>
+            <p>데이터베이스 테이블 초기화 중...</p>
+          </div>
+        )}
+        
+        {setupSuccess && (
+          <div style={{ backgroundColor: '#f0fff0', padding: '16px', marginBottom: '16px', borderRadius: '4px' }}>
+            <p>테이블 초기화 및 샘플 데이터 추가 완료!</p>
+          </div>
+        )}
+        
+        {setupError && (
+          <div style={{ backgroundColor: '#fff0f0', padding: '16px', marginBottom: '16px', borderRadius: '4px' }}>
+            <p>테이블 초기화 오류: {setupError}</p>
+            <p>Supabase 대시보드에서 직접 테이블을 생성해야 할 수 있습니다.</p>
+          </div>
+        )}
         
         {loading ? (
           <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', textAlign: 'center' }}>
@@ -70,6 +147,11 @@ export default function RestaurantsPage() {
         ) : (
           <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
             <h2>국회앞 식당 목록 ({restaurants.length}개)</h2>
+            {!isRealData && (
+              <div style={{ backgroundColor: '#ffffd0', padding: '10px', marginBottom: '10px', borderRadius: '4px' }}>
+                <p>현재 샘플 데이터가 표시되고 있습니다. 실제 데이터베이스 테이블이 생성되지 않았습니다.</p>
+              </div>
+            )}
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>

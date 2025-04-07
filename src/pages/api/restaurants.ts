@@ -11,6 +11,9 @@ export default async function handler(
       console.log('식당 정보 API 요청 시작');
       const { page = '1', pageSize = '20', category, all = 'false' } = req.query;
       
+      // Supabase 연결 확인
+      console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '설정됨' : '설정되지 않음');
+      
       // 먼저 전체 카운트를 계산하기 위한 쿼리
       let countQuery = supabase
         .from('na-res')
@@ -50,14 +53,24 @@ export default async function handler(
       }
       
       // 두 쿼리 동시 실행
-      console.log('Supabase 쿼리 실행 중...');
+      console.log('Supabase 쿼리 실행 중... 테이블: na-res');
       const [countResult, dataResult] = await Promise.all([
         countQuery,
         dataQuery
       ]);
       
+      console.log('카운트 결과:', countResult);
+      console.log('데이터 결과:', { 
+        status: dataResult.status, 
+        error: dataResult.error, 
+        count: dataResult.data?.length 
+      });
+      
       if (countResult.error) {
         console.error('Supabase count 쿼리 오류:', countResult.error);
+        if (countResult.error.code === 'PGRST116') {
+          console.error('테이블이 존재하지 않습니다. na-res 테이블을 생성해야 합니다.');
+        }
         throw countResult.error;
       }
       if (dataResult.error) {
