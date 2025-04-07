@@ -46,9 +46,9 @@ export default function RestaurantsPage() {
         
         <div style={{ marginBottom: '20px' }}>
           <Link href="/">
-            <a style={{ display: 'inline-block', padding: '8px 16px', backgroundColor: '#1a4b8c', color: 'white', borderRadius: '4px', textDecoration: 'none' }}>
+            <span style={{ display: 'inline-block', padding: '8px 16px', backgroundColor: '#1a4b8c', color: 'white', borderRadius: '4px', cursor: 'pointer' }}>
               ← 메인으로 돌아가기
-            </a>
+            </span>
           </Link>
         </div>
         
@@ -67,40 +67,42 @@ export default function RestaurantsPage() {
             <p>식당 정보가 없습니다. 나중에 다시 시도해주세요.</p>
           </div>
         ) : (
-          <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+          <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', overflowX: 'auto' }}>
             <h2>국회앞 식당 목록 ({restaurants.length}개)</h2>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-              <thead>
-                <tr style={{ borderBottom: '1px solid #ddd' }}>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>카테고리</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>이름</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>위치</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>연락처</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>가격대</th>
-                  <th style={{ padding: '8px', textAlign: 'left' }}>비고</th>
-                </tr>
-              </thead>
-              <tbody>
-                {restaurants.map(restaurant => (
-                  <tr key={restaurant.id} style={{ borderBottom: '1px solid #eee' }}>
-                    <td style={{ padding: '8px' }}>{restaurant.category}</td>
-                    <td style={{ padding: '8px' }}>
-                      {restaurant.link ? (
-                        <a href={restaurant.link} target="_blank" rel="noopener noreferrer" style={{ color: '#1a4b8c', textDecoration: 'none' }}>
-                          {restaurant.name}
-                        </a>
-                      ) : (
-                        restaurant.name
-                      )}
-                    </td>
-                    <td style={{ padding: '8px' }}>{restaurant.location}</td>
-                    <td style={{ padding: '8px' }}>{restaurant.pnum}</td>
-                    <td style={{ padding: '8px' }}>{restaurant.price}</td>
-                    <td style={{ padding: '8px' }}>{restaurant.remark}</td>
+            <div style={{ overflowX: 'auto', width: '100%' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '650px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #ddd' }}>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>카테고리</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>이름</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>위치</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>연락처</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>가격대</th>
+                    <th style={{ padding: '8px', textAlign: 'left' }}>비고</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {restaurants.map((restaurant, index) => (
+                    <tr key={restaurant.id || index} style={{ borderBottom: '1px solid #eee' }}>
+                      <td style={{ padding: '8px' }}>{restaurant.category}</td>
+                      <td style={{ padding: '8px' }}>
+                        {restaurant.link ? (
+                          <a href={restaurant.link} target="_blank" rel="noopener noreferrer" style={{ color: '#1a4b8c', textDecoration: 'none' }}>
+                            {restaurant.name}
+                          </a>
+                        ) : (
+                          restaurant.name
+                        )}
+                      </td>
+                      <td style={{ padding: '8px' }}>{restaurant.location}</td>
+                      <td style={{ padding: '8px' }}>{restaurant.pnum}</td>
+                      <td style={{ padding: '8px' }}>{restaurant.price}</td>
+                      <td style={{ padding: '8px' }}>{restaurant.remark || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
