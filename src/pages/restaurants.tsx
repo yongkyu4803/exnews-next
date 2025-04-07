@@ -112,6 +112,60 @@ export default function RestaurantsPage() {
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       console.log('Supabase 클라이언트 생성:', supabase ? '성공' : '실패');
+      console.log('Supabase URL:', supabaseUrl);
+      
+      // 테이블 목록 확인
+      try {
+        const { data: tableList, error: tableListError } = await supabase
+          .from('_tables')
+          .select('*');
+        
+        console.log('가능한 테이블 목록:', tableList || '조회 실패', tableListError);
+      } catch (tableErr) {
+        console.log('테이블 목록 조회 오류:', tableErr);
+      }
+      
+      // 다양한 테이블명 시도
+      const tableNames = ['na-res', 'na_res', 'nares', 'restaurants'];
+      let foundTable = false;
+      let tableData = null;
+      let tableError = null;
+      
+      for (const tableName of tableNames) {
+        console.log(`테이블 '${tableName}' 확인 중...`);
+        const { data: testData, error: testError } = await supabase
+          .from(tableName)
+          .select('id', { count: 'exact', head: true });
+        
+        if (!testError) {
+          console.log(`테이블 '${tableName}' 존재함!`);
+          foundTable = true;
+          tableData = testData;
+          
+          // 이 테이블에서 데이터 조회
+          const { data, error, count } = await supabase
+            .from(tableName)
+            .select('*', { count: 'exact' });
+          
+          console.log(`'${tableName}' 데이터 조회 결과:`, error ? '오류 발생' : `${count}개 항목 조회됨`);
+          console.log('조회된 데이터:', data);
+          
+          if (!error && data) {
+            setRestaurants(data);
+            setIsRealData(true);
+            setDebugInfo({
+              tableName,
+              count,
+              supabaseConnected: true,
+              dataFound: data?.length > 0,
+              rawData: data,
+              columns: data && data.length > 0 ? Object.keys(data[0]) : []
+            });
+            setLoading(false);
+            return;
+          }
+        }
+      }
       
       // 테이블 존재 확인
       const { data: testData, error: testError } = await supabase
@@ -119,6 +173,7 @@ export default function RestaurantsPage() {
         .select('id', { count: 'exact', head: true });
       
       console.log('테이블 확인 결과:', testError ? '테이블 없음' : '테이블 존재');
+      console.log('테이블 확인 세부 정보:', { testData, testError });
       
       if (testError) {
         // 테이블 없음 오류 처리
@@ -139,6 +194,8 @@ export default function RestaurantsPage() {
         .select('*', { count: 'exact' });
       
       console.log('데이터 조회 결과:', error ? '오류 발생' : `${count}개 항목 조회됨`);
+      console.log('조회된 데이터:', data);
+      console.log('데이터 조회 오류:', error);
       
       if (error) {
         setDebugInfo({
@@ -156,7 +213,9 @@ export default function RestaurantsPage() {
         setDebugInfo({
           count,
           supabaseConnected: true,
-          dataFound: data?.length > 0
+          dataFound: data?.length > 0,
+          rawData: data,
+          columns: data && data.length > 0 ? Object.keys(data[0]) : []
         });
       }
     } catch (err: any) {
