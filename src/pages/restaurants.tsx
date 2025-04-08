@@ -94,7 +94,7 @@ export default function RestaurantsPage() {
       // 카테고리 목록 추출 및 업데이트 (최초 로드 시 또는 필요 시)
       if (data.items && data.items.length > 0 && categories.length <= 1) {
         // 기본 카테고리 목록
-        const defaultCategories = ['all', '한식', '중식', '일식/해산물', '이탈리안', '카페', '기타'];
+        const defaultCategories = ['all', '한정식', '고깃집', '중식', '일식/해산물', '이탈리안', '기타'];
         
         // API에서 가져온 카테고리 목록
         const apiCategories = data.items.reduce((acc: string[], item: RestaurantItem) => {
@@ -353,10 +353,11 @@ function RestaurantContent(props: RestaurantContentProps) {
   // 카테고리별 텍스트 색상 매핑 (배경색 제거)
   const getCategoryTextColor = (category: string) => {
     const colorMap: {[key: string]: string} = {
+      '한정식': '#d4380d',
+      '고깃집': '#fa541c',
       '중식': '#cf1322',
       '일식/해산물': '#1677ff',
       '이탈리안': '#389e0d',
-      '카페': '#722ed1',
       '기타': '#5c6b77'
     };
     return colorMap[category] || '#333';

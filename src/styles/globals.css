@@ -150,10 +150,11 @@ a {
 .category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="기타"] .ant-tabs-tab-btn { color: #5c6b77 !important; background-color: transparent !important; }
 
 /* 식당 카테고리 색상 */
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="한정식"] .ant-tabs-tab-btn { color: #d4380d !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="고깃집"] .ant-tabs-tab-btn { color: #fa541c !important; background-color: transparent !important; }
 .category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="중식"] .ant-tabs-tab-btn { color: #cf1322 !important; background-color: transparent !important; }
 .category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="일식/해산물"] .ant-tabs-tab-btn { color: #1677ff !important; background-color: transparent !important; }
 .category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="이탈리안"] .ant-tabs-tab-btn { color: #389e0d !important; background-color: transparent !important; }
-.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="카페"] .ant-tabs-tab-btn { color: #722ed1 !important; background-color: transparent !important; }
 
 /* 호버 및 활성 상태 스타일 */
 .category-tabs .ant-tabs-nav .ant-tabs-tab:hover .ant-tabs-tab-btn {
@@ -581,6 +582,14 @@ button.micro-button,
   color: #333 !important;
   background-color: transparent !important;
 }
+.custom-tabs .ant-tabs-tab[data-node-key="한정식"] .ant-tabs-tab-btn { 
+  color: #d4380d !important;
+  background-color: transparent !important;
+}
+.custom-tabs .ant-tabs-tab[data-node-key="고깃집"] .ant-tabs-tab-btn { 
+  color: #fa541c !important;
+  background-color: transparent !important;
+}
 .custom-tabs .ant-tabs-tab[data-node-key="중식"] .ant-tabs-tab-btn { 
   color: #cf1322 !important;
   background-color: transparent !important;
@@ -591,10 +600,6 @@ button.micro-button,
 }
 .custom-tabs .ant-tabs-tab[data-node-key="이탈리안"] .ant-tabs-tab-btn { 
   color: #389e0d !important;
-  background-color: transparent !important;
-}
-.custom-tabs .ant-tabs-tab[data-node-key="카페"] .ant-tabs-tab-btn { 
-  color: #722ed1 !important;
   background-color: transparent !important;
 }
 .custom-tabs .ant-tabs-tab[data-node-key="기타"] .ant-tabs-tab-btn { 
