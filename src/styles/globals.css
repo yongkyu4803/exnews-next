@@ -554,7 +554,7 @@ button.micro-button,
 .custom-tabs .ant-tabs-tab {
   margin: 0 4px !important;
   transition: all 0.3s ease;
-  border-radius: 8px !important;
+  border-radius: 20px !important;
   padding: 8px 16px !important;
   font-weight: 500;
 }
@@ -574,6 +574,32 @@ button.micro-button,
 
 .custom-tabs .ant-tabs-ink-bar {
   display: none !important;
+}
+
+/* 카테고리 탭 색상 - 텍스트 색상만 사용 */
+.custom-tabs .ant-tabs-tab[data-node-key="all"] .ant-tabs-tab-btn { 
+  color: #333 !important;
+  background-color: transparent !important;
+}
+.custom-tabs .ant-tabs-tab[data-node-key="중식"] .ant-tabs-tab-btn { 
+  color: #cf1322 !important;
+  background-color: transparent !important;
+}
+.custom-tabs .ant-tabs-tab[data-node-key="일식/해산물"] .ant-tabs-tab-btn { 
+  color: #1677ff !important;
+  background-color: transparent !important;
+}
+.custom-tabs .ant-tabs-tab[data-node-key="이탈리안"] .ant-tabs-tab-btn { 
+  color: #389e0d !important;
+  background-color: transparent !important;
+}
+.custom-tabs .ant-tabs-tab[data-node-key="카페"] .ant-tabs-tab-btn { 
+  color: #722ed1 !important;
+  background-color: transparent !important;
+}
+.custom-tabs .ant-tabs-tab[data-node-key="기타"] .ant-tabs-tab-btn { 
+  color: #5c6b77 !important;
+  background-color: transparent !important;
 }
 
 /* 맛집 카드 스타일 */
@@ -603,34 +629,6 @@ button.micro-button,
 .ant-card.h-full .ant-card-body div {
   line-height: 1.4;
   margin-bottom: 6px;
-}
-
-/* 식당 카테고리 탭 스타일 */
-.custom-tabs .ant-tabs-tab[data-node-key="all"] .ant-tabs-tab-btn { 
-  background-color: #e6e6e6 !important;
-}
-.custom-tabs .ant-tabs-tab[data-node-key="한식"] .ant-tabs-tab-btn { 
-  background-color: #f5f5f5 !important;
-}
-.custom-tabs .ant-tabs-tab[data-node-key="중식"] .ant-tabs-tab-btn { 
-  background-color: #fff1f0 !important;
-}
-.custom-tabs .ant-tabs-tab[data-node-key="일식/해산물"] .ant-tabs-tab-btn { 
-  background-color: #e6f7ff !important;
-}
-.custom-tabs .ant-tabs-tab[data-node-key="이탈리안"] .ant-tabs-tab-btn { 
-  background-color: #f6ffed !important;
-}
-.custom-tabs .ant-tabs-tab[data-node-key="카페"] .ant-tabs-tab-btn { 
-  background-color: #fff7e6 !important;
-}
-.custom-tabs .ant-tabs-tab[data-node-key="기타"] .ant-tabs-tab-btn { 
-  background-color: #f9f0ff !important;
-}
-
-/* 탭이 활성화됐을 때 글자 색상은 흰색으로 통일 */
-.custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
-  color: white !important;
 }
 
 /* 디버그 정보 영역 스타일 개선 */

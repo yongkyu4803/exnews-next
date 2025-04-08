@@ -376,20 +376,18 @@ function RestaurantContent(props: RestaurantContentProps) {
       {/* 상단 헤더 섹션 */}
       <div className="bg-gray-50 py-6 mb-8 rounded-lg shadow-sm">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-            
+          <div className="flex justify-end mb-6">
             {/* 새로고침 버튼 - 우측 상단으로 배치 */}
             <Button
               onClick={() => fetchData(selectedCategory)}
               loading={loading}
               type="primary"
               icon={<span className="mr-1">🔄</span>}
-              style={{ marginLeft: 'auto', marginRight: 0 }}
             >
               새로고침
             </Button>
           </div>
-          <div>
+          
           {/* 카테고리 탭 */}
           <Tabs 
             activeKey={selectedCategory} 
@@ -403,7 +401,6 @@ function RestaurantContent(props: RestaurantContentProps) {
               className: selectedCategory === cat ? 'font-bold' : ''
             }))}
           />
-          </div>
         </div>
       </div>
       
