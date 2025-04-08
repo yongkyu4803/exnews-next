@@ -4,8 +4,8 @@ import Head from 'next/head';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { RestaurantItem } from '@/types';
-import Header from '@/components/Layout/Header';
 import Image from 'next/image';
+import TopNavBar from '@/components/mobile/TopNavBar';
 
 // 클라이언트 컴포넌트 
 const ClientOnly = ({ children, ...delegated }: { children: ReactNode; [key: string]: any }) => {
@@ -266,17 +266,17 @@ export default function RestaurantsPage() {
   return (
     <>
       <Head>
-        <title>국회 주변 맛집 - ExNews</title>
+        <title>국회앞 식당정보보 - ExNews</title>
         <meta name="description" content="국회 주변 맛집 정보를 제공합니다." />
       </Head>
 
       <main className="flex min-h-screen flex-col items-center justify-between">
-        <Header />
+        <TopNavBar />
         
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 mt-4">
           <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white py-8 px-6 rounded-lg shadow-md mb-8">
-            <h1 className="text-3xl font-bold mb-2">국회 주변 맛집</h1>
-            <p className="text-blue-100">국회 주변의 다양한 맛집 정보를 카테고리별로 확인해보세요.</p>
+            <h1 className="text-3xl font-bold mb-2">국회앞 식당정보보</h1>
+            <p className="text-blue-100">국회앞 식당 정보를 카테고리별로 확인해보세요.</p>
           </div>
 
           <ClientOnly>

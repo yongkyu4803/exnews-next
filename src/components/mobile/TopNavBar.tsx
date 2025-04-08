@@ -76,6 +76,13 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
   
   const handleTabChange = (info: { key: string }) => {
     console.log('탭 변경 시도:', info.key);
+    
+    // 페이지 이동 처리
+    if (info.key === 'restaurants') {
+      router.push('/restaurants');
+      return;
+    }
+    
     if (onTabChange) {
       onTabChange(info.key);
     }
@@ -84,6 +91,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
   if (!isMounted) {
     return <div style={{ height: '48px', backgroundColor: '#ffffff' }}></div>;
   }
+  
+  // 현재 경로에 따라 active 탭 설정
+  const currentPath = router.pathname;
+  const activeKey = currentPath === '/restaurants' ? 'restaurants' : activeTab;
   
   return (
     <NavBarContainer>
@@ -95,7 +106,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
       
       <NavMenu 
         mode="horizontal" 
-        selectedKeys={[activeTab]}
+        selectedKeys={[activeKey]}
         onSelect={handleTabChange}
         onClick={(info: { key: string, domEvent: React.MouseEvent<HTMLElement> }) => {
           console.log('탭 클릭됨:', info.key);
@@ -105,10 +116,23 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
           {
             key: 'exclusive',
             label: '단독 뉴스',
+            onClick: () => router.push('/'),
           },
           {
             key: 'ranking',
             label: '랭킹 뉴스',
+            onClick: () => {
+              if (currentPath === '/') {
+                if (onTabChange) onTabChange('ranking');
+              } else {
+                router.push('/?tab=ranking');
+              }
+            },
+          },
+          {
+            key: 'restaurants',
+            label: '국회앞 식당',
+            onClick: () => router.push('/restaurants'),
           }
         ]}
       />

@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
 // Remove unused import since LoadMoreButton component is not being used
 import VirtualNewsList from '@/components/mobile/VirtualNewsList';
 import VirtualRankingNewsList from '@/components/mobile/VirtualRankingNewsList';
@@ -46,6 +48,18 @@ const HomePage = () => {
   const [rankingSelectedRows, setRankingSelectedRows] = useState<RankingNewsItem[]>([]);
   const [rankingSelectedKeys, setRankingSelectedKeys] = useState<React.Key[]>([]);
   const queryClient = useQueryClient();
+  const router = useRouter();
+
+  // URL에서 tab 파라미터 체크
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tabParam = urlParams.get('tab');
+      if (tabParam === 'ranking') {
+        setActiveTab('ranking');
+      }
+    }
+  }, []);
 
   // 클라이언트 사이드 마운트 체크
   useEffect(() => {
@@ -322,254 +336,266 @@ const HomePage = () => {
   }
 
   return (
-    <div style={{ paddingBottom: isMobile ? '16px' : '20px' }}>
-      <style jsx global>{`
-        /* 작은 버튼 스타일 오버라이드 */
-        .small-action-button {
-          min-width: 8px !important;
-          min-height: 8px !important;
-          width: 8px !important;
-          height: 8px !important;
-          padding: 0 !important;
-          border: none !important;
-        }
-        
-        .small-action-button svg {
-          width: 4px !important;
-          height: 4px !important;
-        }
-        
-        /* 터치 영역 최적화 수정 */
-        @media (hover: none) {
-          .micro-button {
-            min-height: 8px !important;
-            min-width: 8px !important;
-            padding: 0 !important;
-          }
-        }
-      `}</style>
+    <div className="flex flex-col min-h-screen">
+      <Head>
+        <title>뉴스 - 단독 & 랭킹 기사 모음</title>
+        <meta name="description" content="각 언론사의 단독기사와 랭킹기사 모음" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+      </Head>
       
-      {/* 기존 TopNavBar는 주석 처리 */}
-      {/* <TopNavBar 
-        activeTab={activeTab} 
-        onTabChange={handleTabChange} 
-      /> */}
-      
-      <div style={{ padding: isMobile ? '16px' : '20px' }}>
-        <Space direction="vertical" style={{ width: '100%' }}>
-          <PwaInstallPrompt />
-          
-          {/* 새로운 간단한 탭 컴포넌트 추가 */}
-          <SimpleTabs
-            items={[
-              { key: 'exclusive', label: '🚨 단독 뉴스' },
-              { key: 'ranking', label: '📊 랭킹 뉴스' }
-            ]}
-            activeKey={activeTab}
-            onChange={handleTabChange}
+      {isMounted && (
+        <>
+          {/* 모바일에 최적화된 상단 네비게이션 바 */}
+          <TopNavBar
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
           />
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <Title level={2} style={{ margin: 0 }}>
-              {activeTab === 'exclusive' ? '단독 뉴스' : '랭킹 뉴스'}
-            </Title>
-            <Link 
-              href="/restaurants" 
-              style={{ marginLeft: '8px' }}
-            >
-              <Button 
-                type="primary" 
-                icon={<ShopOutlined />}
-              >
-                국회앞 식당
-              </Button>
-            </Link>
-          </div>
-          
-          {activeTab === 'exclusive' && (
-            <>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                flexWrap: isMobile ? 'wrap' : 'nowrap',
-                gap: '12px'
-              }}>
-                <Title level={isMobile ? 4 : 3}>🚨 단독 뉴스</Title>
-                <Button 
-                  icon={<CopyOutlined />} 
-                  onClick={handleCopyToClipboard}
-                  disabled={selectedRows.length === 0}
-                  size={isMobile ? 'small' : 'middle'}
-                >
-                  선택 기사 복사 ({selectedRows.length})
-                </Button>
-              </div>
-
-              <Tabs
-                defaultActiveKey="all"
-                onChange={handleCategoryChange}
-                items={[
-                  { key: 'all', label: '전체', className: 'tab-all' },
-                  { key: '정치', label: '정치', className: 'tab-politics' },
-                  { key: '경제', label: '경제', className: 'tab-economy' },
-                  { key: '사회', label: '사회', className: 'tab-social' },
-                  { key: '국제', label: '국제', className: 'tab-international' },
-                  { key: '문화', label: '문화', className: 'tab-culture' },
-                  { key: '연예/스포츠', label: '연예/스포츠', className: 'tab-entertainment' },
-                  { key: '기타', label: '기타', className: 'tab-etc' }
-                ]}
-                style={{ 
-                  marginBottom: '12px',
-                  backgroundColor: '#ffffff',
-                  padding: isMobile ? '4px' : '8px',
-                  borderRadius: '4px'
-                }}
-                size={isMobile ? 'small' : 'middle'}
-                className="category-tabs"
-              />
-
-              {error && (
-                <Alert
-                  message="데이터 로딩 오류"
-                  description={error.message}
-                  type="error"
-                  showIcon
-                  style={{ marginBottom: '16px' }}
-                />
-              )}
-
-              {isMobile ? (
-                <>
-                  <VirtualNewsList
-                    items={paginatedItems}
-                    hasMore={false}
-                    isLoading={isLoading}
-                    onLoadMore={() => {}}
-                    onRefresh={handleRefresh}
-                    selectedKeys={selectedKeys}
-                    onSelectChange={(keys, rows) => {
-                      setSelectedKeys(keys);
-                      setSelectedRows(rows);
-                    }}
-                  />
-                  
-                  {/* 페이지네이션 UI */}
-                  {totalPages > 1 && (
-                    <>
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        marginTop: '16px',
-                        padding: '8px',
-                        backgroundColor: '#fff',
-                        borderRadius: '8px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                      }}>
-                        <Pagination
-                          current={currentPage}
-                          total={data?.items?.length || 0}
-                          pageSize={pageSize}
-                          onChange={handlePageChange}
-                          size="small"
-                          showSizeChanger={false}
-                          simple
-                        />
-                      </div>
-                      
-                      <div style={{ height: '60px' }}></div> {/* 하단 메뉴바 공간 */}
-                    </>
-                  )}
-                </>
-              ) : (
-                <NewsTable 
-                  items={data?.items || []}
-                  selectedKeys={selectedKeys}
-                  onSelectChange={(keys, rows) => {
-                    setSelectedKeys(keys);
-                    setSelectedRows(rows);
-                  }}
-                />
-              )}
-            </>
-          )}
-          
-          {activeTab === 'ranking' && (
-            <>
-              <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
-                alignItems: 'center',
-                flexWrap: isMobile ? 'wrap' : 'nowrap',
-                gap: '12px'
-              }}>
-                <Title level={isMobile ? 4 : 3}>📊 랭킹 뉴스</Title>
-                <Button 
-                  icon={<CopyOutlined />} 
-                  onClick={handleCopyRankingToClipboard}
-                  disabled={rankingSelectedRows.length === 0}
-                  size={isMobile ? 'small' : 'middle'}
-                >
-                  선택 기사 복사 ({rankingSelectedRows.length})
-                </Button>
-              </div>
+          <div style={{ paddingBottom: isMobile ? '16px' : '20px' }}>
+            <style jsx global>{`
+              /* 작은 버튼 스타일 오버라이드 */
+              .small-action-button {
+                min-width: 8px !important;
+                min-height: 8px !important;
+                width: 8px !important;
+                height: 8px !important;
+                padding: 0 !important;
+                border: none !important;
+              }
               
-              {rankingError && (
-                <Alert
-                  message="데이터 로딩 오류"
-                  description={rankingError.message}
-                  type="error"
-                  showIcon
-                  style={{ marginBottom: '16px' }}
-                />
-              )}
+              .small-action-button svg {
+                width: 4px !important;
+                height: 4px !important;
+              }
               
-              {isMobile ? (
-                <VirtualRankingNewsList 
-                  items={(rankingData && rankingData.items) ? 
-                    // 유효하지 않은 아이템 필터링 (필터링 결과 로깅 추가)
-                    rankingData.items.filter(item => {
-                      const isValid = item && item.id && item.title && item.link;
-                      if (!isValid) {
-                        console.warn('유효하지 않은 랭킹 뉴스 아이템 필터링:', item);
-                      }
-                      return isValid;
-                    }) : 
-                    []
-                  }
-                  isLoading={rankingIsLoading}
-                  onRefresh={handleRankingRefresh}
-                  selectedKeys={rankingSelectedKeys}
-                  onSelectChange={(keys, rows) => {
-                    setRankingSelectedKeys(keys);
-                    setRankingSelectedRows(rows);
-                  }}
+              /* 터치 영역 최적화 수정 */
+              @media (hover: none) {
+                .micro-button {
+                  min-height: 8px !important;
+                  min-width: 8px !important;
+                  padding: 0 !important;
+                }
+              }
+            `}</style>
+            
+            <div style={{ padding: isMobile ? '16px' : '20px' }}>
+              <Space direction="vertical" style={{ width: '100%' }}>
+                <PwaInstallPrompt />
+                
+                {/* 새로운 간단한 탭 컴포넌트 추가 */}
+                <SimpleTabs
+                  items={[
+                    { key: 'exclusive', label: '🚨 단독 뉴스' },
+                    { key: 'ranking', label: '📊 랭킹 뉴스' }
+                  ]}
+                  activeKey={activeTab}
+                  onChange={handleTabChange}
                 />
-              ) : (
-                <div>
-                  {rankingIsLoading ? (
-                    <div style={{ padding: '20px', textAlign: 'center' }}>
-                      <div>데이터를 불러오는 중입니다...</div>
-                    </div>
-                  ) : (
-                    <RankingNewsTable 
-                      items={(rankingData && rankingData.items) ? 
-                        rankingData.items.filter(item => item && item.id && item.title && item.link) : 
-                        []
-                      }
-                      selectedKeys={rankingSelectedKeys}
-                      onSelectChange={(keys, rows) => {
-                        setRankingSelectedKeys(keys);
-                        setRankingSelectedRows(rows);
-                      }}
-                    />
-                  )}
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <Title level={2} style={{ margin: 0 }}>
+                    {activeTab === 'exclusive' ? '단독 뉴스' : '랭킹 뉴스'}
+                  </Title>
+                  <Link 
+                    href="/restaurants" 
+                    style={{ marginLeft: '8px' }}
+                  >
+                    <Button 
+                      type="primary" 
+                      icon={<ShopOutlined />}
+                    >
+                      국회앞 식당
+                    </Button>
+                  </Link>
                 </div>
-              )}
-            </>
-          )}
-        </Space>
-      </div>
+                
+                {activeTab === 'exclusive' && (
+                  <>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      flexWrap: isMobile ? 'wrap' : 'nowrap',
+                      gap: '12px'
+                    }}>
+                      <Title level={isMobile ? 4 : 3}>🚨 단독 뉴스</Title>
+                      <Button 
+                        icon={<CopyOutlined />} 
+                        onClick={handleCopyToClipboard}
+                        disabled={selectedRows.length === 0}
+                        size={isMobile ? 'small' : 'middle'}
+                      >
+                        선택 기사 복사 ({selectedRows.length})
+                      </Button>
+                    </div>
+
+                    <Tabs
+                      defaultActiveKey="all"
+                      onChange={handleCategoryChange}
+                      items={[
+                        { key: 'all', label: '전체', className: 'tab-all' },
+                        { key: '정치', label: '정치', className: 'tab-politics' },
+                        { key: '경제', label: '경제', className: 'tab-economy' },
+                        { key: '사회', label: '사회', className: 'tab-social' },
+                        { key: '국제', label: '국제', className: 'tab-international' },
+                        { key: '문화', label: '문화', className: 'tab-culture' },
+                        { key: '연예/스포츠', label: '연예/스포츠', className: 'tab-entertainment' },
+                        { key: '기타', label: '기타', className: 'tab-etc' }
+                      ]}
+                      style={{ 
+                        marginBottom: '12px',
+                        backgroundColor: '#ffffff',
+                        padding: isMobile ? '4px' : '8px',
+                        borderRadius: '4px'
+                      }}
+                      size={isMobile ? 'small' : 'middle'}
+                      className="category-tabs"
+                    />
+
+                    {error && (
+                      <Alert
+                        message="데이터 로딩 오류"
+                        description={error.message}
+                        type="error"
+                        showIcon
+                        style={{ marginBottom: '16px' }}
+                      />
+                    )}
+
+                    {isMobile ? (
+                      <>
+                        <VirtualNewsList
+                          items={paginatedItems}
+                          hasMore={false}
+                          isLoading={isLoading}
+                          onLoadMore={() => {}}
+                          onRefresh={handleRefresh}
+                          selectedKeys={selectedKeys}
+                          onSelectChange={(keys, rows) => {
+                            setSelectedKeys(keys);
+                            setSelectedRows(rows);
+                          }}
+                        />
+                        
+                        {/* 페이지네이션 UI */}
+                        {totalPages > 1 && (
+                          <>
+                            <div style={{ 
+                              display: 'flex', 
+                              justifyContent: 'center', 
+                              marginTop: '16px',
+                              padding: '8px',
+                              backgroundColor: '#fff',
+                              borderRadius: '8px',
+                              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            }}>
+                              <Pagination
+                                current={currentPage}
+                                total={data?.items?.length || 0}
+                                pageSize={pageSize}
+                                onChange={handlePageChange}
+                                size="small"
+                                showSizeChanger={false}
+                                simple
+                              />
+                            </div>
+                            
+                            <div style={{ height: '60px' }}></div> {/* 하단 메뉴바 공간 */}
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <NewsTable 
+                        items={data?.items || []}
+                        selectedKeys={selectedKeys}
+                        onSelectChange={(keys, rows) => {
+                          setSelectedKeys(keys);
+                          setSelectedRows(rows);
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+                
+                {activeTab === 'ranking' && (
+                  <>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      flexWrap: isMobile ? 'wrap' : 'nowrap',
+                      gap: '12px'
+                    }}>
+                      <Title level={isMobile ? 4 : 3}>📊 랭킹 뉴스</Title>
+                      <Button 
+                        icon={<CopyOutlined />} 
+                        onClick={handleCopyRankingToClipboard}
+                        disabled={rankingSelectedRows.length === 0}
+                        size={isMobile ? 'small' : 'middle'}
+                      >
+                        선택 기사 복사 ({rankingSelectedRows.length})
+                      </Button>
+                    </div>
+                    
+                    {rankingError && (
+                      <Alert
+                        message="데이터 로딩 오류"
+                        description={rankingError.message}
+                        type="error"
+                        showIcon
+                        style={{ marginBottom: '16px' }}
+                      />
+                    )}
+                    
+                    {isMobile ? (
+                      <VirtualRankingNewsList 
+                        items={(rankingData && rankingData.items) ? 
+                          // 유효하지 않은 아이템 필터링 (필터링 결과 로깅 추가)
+                          rankingData.items.filter(item => {
+                            const isValid = item && item.id && item.title && item.link;
+                            if (!isValid) {
+                              console.warn('유효하지 않은 랭킹 뉴스 아이템 필터링:', item);
+                            }
+                            return isValid;
+                          }) : 
+                          []
+                        }
+                        isLoading={rankingIsLoading}
+                        onRefresh={handleRankingRefresh}
+                        selectedKeys={rankingSelectedKeys}
+                        onSelectChange={(keys, rows) => {
+                          setRankingSelectedKeys(keys);
+                          setRankingSelectedRows(rows);
+                        }}
+                      />
+                    ) : (
+                      <div>
+                        {rankingIsLoading ? (
+                          <div style={{ padding: '20px', textAlign: 'center' }}>
+                            <div>데이터를 불러오는 중입니다...</div>
+                          </div>
+                        ) : (
+                          <RankingNewsTable 
+                            items={(rankingData && rankingData.items) ? 
+                              rankingData.items.filter(item => item && item.id && item.title && item.link) : 
+                              []
+                            }
+                            selectedKeys={rankingSelectedKeys}
+                            onSelectChange={(keys, rows) => {
+                              setRankingSelectedKeys(keys);
+                              setRankingSelectedRows(rows);
+                            }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </Space>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
