@@ -98,12 +98,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
   
   return (
     <NavBarContainer>
-      <NavHeader>
-        <Logo>
-          <span>🚨 뉴스</span>
-        </Logo>
-      </NavHeader>
-      
       <NavMenu 
         mode="horizontal" 
         selectedKeys={[activeKey]}

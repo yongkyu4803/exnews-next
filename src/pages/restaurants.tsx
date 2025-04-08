@@ -266,7 +266,7 @@ export default function RestaurantsPage() {
   return (
     <>
       <Head>
-        <title>국회앞 식당정보보 - ExNews</title>
+        <title>국회앞 식당정보 - ExNews</title>
         <meta name="description" content="국회 주변 맛집 정보를 제공합니다." />
       </Head>
 
@@ -275,7 +275,7 @@ export default function RestaurantsPage() {
         
         <div className="container mx-auto px-4 py-8 mt-4">
           <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white py-8 px-6 rounded-lg shadow-md mb-8">
-            <h1 className="text-3xl font-bold mb-2">국회앞 식당정보보</h1>
+            <h1 className="text-3xl font-bold mb-2">국회앞 식당정보</h1>
             <p className="text-blue-100">국회앞 식당 정보를 카테고리별로 확인해보세요.</p>
           </div>
 
