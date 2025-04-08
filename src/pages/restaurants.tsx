@@ -350,6 +350,19 @@ function RestaurantContent(props: RestaurantContentProps) {
     return {};
   }, []);
 
+  // 카테고리별 배경색 매핑
+  const getCardBgColor = (category: string) => {
+    const colorMap: {[key: string]: string} = {
+      '한식': '#f9f9f9',
+      '중식': '#fff7f7',
+      '일식/해산물': '#f5faff',
+      '이탈리안': '#f6ffed',
+      '카페': '#fffcf5',
+      '기타': '#fcf8ff'
+    };
+    return colorMap[category] || '#ffffff';
+  };
+
   // Tabs 컴포넌트 로드 확인
   if (!Alert || !Button || !Tabs) return null; 
 
@@ -366,16 +379,17 @@ function RestaurantContent(props: RestaurantContentProps) {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center mb-4">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">국회 주변 맛집 카테고리</h2>
-              <p className="text-gray-600 mb-4">원하시는 카테고리를 선택하여 맛집 정보를 확인하세요</p>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">국회 주변 맛집 가이드</h2>
+              <p className="text-gray-600 mb-0">원하시는 카테고리를 선택하여 맛집 정보를 확인하세요</p>
             </div>
             
-            {/* 새로고침 버튼 - 헤더 영역으로 이동 */}
+            {/* 새로고침 버튼 - 우측 상단으로 배치 */}
             <Button
               onClick={() => fetchData(selectedCategory)}
               loading={loading}
               type="primary"
               icon={<span className="mr-1">🔄</span>}
+              style={{ marginLeft: 'auto', marginRight: 0 }}
             >
               새로고침
             </Button>
@@ -489,7 +503,7 @@ function RestaurantContent(props: RestaurantContentProps) {
           {Spin && <Spin size="large" tip="데이터를 불러오는 중..." />}
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto px-4">
           {List && (
             <List
               grid={{
@@ -507,34 +521,72 @@ function RestaurantContent(props: RestaurantContentProps) {
                   {Card && (
                     <Card
                       title={
-                        <div className="flex justify-between items-center">
-                          <span className="text-lg font-bold">{item.name}</span>
+                        <div style={{ 
+                          fontSize: '1.15rem', 
+                          fontWeight: 600, 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'space-between' 
+                        }}>
+                          {item.link ? (
+                            <a 
+                              href={item.link} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              style={{ color: '#1a73e8' }}
+                            >
+                              {item.name}
+                            </a>
+                          ) : (
+                            item.name
+                          )}
                           {item.category && Tag && (
-                            <Tag color="blue">{item.category}</Tag>
+                            <Tag 
+                              color="blue" 
+                              style={{ marginLeft: 8, fontSize: '0.8rem' }}
+                            >
+                              {item.category}
+                            </Tag>
                           )}
                         </div>
                       }
                       hoverable
-                      className="h-full shadow-md hover:shadow-lg transition-shadow"
+                      className="h-full"
+                      style={{ 
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
+                        transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
+                        backgroundColor: getCardBgColor(item.category)
+                      }}
                       bordered={false}
+                      bodyStyle={{ padding: '12px 16px', lineHeight: '1.4' }}
                     >
-                      <p className="mb-2"><strong>위치:</strong> {item.location}</p>
-                      {item.pnum && <p className="mb-2"><strong>전화:</strong> {item.pnum}</p>}
-                      {item.price && <p className="mb-2"><strong>가격대:</strong> {item.price}</p>}
-                      {item.remark && <p className="mb-2"><strong>비고:</strong> {item.remark}</p>}
-                      {item.link && (
-                        <p className="mt-4">
-                          <a 
-                            href={item.link} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-500 hover:text-blue-700 flex items-center"
-                          >
-                            <span>식당 정보 바로가기</span>
-                            <span className="ml-1">→</span>
-                          </a>
-                        </p>
-                      )}
+                      <div style={{ lineHeight: '1.4' }}>
+                        <div style={{ marginBottom: '4px' }}>
+                          <span role="img" aria-label="location" style={{ marginRight: 8 }}>📍</span>
+                          {item.location}
+                        </div>
+                        
+                        {item.pnum && (
+                          <div style={{ marginBottom: '4px' }}>
+                            <span role="img" aria-label="phone" style={{ marginRight: 8 }}>📞</span>
+                            {item.pnum}
+                          </div>
+                        )}
+                        
+                        {item.price && (
+                          <div style={{ marginBottom: '4px' }}>
+                            <span role="img" aria-label="price" style={{ marginRight: 8 }}>💰</span>
+                            {item.price}
+                          </div>
+                        )}
+                        
+                        {item.remark && (
+                          <div style={{ marginBottom: '4px', color: '#666' }}>
+                            <span role="img" aria-label="note" style={{ marginRight: 8 }}>💬</span>
+                            {item.remark}
+                          </div>
+                        )}
+                      </div>
                     </Card>
                   )}
                 </List.Item>

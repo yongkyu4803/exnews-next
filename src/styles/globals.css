@@ -3,7 +3,6 @@
   --primary-color: #1a73e8;
   --card-border-radius: 8px;
   --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-  --header-z-index: 1000;
 }
 
 * {
@@ -563,122 +562,54 @@ button.micro-button,
 
 /* 맛집 카드 스타일 */
 .ant-card.h-full {
-  transition: all 0.3s ease;
-  border-radius: 12px !important;
+  border-radius: 12px;
   overflow: hidden;
+  height: 100%;
+  transition: all 0.3s ease;
 }
 
 .ant-card.h-full .ant-card-head {
-  border-bottom: 1px solid #f0f0f0;
-  background-color: #fafafa;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .ant-card.h-full:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
 .ant-card.h-full .ant-card-body {
   padding: 16px;
+  height: calc(100% - 56px);
 }
 
-/* 내비게이션 바 스타일 */
-header.w-full {
-  width: 100%;
-  position: sticky;
-  top: 0;
-  z-index: var(--header-z-index);
-  background: linear-gradient(to right, #1e40af, #3730a3);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+/* 식당 카드 내 텍스트 스타일 */
+.ant-card.h-full .ant-card-body div {
+  line-height: 1.4;
+  margin-bottom: 6px;
 }
 
-header.w-full .container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
-
-@media (min-width: 768px) {
-  header.w-full .container {
-    padding: 0 2rem;
-  }
-}
-
-header.w-full nav ul {
-  display: flex;
-  gap: 1.5rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-header.w-full nav a {
-  color: white;
-  text-decoration: none;
-  font-weight: 500;
-  padding: 0.5rem 0;
-  position: relative;
-  transition: color 0.2s ease;
-}
-
-header.w-full nav a:hover {
-  color: #93c5fd;
-}
-
-header.w-full nav a.active {
-  color: #93c5fd;
-}
-
-header.w-full nav a.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: #93c5fd;
-  border-radius: 2px;
-}
-
-/* z-index 계층 구조 조정 */
-#__next {
-  position: relative;
-  z-index: 1;
-}
-
-main {
-  position: relative;
-  z-index: 1;
-}
-
-/* 식당 페이지 스타일 */
-.container.mx-auto.px-4.py-8 {
-  position: relative;
-  z-index: 1;
-  margin-top: 4rem; /* 헤더 높이만큼 여백 추가 */
-}
-
-/* 맛집 카테고리 탭 색상 */
+/* 식당 카테고리 탭 스타일 */
 .custom-tabs .ant-tabs-tab[data-node-key="all"] .ant-tabs-tab-btn { 
-  color: #333; 
+  background-color: #e6e6e6 !important;
 }
 .custom-tabs .ant-tabs-tab[data-node-key="한식"] .ant-tabs-tab-btn { 
-  color: #d4380d; 
+  background-color: #f5f5f5 !important;
 }
 .custom-tabs .ant-tabs-tab[data-node-key="중식"] .ant-tabs-tab-btn { 
-  color: #cf1322; 
+  background-color: #fff1f0 !important;
 }
 .custom-tabs .ant-tabs-tab[data-node-key="일식/해산물"] .ant-tabs-tab-btn { 
-  color: #1677ff; 
+  background-color: #e6f7ff !important;
 }
 .custom-tabs .ant-tabs-tab[data-node-key="이탈리안"] .ant-tabs-tab-btn { 
-  color: #389e0d; 
+  background-color: #f6ffed !important;
 }
 .custom-tabs .ant-tabs-tab[data-node-key="카페"] .ant-tabs-tab-btn { 
-  color: #722ed1; 
+  background-color: #fff7e6 !important;
 }
 .custom-tabs .ant-tabs-tab[data-node-key="기타"] .ant-tabs-tab-btn { 
-  color: #5c6b77; 
+  background-color: #f9f0ff !important;
 }
 
 /* 탭이 활성화됐을 때 글자 색상은 흰색으로 통일 */
@@ -696,5 +627,20 @@ main {
   .container.mx-auto.px-4.py-8 {
     padding-top: 1.5rem;
     padding-bottom: 3rem;
+  }
+}
+
+/* 내비게이션 바 스타일 */
+header.w-full {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+@media (min-width: 768px) {
+  header .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
   }
 }

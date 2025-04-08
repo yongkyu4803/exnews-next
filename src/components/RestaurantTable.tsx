@@ -24,57 +24,57 @@ export default function RestaurantTable({
     console.log('식당 정보 클릭:', record.name);
   };
 
+  // 카테고리별 배경색 매핑
+  const getCategoryColor = (category: string) => {
+    const colorMap: {[key: string]: string} = {
+      '한식': '#f5f5f5',
+      '중식': '#fff1f0',
+      '일식/해산물': '#e6f7ff',
+      '이탈리안': '#f6ffed',
+      '카페': '#fff7e6',
+      '기타': '#f9f0ff'
+    };
+    return colorMap[category] || '#f0f2f5';
+  };
+
   return (
     <Table 
       loading={loading}
       columns={[
         {
-          title: '카테고리',
-          dataIndex: 'category',
-          key: 'category',
-          width: 100,
-        },
-        {
           title: '식당명',
           dataIndex: 'name',
           key: 'name',
+          width: 180,
           render: (text: any, record: RestaurantItem) => (
-            record.link ? (
-              <a 
-                href={record.link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                onClick={() => handleClick(record)}
-                style={{ fontWeight: 500 }}
-              >
-                {text}
-              </a>
-            ) : (
-              <span onClick={() => handleClick(record)}>{text}</span>
-            )
+            <div style={{ fontWeight: 500 }}>
+              {record.link ? (
+                <a 
+                  href={record.link} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  onClick={() => handleClick(record)}
+                >
+                  {text}
+                </a>
+              ) : (
+                <span onClick={() => handleClick(record)}>{text}</span>
+              )}
+            </div>
           ),
         },
         {
-          title: '위치',
+          title: '정보',
           dataIndex: 'location',
           key: 'location',
-        },
-        {
-          title: '연락처',
-          dataIndex: 'pnum',
-          key: 'pnum',
-          width: 150,
-        },
-        {
-          title: '가격대',
-          dataIndex: 'price',
-          key: 'price',
-          width: 120,
-        },
-        {
-          title: '비고',
-          dataIndex: 'remark',
-          key: 'remark',
+          render: (_: any, record: RestaurantItem) => (
+            <div style={{ lineHeight: '1.4', fontSize: '0.94em' }}>
+              <div>📍 {record.location}</div>
+              {record.pnum && <div style={{ marginTop: '3px' }}>📞 {record.pnum}</div>}
+              {record.price && <div style={{ marginTop: '3px' }}>💰 {record.price}</div>}
+              {record.remark && <div style={{ marginTop: '3px', color: '#666' }}>💬 {record.remark}</div>}
+            </div>
+          )
         },
       ] as any}
       dataSource={items}
@@ -94,6 +94,9 @@ export default function RestaurantTable({
       }}
       scroll={{ x: 'max-content' }}
       style={{ marginTop: 16 }}
+      onRow={(record: RestaurantItem) => ({
+        style: { backgroundColor: getCategoryColor(record.category) }
+      })}
     />
   );
 } 
