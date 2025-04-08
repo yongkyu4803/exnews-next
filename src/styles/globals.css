@@ -663,3 +663,15 @@ header.w-full {
     padding-right: 2rem;
   }
 }
+
+/* 식당 페이지 새로고침 버튼 */
+.flex.justify-end {
+  display: flex !important;
+  justify-content: flex-end !important;
+  width: 100% !important;
+  margin-left: auto !important;
+}
+
+.flex.justify-end button {
+  margin-left: auto !important;
+}

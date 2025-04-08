@@ -377,13 +377,14 @@ function RestaurantContent(props: RestaurantContentProps) {
       {/* 상단 헤더 섹션 */}
       <div className="bg-gray-50 py-6 mb-8 rounded-lg shadow-sm">
         <div className="container mx-auto px-4">
-          <div className="flex justify-end mb-6">
+          <div className="flex justify-end w-full mb-6" style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
             {/* 새로고침 버튼 - 우측 상단으로 배치 */}
             <Button
               onClick={() => fetchData(selectedCategory)}
               loading={loading}
               type="primary"
               icon={<span className="mr-1">🔄</span>}
+              style={{ marginLeft: 'auto' }}
             >
               새로고침
             </Button>
