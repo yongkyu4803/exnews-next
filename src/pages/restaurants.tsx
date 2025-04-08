@@ -389,7 +389,7 @@ function RestaurantContent(props: RestaurantContentProps) {
               새로고침
             </Button>
           </div>
-          
+          <div>
           {/* 카테고리 탭 */}
           <Tabs 
             activeKey={selectedCategory} 
@@ -403,6 +403,7 @@ function RestaurantContent(props: RestaurantContentProps) {
               className: selectedCategory === cat ? 'font-bold' : ''
             }))}
           />
+          </div>
         </div>
       </div>
       
