@@ -377,10 +377,6 @@ function RestaurantContent(props: RestaurantContentProps) {
       <div className="bg-gray-50 py-6 mb-8 rounded-lg shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">국회 주변 맛집 가이드</h2>
-              <p className="text-gray-600 mb-0">원하시는 카테고리를 선택하여 맛집 정보를 확인하세요</p>
-            </div>
             
             {/* 새로고침 버튼 - 우측 상단으로 배치 */}
             <Button
