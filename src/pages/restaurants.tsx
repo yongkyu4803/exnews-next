@@ -350,17 +350,16 @@ function RestaurantContent(props: RestaurantContentProps) {
     return {};
   }, []);
 
-  // 카테고리별 배경색 매핑
-  const getCardBgColor = (category: string) => {
+  // 카테고리별 텍스트 색상 매핑 (배경색 제거)
+  const getCategoryTextColor = (category: string) => {
     const colorMap: {[key: string]: string} = {
-      '한식': '#f9f9f9',
-      '중식': '#fff7f7',
-      '일식/해산물': '#f5faff',
-      '이탈리안': '#f6ffed',
-      '카페': '#fffcf5',
-      '기타': '#fcf8ff'
+      '중식': '#cf1322',
+      '일식/해산물': '#1677ff',
+      '이탈리안': '#389e0d',
+      '카페': '#722ed1',
+      '기타': '#5c6b77'
     };
-    return colorMap[category] || '#ffffff';
+    return colorMap[category] || '#333';
   };
 
   // Tabs 컴포넌트 로드 확인
@@ -542,8 +541,8 @@ function RestaurantContent(props: RestaurantContentProps) {
                           )}
                           {item.category && Tag && (
                             <Tag 
-                              color="blue" 
-                              style={{ marginLeft: 8, fontSize: '0.8rem' }}
+                              color={getCategoryTextColor(item.category)} 
+                              style={{ marginLeft: 8, fontSize: '0.8rem', borderColor: 'transparent', backgroundColor: 'transparent' }}
                             >
                               {item.category}
                             </Tag>
@@ -555,7 +554,7 @@ function RestaurantContent(props: RestaurantContentProps) {
                       style={{ 
                         boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
                         transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
-                        backgroundColor: getCardBgColor(item.category)
+                        backgroundColor: 'white'
                       }}
                       bordered={false}
                       bodyStyle={{ padding: '12px 16px', lineHeight: '1.4' }}

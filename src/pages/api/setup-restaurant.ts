@@ -123,7 +123,7 @@ export default async function handler(
     // 샘플 데이터 생성
     const sampleData = [
       {
-        category: '한식',
+        category: '이탈리안',
         name: '국회 식당',
         location: '서울시 영등포구 의사당대로 1',
         pnum: '02-123-4567',
@@ -141,7 +141,7 @@ export default async function handler(
         link: ''
       },
       {
-        category: '일식',
+        category: '일식/해산물',
         name: '사쿠라 스시',
         location: '서울시 영등포구 의사당로 13',
         pnum: '02-555-7890',
@@ -150,7 +150,7 @@ export default async function handler(
         link: 'https://example.com/sakura'
       },
       {
-        category: '양식',
+        category: '카페',
         name: '파스타 하우스',
         location: '서울시 영등포구 여의도동 23-8',
         pnum: '02-332-1234',
@@ -159,7 +159,7 @@ export default async function handler(
         link: ''
       },
       {
-        category: '분식',
+        category: '기타',
         name: '여의도 떡볶이',
         location: '서울시 영등포구 여의대방로 375',
         pnum: '02-928-5678',

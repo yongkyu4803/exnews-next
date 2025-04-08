@@ -139,20 +139,30 @@ a {
   padding: 2px !important;  /* 내부 패딩 축소 */
 }
 
-/* 카테고리 탭 스타일 */
-.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="all"] .ant-tabs-tab-btn { background-color: #e6e6e6 !important; }
-.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="정치"] .ant-tabs-tab-btn { background-color: #bae7ff !important; }
-.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="경제"] .ant-tabs-tab-btn { background-color: #b7eb8f !important; }
-.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="사회"] .ant-tabs-tab-btn { background-color: #ffe58f !important; }
-.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="국제"] .ant-tabs-tab-btn { background-color: #efdbff !important; }
-.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="문화"] .ant-tabs-tab-btn { background-color: #ffadd2 !important; }
-.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="연예/스포츠"] .ant-tabs-tab-btn { background-color: #d9d9d9 !important; }
-.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="기타"] .ant-tabs-tab-btn { background-color: #f5f5f5 !important; }
+/* 카테고리 탭 스타일 - 배경색 제거하고 텍스트 색상만 적용 */
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="all"] .ant-tabs-tab-btn { color: #333 !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="정치"] .ant-tabs-tab-btn { color: #1677ff !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="경제"] .ant-tabs-tab-btn { color: #389e0d !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="사회"] .ant-tabs-tab-btn { color: #d4380d !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="국제"] .ant-tabs-tab-btn { color: #722ed1 !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="문화"] .ant-tabs-tab-btn { color: #eb2f96 !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="연예/스포츠"] .ant-tabs-tab-btn { color: #fa541c !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="기타"] .ant-tabs-tab-btn { color: #5c6b77 !important; background-color: transparent !important; }
+
+/* 식당 카테고리 색상 */
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="중식"] .ant-tabs-tab-btn { color: #cf1322 !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="일식/해산물"] .ant-tabs-tab-btn { color: #1677ff !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="이탈리안"] .ant-tabs-tab-btn { color: #389e0d !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="카페"] .ant-tabs-tab-btn { color: #722ed1 !important; background-color: transparent !important; }
 
 /* 호버 및 활성 상태 스타일 */
-.category-tabs .ant-tabs-nav .ant-tabs-tab:hover .ant-tabs-tab-btn,
-.category-tabs .ant-tabs-nav .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+.category-tabs .ant-tabs-nav .ant-tabs-tab:hover .ant-tabs-tab-btn {
   opacity: 0.8;
+}
+
+.category-tabs .ant-tabs-nav .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  font-weight: 600;
+  text-shadow: 0 0 0.1px currentColor;
 }
 
 .category-tabs .ant-tabs-tab-btn {
@@ -160,6 +170,12 @@ a {
   border-radius: 20px !important;  /* 버튼 모서리 둥글게 */
   min-width: 60px !important;  /* 최소 너비 설정 */
   text-align: center !important;  /* 텍스트 중앙 정렬 */
+  border: 1px solid #e8e8e8 !important; /* 테두리 추가 */
+  transition: all 0.3s ease !important;
+}
+
+.category-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  border-color: currentColor !important;
 }
 
 /* 탭 네비게이션 여백 조정 */

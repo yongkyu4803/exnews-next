@@ -24,17 +24,16 @@ export default function RestaurantTable({
     console.log('식당 정보 클릭:', record.name);
   };
 
-  // 카테고리별 배경색 매핑
-  const getCategoryColor = (category: string) => {
+  // 카테고리별 텍스트 색상 매핑 (배경색은 제거)
+  const getCategoryTextColor = (category: string) => {
     const colorMap: {[key: string]: string} = {
-      '한식': '#f5f5f5',
-      '중식': '#fff1f0',
-      '일식/해산물': '#e6f7ff',
-      '이탈리안': '#f6ffed',
-      '카페': '#fff7e6',
-      '기타': '#f9f0ff'
+      '중식': '#cf1322',
+      '일식/해산물': '#1677ff',
+      '이탈리안': '#389e0d',
+      '카페': '#722ed1',
+      '기타': '#5c6b77'
     };
-    return colorMap[category] || '#f0f2f5';
+    return colorMap[category] || '#333';
   };
 
   return (
@@ -60,6 +59,14 @@ export default function RestaurantTable({
               ) : (
                 <span onClick={() => handleClick(record)}>{text}</span>
               )}
+              <span style={{ 
+                marginLeft: '8px', 
+                fontSize: '0.8rem', 
+                color: getCategoryTextColor(record.category),
+                fontWeight: 'normal'
+              }}>
+                {record.category}
+              </span>
             </div>
           ),
         },
@@ -94,9 +101,6 @@ export default function RestaurantTable({
       }}
       scroll={{ x: 'max-content' }}
       style={{ marginTop: 16 }}
-      onRow={(record: RestaurantItem) => ({
-        style: { backgroundColor: getCategoryColor(record.category) }
-      })}
     />
   );
 } 
