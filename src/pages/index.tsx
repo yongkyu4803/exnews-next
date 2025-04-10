@@ -13,14 +13,12 @@ import { NewsItem, NewsResponse, RankingNewsItem, RankingNewsResponse } from '@/
 import { Pagination } from 'antd';
 import BottomNav from '@/components/mobile/BottomNav';
 import TopNavBar from '@/components/mobile/TopNavBar';
-import SimpleTabs from '@/components/mobile/SimpleTabs';
 
 // 동적으로 Ant Design 컴포넌트 임포트
 const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
 const Title = dynamic(() => import('antd/lib/typography/Title'), { ssr: false }) as any;
 const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
 const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
-const Tabs = dynamic(() => import('antd/lib/tabs'), { ssr: false }) as any;
 const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
 
 // 테이블 컴포넌트를 동적으로 불러옴
@@ -183,27 +181,12 @@ const HomePage = () => {
 
   // 탭 변경 핸들러
   const handleTabChange = (key: string) => {
-    console.log('메인 페이지에서 탭 변경:', key, '(현재:', activeTab, ')');
-    
-    // 이미 같은 탭이 선택된 경우 중복 처리 방지
-    if (key === activeTab) {
-      console.log('이미 선택된 탭입니다.');
-      return;
-    }
-    
     setActiveTab(key);
-    
-    // 탭 변경 시 필요한 데이터 로드
-    if (key === 'ranking') {
-      console.log('랭킹 뉴스 탭 활성화: 데이터 상태 확인', {
-        hasData: !!rankingData,
-        itemCount: rankingData?.items?.length || 0,
-        isLoading: rankingIsLoading
-      });
-      
-      // 데이터 다시 로드
-      queryClient.invalidateQueries('rankingNewsItems');
-    }
+    setCurrentPage(1);
+    setSelectedKeys([]);
+    setSelectedRows([]);
+    setRankingSelectedKeys([]);
+    setRankingSelectedRows([]);
   };
 
   const handleCopyToClipboard = () => {
@@ -338,8 +321,8 @@ const HomePage = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Head>
-        <title>뉴스 - 단독 & 랭킹 기사 모음</title>
-        <meta name="description" content="각 언론사의 단독기사와 랭킹기사 모음" />
+        <title>EXNEWS</title>
+        <meta name="description" content="EXNEWS - 뉴스 플랫폼" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </Head>
       
@@ -382,16 +365,6 @@ const HomePage = () => {
               <Space direction="vertical" style={{ width: '100%' }}>
                 <PwaInstallPrompt />
                 
-                {/* 새로운 간단한 탭 컴포넌트 추가 */}
-                <SimpleTabs
-                  items={[
-                    { key: 'exclusive', label: '🚨 단독 뉴스' },
-                    { key: 'ranking', label: '📊 랭킹 뉴스' }
-                  ]}
-                  activeKey={activeTab}
-                  onChange={handleTabChange}
-                />
-                
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <Title level={2} style={{ margin: 0 }}>
                     {activeTab === 'exclusive' ? '단독 뉴스' : '랭킹 뉴스'}
@@ -428,29 +401,6 @@ const HomePage = () => {
                         선택 기사 복사 ({selectedRows.length})
                       </Button>
                     </div>
-
-                    <Tabs
-                      defaultActiveKey="all"
-                      onChange={handleCategoryChange}
-                      items={[
-                        { key: 'all', label: '전체', className: 'tab-all' },
-                        { key: '정치', label: '정치', className: 'tab-politics' },
-                        { key: '경제', label: '경제', className: 'tab-economy' },
-                        { key: '사회', label: '사회', className: 'tab-social' },
-                        { key: '국제', label: '국제', className: 'tab-international' },
-                        { key: '문화', label: '문화', className: 'tab-culture' },
-                        { key: '연예/스포츠', label: '연예/스포츠', className: 'tab-entertainment' },
-                        { key: '기타', label: '기타', className: 'tab-etc' }
-                      ]}
-                      style={{ 
-                        marginBottom: '12px',
-                        backgroundColor: '#ffffff',
-                        padding: isMobile ? '4px' : '8px',
-                        borderRadius: '4px'
-                      }}
-                      size={isMobile ? 'small' : 'middle'}
-                      className="category-tabs"
-                    />
 
                     {error && (
                       <Alert
@@ -596,6 +546,7 @@ const HomePage = () => {
           </div>
         </>
       )}
+      <BottomNav />
     </div>
   );
 };
