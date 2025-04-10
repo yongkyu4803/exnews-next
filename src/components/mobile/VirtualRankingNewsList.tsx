@@ -14,15 +14,10 @@ const FixedSizeList = dynamic(
 // 스타일 컴포넌트 정의
 const Container = styled.div`
   position: relative;
-  height: calc(100vh - 250px);
-  min-height: 400px;
+  height: calc(100vh - 200px);
   width: 100%;
   overflow: visible;
   background-color: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 8px 0;
-  margin-top: 8px;
 `;
 
 const LoadingContainer = styled.div`
