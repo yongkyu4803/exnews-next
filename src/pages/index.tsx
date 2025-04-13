@@ -20,6 +20,7 @@ const Title = dynamic(() => import('antd/lib/typography/Title'), { ssr: false })
 const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
 const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
 const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
+const Tabs = dynamic(() => import('antd/lib/tabs'), { ssr: false }) as any;
 
 // 테이블 컴포넌트를 동적으로 불러옴
 const NewsTable = dynamic(() => import('@/components/NewsTable'), { 
@@ -384,6 +385,29 @@ const HomePage = () => {
                         선택 기사 복사 ({selectedRows.length})
                       </Button>
                     </div>
+
+                    <Tabs
+                      defaultActiveKey="all"
+                      onChange={handleCategoryChange}
+                      items={[
+                        { key: 'all', label: '전체', className: 'tab-all' },
+                        { key: '정치', label: '정치', className: 'tab-politics' },
+                        { key: '경제', label: '경제', className: 'tab-economy' },
+                        { key: '사회', label: '사회', className: 'tab-social' },
+                        { key: '국제', label: '국제', className: 'tab-international' },
+                        { key: '문화', label: '문화', className: 'tab-culture' },
+                        { key: '연예/스포츠', label: '연예/스포츠', className: 'tab-entertainment' },
+                        { key: '기타', label: '기타', className: 'tab-etc' }
+                      ]}
+                      style={{ 
+                        marginBottom: '12px',
+                        backgroundColor: '#ffffff',
+                        padding: isMobile ? '4px' : '8px',
+                        borderRadius: '4px'
+                      }}
+                      size={isMobile ? 'small' : 'middle'}
+                      className="category-tabs"
+                    />
 
                     {error && (
                       <Alert
