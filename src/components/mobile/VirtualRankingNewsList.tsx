@@ -83,13 +83,13 @@ const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   position: fixed;
   bottom: 16px;
   right: ${props => props.color === 'green' ? '16px' : '36px'};
-  width: 16px !important;
-  height: 16px !important;
-  min-width: 16px !important;
-  min-height: 16px !important;
-  max-width: 16px !important;
-  max-height: 16px !important;
-  padding: 0 !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  min-height: 40px !important;
+  max-width: 40px !important;
+  max-height: 40px !important;
+  padding: 8px !important;
   border-radius: 50%;
   background-color: ${props => props.color === 'green' ? '#4CAF50' : 'var(--primary-color, #1a73e8)'};
   color: white;
@@ -97,7 +97,7 @@ const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   align-items: center;
   justify-content: center;
   border: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
   z-index: 100;
   transition: all 0.3s ease;
   
@@ -107,10 +107,10 @@ const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
   }
   
   svg {
-    width: 8px !important;
-    height: 8px !important;
-    max-width: 8px !important;
-    max-height: 8px !important;
+    width: 20px !important;
+    height: 20px !important;
+    max-width: 20px !important;
+    max-height: 20px !important;
   }
 `;
 
