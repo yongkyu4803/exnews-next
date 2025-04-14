@@ -4,6 +4,8 @@ import styled from '@emotion/styled';
 import { trackEvent } from '@/utils/analyticsUtils';
 import RankingNewsCard from './RankingNewsCard';
 import { RankingNewsItem } from '@/types';
+import MicroButton from '@/components/common/MicroButton';
+import FloatingButtonWrapper from '@/components/common/FloatingButtonWrapper';
 
 // 클라이언트 사이드에서만 로드되는 컴포넌트
 const FixedSizeList = dynamic(
@@ -76,41 +78,6 @@ const EmptyView = styled.div`
   p {
     color: #666;
     font-size: 14px;
-  }
-`;
-
-const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
-  position: fixed;
-  bottom: 16px;
-  right: ${props => props.color === 'green' ? '16px' : '36px'};
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  min-height: 40px !important;
-  max-width: 40px !important;
-  max-height: 40px !important;
-  padding: 8px !important;
-  border-radius: 50%;
-  background-color: ${props => props.color === 'green' ? '#4CAF50' : 'var(--primary-color, #1a73e8)'};
-  color: white;
-  display: ${props => props.visible === false ? 'none' : 'flex'};
-  align-items: center;
-  justify-content: center;
-  border: none;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-  z-index: 100;
-  transition: all 0.3s ease;
-  
-  &:active {
-    transform: scale(0.95);
-    background-color: ${props => props.color === 'green' ? '#3e8e41' : '#1562c5'};
-  }
-  
-  svg {
-    width: 20px !important;
-    height: 20px !important;
-    max-width: 20px !important;
-    max-height: 20px !important;
   }
 `;
 
@@ -338,17 +305,29 @@ export default function VirtualRankingNewsList({
       </div>
       
       {/* 새로고침 버튼 */}
-      <ActionButton
-        color="green"
-        onClick={handleRefresh}
-        aria-label="새로고침"
-        visible={true}
-      >
-        <RefreshIcon />
-      </ActionButton>
+      <FloatingButtonWrapper position="primary">
+        <MicroButton
+          onClick={handleRefresh}
+          icon={<RefreshIcon />}
+          label="새로고침"
+          color="#4CAF50"
+          disabled={isRefreshing}
+          style={{
+            animation: isRefreshing ? 'rotate 1s linear infinite' : 'none'
+          }}
+        />
+      </FloatingButtonWrapper>
       
       {/* 토스트 메시지 */}
       {toastMessage && <Toast>{toastMessage}</Toast>}
+      
+      {/* 회전 애니메이션 스타일 */}
+      <style jsx global>{`
+        @keyframes rotate {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </Container>
   );
 } 

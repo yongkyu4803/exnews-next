@@ -3,6 +3,8 @@ import dynamic from 'next/dynamic';
 import styled from '@emotion/styled';
 import { trackEvent } from '@/utils/analyticsUtils';
 import { copySelectedNewsToClipboard } from '@/utils/clipboardUtils';
+import MicroButton from '@/components/common/MicroButton';
+import FloatingButtonWrapper from '@/components/common/FloatingButtonWrapper';
 
 // 클라이언트 사이드에서만 로드되는 컴포넌트
 const ReactWindowComponents = dynamic(() => import('./ReactWindowComponents'), {
@@ -82,41 +84,6 @@ const EmptyView = styled.div`
   p {
     color: #666;
     font-size: 14px;
-  }
-`;
-
-const ActionButton = styled.button<{ color?: string; visible?: boolean }>`
-  position: fixed;
-  bottom: 16px;
-  right: ${props => props.color === 'green' ? '16px' : '36px'};
-  width: 16px !important;
-  height: 16px !important;
-  min-width: 16px !important;
-  min-height: 16px !important;
-  max-width: 16px !important;
-  max-height: 16px !important;
-  padding: 0 !important;
-  border-radius: 50%;
-  background-color: ${props => props.color === 'green' ? '#4CAF50' : 'var(--primary-color, #1a73e8)'};
-  color: white;
-  display: ${props => props.visible === false ? 'none' : 'flex'};
-  align-items: center;
-  justify-content: center;
-  border: none;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
-  z-index: 100;
-  transition: all 0.3s ease;
-  
-  &:active {
-    transform: scale(0.95);
-    background-color: ${props => props.color === 'green' ? '#3e8e41' : '#1562c5'};
-  }
-  
-  svg {
-    width: 8px !important;
-    height: 8px !important;
-    max-width: 8px !important;
-    max-height: 8px !important;
   }
 `;
 
@@ -215,31 +182,6 @@ const VisualConsole = styled.div<{ visible: boolean }>`
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 10px;
-  }
-`;
-
-const MicroButton = styled.button`
-  width: 40px !important;
-  height: 40px !important;
-  min-width: 40px !important;
-  min-height: 40px !important;
-  max-width: 40px !important;
-  max-height: 40px !important;
-  padding: 8px !important;
-  margin: 0 !important;
-  border: none !important;
-  border-radius: 50% !important;
-  color: white !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25) !important;
-  
-  svg {
-    width: 20px !important;
-    height: 20px !important;
-    max-width: 20px !important;
-    max-height: 20px !important;
   }
 `;
 
@@ -545,47 +487,28 @@ export default function VirtualNewsList({
         </PullToRefreshContainer>
         
         {/* 새로고침 버튼 */}
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '70px',
-            right: '16px',
-            zIndex: 1000,
-          }}
-        >
-          <MicroButton
+        <FloatingButtonWrapper position="primary">
+          <MicroButton 
             onClick={handleRefresh}
-            aria-label="새로고침"
-            style={{ 
-              opacity: refreshing ? 0.7 : 1,
-              animation: refreshing ? 'rotate 1s linear infinite' : 'none',
-              backgroundColor: '#4CAF50',
+            icon={<RefreshIcon />}
+            label="새로고침"
+            color="#4CAF50"
+            style={{
+              animation: refreshing ? 'rotate 1s linear infinite' : 'none'
             }}
-          >
-            <RefreshIcon />
-          </MicroButton>
-        </div>
+            disabled={refreshing}
+          />
+        </FloatingButtonWrapper>
         
         {/* 복사 버튼 */}
         {selectedKeys.length > 0 && (
-          <div
-            style={{
-              position: 'fixed',
-              bottom: '70px',
-              right: '66px',
-              zIndex: 1000,
-            }}
-          >
+          <FloatingButtonWrapper position="secondary">
             <MicroButton
               onClick={handleCopySelected}
-              aria-label="선택한 뉴스 복사"
-              style={{ 
-                backgroundColor: 'var(--primary-color, #1a73e8)',
-              }}
-            >
-              <CopyIcon />
-            </MicroButton>
-          </div>
+              icon={<CopyIcon />}
+              label="선택한 뉴스 복사"
+            />
+          </FloatingButtonWrapper>
         )}
         
         {/* 토스트 메시지 */}
@@ -595,26 +518,6 @@ export default function VirtualNewsList({
           </Toast>
         )}
       </Container>
-      
-      {/* 마이크로 버튼 스타일 */}
-      <style jsx global>{`
-        .micro-button {
-          width: 40px !important;
-          height: 40px !important;
-          min-width: 40px !important;
-          min-height: 40px !important;
-          max-width: 40px !important;
-          max-height: 40px !important;
-          padding: 8px !important;
-        }
-        
-        .micro-button svg {
-          width: 20px !important;
-          height: 20px !important;
-          max-width: 20px !important;
-          max-height: 20px !important;
-        }
-      `}</style>
       
       {/* 회전 애니메이션 스타일 */}
       <style jsx global>{`
