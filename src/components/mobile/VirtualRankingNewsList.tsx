@@ -6,6 +6,7 @@ import RankingNewsCard from './RankingNewsCard';
 import { RankingNewsItem } from '@/types';
 import MicroButton from '@/components/common/MicroButton';
 import FloatingButtonWrapper from '@/components/common/FloatingButtonWrapper';
+import { Pagination } from 'antd';
 
 // 클라이언트 사이드에서만 로드되는 컴포넌트
 const FixedSizeList = dynamic(
@@ -137,9 +138,33 @@ export default function VirtualRankingNewsList({
 }: VirtualRankingNewsListProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(7); // 모바일에서 한 페이지당 7개 아이템
   const listRef = useRef<any>(null);
   const listContainerRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 현재 페이지의 아이템만 필터링
+  const paginatedItems = React.useMemo(() => {
+    if (!items) return [];
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    return items.slice(startIndex, endIndex);
+  }, [items, currentPage, pageSize]);
+
+  // 전체 페이지 수 계산
+  const totalPages = React.useMemo(() => {
+    if (!items) return 0;
+    return Math.ceil(items.length / pageSize);
+  }, [items, pageSize]);
+
+  // 페이지 변경 핸들러
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    // 페이지 변경 시 스크롤을 맨 위로
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // 항목 수 확인을 위한 디버깅 로그
   useEffect(() => {
@@ -200,50 +225,6 @@ export default function VirtualRankingNewsList({
     onSelectChange(newKeys, selectedRows);
   }, [items, selectedKeys, onSelectChange]);
 
-  // 아이템 렌더링 함수
-  const renderNewsItem = useCallback(({ index, style }: { index: number; style: React.CSSProperties }) => {
-    const item = items[index];
-    if (!item) return null;
-    
-    // null check 추가 - 아이템이 유효한지 먼저 확인
-    if (!item.id || !item.title || !item.link) {
-      console.warn('유효하지 않은 랭킹 뉴스 아이템:', item);
-      return (
-        <div style={{ ...style, paddingRight: '8px', paddingLeft: '8px' }}>
-          <div style={{ 
-            height: '80px', 
-            backgroundColor: '#f5f5f5', 
-            borderRadius: '8px', 
-            padding: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '12px',
-            color: '#666'
-          }}>
-            데이터 오류
-          </div>
-        </div>
-      );
-    }
-    
-    const isSelected = selectedKeys.includes(String(item.id));
-    
-    return (
-      <div style={{ ...style, paddingRight: '8px', paddingLeft: '8px' }}>
-        <RankingNewsCard
-          key={item.id}
-          id={String(item.id)}
-          title={item.title || ''}
-          link={item.link || '#'}
-          media_name={item.media_name || '알 수 없는 매체'}
-          isSelected={isSelected}
-          onSelect={handleSelectItem}
-        />
-      </div>
-    );
-  }, [items, selectedKeys, handleSelectItem]);
-
   // 데이터가 없는 경우
   if (items.length === 0 && !isLoading) {
     console.log('랭킹 뉴스 데이터 없음 표시');
@@ -289,18 +270,86 @@ export default function VirtualRankingNewsList({
   return (
     <Container ref={listContainerRef}>
       <div style={{ height: '100%', width: '100%', padding: '0 8px' }}>
-        {items.length > 0 && (
+        {paginatedItems.length > 0 && (
           <FixedSizeList
             ref={listRef}
             height={listHeight} // 고정 높이 값 사용
             width="100%"
             itemSize={86} // 카드 높이 + 마진
-            itemCount={items.length}
+            itemCount={paginatedItems.length}
             overscanCount={5}
             style={{ paddingBottom: '16px' }}
           >
-            {renderNewsItem}
+            {({ index, style }: { index: number; style: React.CSSProperties }) => {
+              const item = paginatedItems[index];
+              if (!item) return null;
+              
+              // null check 추가 - 아이템이 유효한지 먼저 확인
+              if (!item.id || !item.title || !item.link) {
+                console.warn('유효하지 않은 랭킹 뉴스 아이템:', item);
+                return (
+                  <div style={{ ...style, paddingRight: '8px', paddingLeft: '8px' }}>
+                    <div style={{ 
+                      height: '80px', 
+                      backgroundColor: '#f5f5f5', 
+                      borderRadius: '8px', 
+                      padding: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      color: '#666'
+                    }}>
+                      데이터 오류
+                    </div>
+                  </div>
+                );
+              }
+              
+              const isSelected = selectedKeys.includes(String(item.id));
+              
+              return (
+                <div style={{ ...style, paddingRight: '8px', paddingLeft: '8px' }}>
+                  <RankingNewsCard
+                    key={item.id}
+                    id={String(item.id)}
+                    title={item.title || ''}
+                    link={item.link || '#'}
+                    media_name={item.media_name || '알 수 없는 매체'}
+                    isSelected={isSelected}
+                    onSelect={handleSelectItem}
+                  />
+                </div>
+              );
+            }}
           </FixedSizeList>
+        )}
+
+        {/* 페이지네이션 UI */}
+        {totalPages > 1 && (
+          <>
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              marginTop: '16px',
+              padding: '8px',
+              backgroundColor: '#fff',
+              borderRadius: '8px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}>
+              <Pagination
+                current={currentPage}
+                total={items?.length || 0}
+                pageSize={pageSize}
+                onChange={handlePageChange}
+                size="small"
+                showSizeChanger={false}
+                simple
+              />
+            </div>
+            
+            <div style={{ height: '60px' }}></div> {/* 하단 메뉴바 공간 */}
+          </>
         )}
       </div>
       
