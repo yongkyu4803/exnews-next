@@ -68,6 +68,21 @@ export default function ReactWindowComponents({
   const [isFirstRender, setIsFirstRender] = useState(true);
   const itemsRef = useRef<any[]>([]); // 아이템 참조 저장
   
+  // 페이지당 7개 아이템에 맞춰 높이 계산 - 스크롤바 없애기
+  const listHeight = React.useMemo(() => {
+    // 표시할 아이템 수에 따라 높이 계산
+    const visibleItemCount = Math.min(7, itemCount); // 최대 7개 아이템
+    const height = visibleItemCount * ITEM_HEIGHT + 10; // 아이템 높이 + 추가 여백
+    
+    console.log('ReactWindowComponents 높이 계산:', {
+      itemCount,
+      visibleItemCount,
+      height
+    });
+    
+    return height;
+  }, [itemCount]);
+  
   // 컴포넌트 마운트 시 초기화
   useEffect(() => {
     console.log('ReactWindowComponents 마운트됨. 아이템 수:', Array.isArray(items) ? items.length : 0);
@@ -78,22 +93,20 @@ export default function ReactWindowComponents({
       itemsRef.current = items;
     }
     
-    // 초기 리사이즈 처리
-    const handleResize = () => {
-      setWindowHeight(window.innerHeight - 180);
-      if (listRef.current && typeof listRef.current.resetAfterIndex === 'function') {
-        listRef.current.resetAfterIndex(0);
-      }
-    };
-    
     // 초기 리사이즈 실행 및 이벤트 리스너 등록
-    handleResize();
     window.addEventListener('resize', handleResize);
     
     return () => {
       window.removeEventListener('resize', handleResize);
     };
   }, [items]);
+  
+  // 리사이즈 핸들러
+  const handleResize = useCallback(() => {
+    if (listRef.current && typeof listRef.current.resetAfterIndex === 'function') {
+      listRef.current.resetAfterIndex(0);
+    }
+  }, []);
   
   // items 변경 감지 및 처리
   useEffect(() => {
@@ -273,7 +286,7 @@ export default function ReactWindowComponents({
               }}
               onItemsRendered={onItemsRendered}
               onScroll={handleScroll}
-              height={windowHeight}
+              height={listHeight}
               width="100%"
               itemCount={hasMore ? itemCount + 1 : itemCount}
               itemSize={ITEM_HEIGHT}
@@ -283,7 +296,8 @@ export default function ReactWindowComponents({
                 transform: 'translateZ(0)',
                 overflowX: 'hidden',
                 overflowY: 'auto',
-                WebkitOverflowScrolling: 'touch'
+                WebkitOverflowScrolling: 'touch',
+                overflow: itemCount <= 7 ? 'hidden' : 'auto' // 7개 이하일 때 스크롤바 숨김
               }}
             >
               {Row}
