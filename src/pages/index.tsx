@@ -457,7 +457,8 @@ const HomePage = () => {
                               />
                             </div>
                             
-                            <div style={{ height: '60px' }}></div> {/* 하단 메뉴바 공간 */}
+                            {/* 하단 메뉴바 공간 - 현재 기능 없음 */}
+                            {/* <div style={{ height: '60px' }}></div> */}
                           </>
                         )}
                       </>
@@ -553,7 +554,8 @@ const HomePage = () => {
           </div>
         </>
       )}
-      <BottomNav />
+      {/* 푸터 내비게이션 - 현재 기능 없음으로 주석 처리 */}
+      {/* <BottomNav /> */}
     </div>
   );
 };
