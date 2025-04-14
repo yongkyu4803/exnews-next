@@ -132,7 +132,7 @@ export default function PwaInstallPrompt() {
               type="primary"
               onClick={handleInstallClick}
             >
-              설치 안내
+              설치 하기
             </Button>
           }
           closable
