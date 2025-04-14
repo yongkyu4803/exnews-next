@@ -261,9 +261,9 @@ export default function VirtualRankingNewsList({
   // 화면에 표시할 고정 높이 값 사용
   const listHeight = React.useMemo(() => {
     if (typeof window === 'undefined') return 400;
-    // 페이지당 7개 아이템에 맞춰 높이 계산 (itemSize 86px + 여백)
-    // 여기서는 7개 아이템이 정확히 화면에 맞도록 계산
-    return paginatedItems.length * 86 + 10; // 아이템당 86px + 아이템 사이 여백을 포함한 추가 여백
+    // 페이지당 7개 아이템에 맞게 높이 계산
+    const itemSize = 86; // 카드 높이(80px) + 여백(6px)
+    return paginatedItems.length * itemSize + 5; // 약간의 여백 추가
   }, [paginatedItems.length]);
   
   console.log('랭킹 뉴스 목록 렌더링:', { 
@@ -280,7 +280,7 @@ export default function VirtualRankingNewsList({
             ref={listRef}
             height={listHeight}
             width="100%"
-            itemSize={86} // 카드 높이 + 마진
+            itemSize={86} // 카드 높이(80px) + 여백(6px)
             itemCount={paginatedItems.length}
             overscanCount={5}
             style={{ paddingBottom: '16px', overflow: 'hidden' }}

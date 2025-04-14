@@ -20,7 +20,7 @@ const TouchCard = styled.div<{ isSelected?: boolean; isMounted?: boolean }>`
   box-shadow: var(--card-shadow);
   padding: 8px;
   margin: 2px 0;
-  height: 70px;
+  height: 80px;
   box-sizing: border-box;
   position: relative;
   overflow: hidden;

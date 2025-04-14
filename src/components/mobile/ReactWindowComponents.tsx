@@ -5,7 +5,7 @@ import InfiniteLoader from 'react-window-infinite-loader';
 import NewsCard from './NewsCard';
 
 // 상수 정의
-const ITEM_HEIGHT = 84; // 새로운 카드 높이에 맞춤
+const ITEM_HEIGHT = 86; // 카드 높이(80px) + 여백(6px)
 const LOADING_ITEM_HEIGHT = 60; // 로딩 아이템 높이 조정
 
 const WindowContainer = styled.div`
@@ -72,7 +72,7 @@ export default function ReactWindowComponents({
   const listHeight = React.useMemo(() => {
     // 표시할 아이템 수에 따라 높이 계산
     const visibleItemCount = Math.min(7, itemCount); // 최대 7개 아이템
-    const height = visibleItemCount * ITEM_HEIGHT + 10; // 아이템 높이 + 추가 여백
+    const height = visibleItemCount * ITEM_HEIGHT + 5; // 약간의 여백 추가
     
     console.log('ReactWindowComponents 높이 계산:', {
       itemCount,
