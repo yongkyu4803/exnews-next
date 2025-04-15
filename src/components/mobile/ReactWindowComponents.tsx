@@ -70,17 +70,27 @@ export default function ReactWindowComponents({
   
   // 페이지당 7개 아이템에 맞춰 높이 계산 - 스크롤바 없애기
   const listHeight = React.useMemo(() => {
-    // 표시할 아이템 수에 따라 높이 계산
-    const visibleItemCount = Math.min(7, itemCount); // 최대 7개 아이템
-    const height = visibleItemCount * ITEM_HEIGHT + 5; // 약간의 여백 추가
+    // 기본 높이 설정 (모바일 환경은 100vh - 헤더/푸터 등 공간)
+    if (typeof window !== 'undefined') {
+      // 고정 높이 사용하여 페이지네이션 문제 해결
+      const standardHeight = 600; // 기본 고정 높이
+      
+      // 아이템 수에 따른 높이 계산 (최소 높이 설정)
+      const calculatedHeight = Math.max(
+        Math.min(7, itemCount) * ITEM_HEIGHT + 5, // 최소 1개 아이템 높이
+        standardHeight * 0.5 // 최소 화면 높이의 50%
+      );
+      
+      console.log('ReactWindowComponents 높이 계산 (개선됨):', {
+        itemCount,
+        calculatedHeight
+      });
+      
+      return calculatedHeight;
+    }
     
-    console.log('ReactWindowComponents 높이 계산:', {
-      itemCount,
-      visibleItemCount,
-      height
-    });
-    
-    return height;
+    // SSR 환경에서는 기본값 반환
+    return 600;
   }, [itemCount]);
   
   // 컴포넌트 마운트 시 초기화
@@ -124,15 +134,20 @@ export default function ReactWindowComponents({
     if (!isFirstRender && listRef.current) {
       console.log('아이템 목록 변경됨. 스크롤 리셋');
       
-      // 스크롤 리셋
-      if (typeof listRef.current.scrollTo === 'function') {
-        listRef.current.scrollTo(0);
-      }
-      
-      // 리스트 강제 업데이트
-      if (typeof listRef.current.resetAfterIndex === 'function') {
-        listRef.current.resetAfterIndex(0);
-      }
+      // 스크롤 리셋 - setTimeout으로 지연 실행하여 동기화 문제 해결
+      setTimeout(() => {
+        if (listRef.current) {
+          // 스크롤 리셋
+          if (typeof listRef.current.scrollTo === 'function') {
+            listRef.current.scrollTo(0);
+          }
+          
+          // 리스트 강제 업데이트
+          if (typeof listRef.current.resetAfterIndex === 'function') {
+            listRef.current.resetAfterIndex(0);
+          }
+        }
+      }, 50);
     }
   }, [items, isFirstRender]);
   

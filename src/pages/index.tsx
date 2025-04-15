@@ -169,9 +169,21 @@ const HomePage = () => {
   const handlePageChange = (page: number) => {
     console.log('페이지 변경:', page, '전체 페이지:', totalPages);
     if (page < 1 || page > totalPages) return;
+    
+    // 페이지 변경 시 데이터 갱신을 확실히 인식하도록 로깅 추가
+    console.log(`페이지 변경 처리: ${currentPage} -> ${page}`);
+    
+    // 페이지 상태 업데이트
     setCurrentPage(page);
-    // 페이지 변경 시 스크롤을 맨 위로
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // 페이지 변경 시 스크롤을 맨 위로 - 동기화 문제 해결을 위해 타이밍 조정
+    setTimeout(() => {
+      window.scrollTo({ 
+        top: 0, 
+        behavior: 'auto' // smooth 대신 auto 사용하여 즉시 스크롤
+      });
+      console.log('스크롤 초기화 완료');
+    }, 10); // 최소 지연으로 상태 업데이트 후 스크롤 실행
   };
 
   // 카테고리 변경 시 페이지 초기화
@@ -455,6 +467,16 @@ const HomePage = () => {
                                 showSizeChanger={false}
                                 simple
                               />
+                            </div>
+                            
+                            {/* 페이지 정보 표시 */}
+                            <div style={{
+                              textAlign: 'center',
+                              fontSize: '12px',
+                              color: '#666',
+                              marginTop: '4px'
+                            }}>
+                              {currentPage} / {totalPages} 페이지
                             </div>
                             
                             {/* 하단 메뉴바 공간 - 현재 기능 없음 */}

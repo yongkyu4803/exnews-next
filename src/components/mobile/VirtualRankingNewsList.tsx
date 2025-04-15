@@ -161,9 +161,27 @@ export default function VirtualRankingNewsList({
   // 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
+    
+    console.log(`랭킹 뉴스 페이지 변경: ${currentPage} -> ${page} (전체 ${totalPages} 페이지)`);
+    
+    // 페이지 상태 업데이트
     setCurrentPage(page);
-    // 페이지 변경 시 스크롤을 맨 위로
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // 페이지 변경 시 스크롤을 맨 위로 - 동기화 문제 해결을 위해 타이밍 조정
+    setTimeout(() => {
+      if (listContainerRef.current) {
+        // 컨테이너로 스크롤
+        listContainerRef.current.scrollIntoView({ behavior: 'auto' });
+      }
+      
+      // 페이지 상단으로 스크롤
+      window.scrollTo({ 
+        top: 0, 
+        behavior: 'auto' // smooth 대신 auto 사용하여 즉시 스크롤
+      });
+      
+      console.log('랭킹 뉴스 스크롤 초기화 완료');
+    }, 10);
   };
 
   // 항목 수 확인을 위한 디버깅 로그
@@ -261,9 +279,23 @@ export default function VirtualRankingNewsList({
   // 화면에 표시할 고정 높이 값 사용
   const listHeight = React.useMemo(() => {
     if (typeof window === 'undefined') return 400;
-    // 페이지당 7개 아이템에 맞게 높이 계산
+    
+    // 고정 높이 접근 방식 (페이지네이션 문제 해결용)
+    const standardHeight = 600; // 기본 고정 높이
+    
+    // 아이템 수에 따라 계산하되 최소 높이 설정
     const itemSize = 86; // 카드 높이(80px) + 여백(6px)
-    return paginatedItems.length * itemSize + 5; // 약간의 여백 추가
+    const calculatedHeight = Math.max(
+      paginatedItems.length * itemSize + 5, // 현재 아이템에 맞는 높이
+      standardHeight * 0.5 // 최소 화면 높이의 50%
+    );
+    
+    console.log('랭킹 뉴스 리스트 높이 계산 (개선됨):', {
+      paginatedItemsLength: paginatedItems.length,
+      calculatedHeight
+    });
+    
+    return calculatedHeight;
   }, [paginatedItems.length]);
   
   console.log('랭킹 뉴스 목록 렌더링:', { 
