@@ -576,8 +576,30 @@ const HomePage = () => {
           </div>
         </>
       )}
-      {/* 푸터 내비게이션 - 현재 기능 없음으로 주석 처리 */}
-      {/* <BottomNav /> */}
+      {/* 푸터 추가 */}
+      <footer style={{
+        width: '100%',
+        padding: '16px',
+        textAlign: 'center',
+        borderTop: '1px solid #eaeaea',
+        marginTop: '32px',
+        color: '#666',
+        fontSize: isMobile ? '12px' : '14px',
+        backgroundColor: '#f9f9f9'
+      }}>
+        <div style={{ marginBottom: '8px' }}>
+          © {new Date().getFullYear()} 단독뉴스 - 모든 권리 보유
+        </div>
+        <div>
+          <a href="mailto:gq.newslens@gmail.com" style={{ 
+            color: '#1a4b8c', 
+            textDecoration: 'none',
+            fontWeight: '500'
+          }}>
+            문의: gq.newslens@gmail.com
+          </a>
+        </div>
+      </footer>
     </div>
   );
 };
