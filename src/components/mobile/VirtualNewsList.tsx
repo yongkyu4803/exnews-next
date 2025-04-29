@@ -15,7 +15,7 @@ const ReactWindowComponents = dynamic(() => import('./ReactWindowComponents'), {
 // 스타일 컴포넌트 정의
 const Container = styled.div`
   position: relative;
-  height: calc(100vh - 200px);
+  height: auto; /* 고정 높이 대신 자동 높이 사용 */
   width: 100%;
   overflow: visible;
   background-color: #ffffff;
@@ -26,6 +26,15 @@ const PullToRefreshContainer = styled.div`
   height: 100%;
   position: relative;
   -webkit-overflow-scrolling: touch;
+  overflow: hidden; /* 컨테이너 자체의 스크롤바 숨김 */
+  
+  /* 스크롤바 숨기기 */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 `;
 
 const LoadingContainer = styled.div`

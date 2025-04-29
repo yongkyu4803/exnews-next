@@ -25,6 +25,13 @@ const ListContainer = styled.div`
   will-change: transform;
   transform: translateZ(0);
   padding-bottom: 16px; // 하단 여백 추가
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+  
+  /* Chrome, Safari 등에서 스크롤바 숨기기 */
+  &::-webkit-scrollbar {
+    display: none;
+  }
 `;
 
 // 로딩 인디케이터 스타일
@@ -310,9 +317,9 @@ export default function ReactWindowComponents({
                 willChange: 'transform',
                 transform: 'translateZ(0)',
                 overflowX: 'hidden',
-                overflowY: 'auto',
+                overflowY: 'hidden', // 항상 스크롤바 숨김으로 변경
                 WebkitOverflowScrolling: 'touch',
-                overflow: itemCount <= 7 ? 'hidden' : 'auto' // 7개 이하일 때 스크롤바 숨김
+                overflow: 'hidden' // 항상 스크롤바 숨김으로 변경, 페이지 스크롤바만 사용
               }}
             >
               {Row}

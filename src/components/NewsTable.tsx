@@ -26,51 +26,59 @@ export default function NewsTable({ items, selectedKeys, onSelectChange }: NewsT
   };
 
   return (
-    <Table 
-      size="small"
-      columns={[
-        { 
-          title: '제목',
-          dataIndex: 'title',
-          render: (text: any, record: any) => (
-            <a href={record.original_link} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{ fontWeight: 600 }}
-              onClick={() => handleCacheNews(record)}
-            >
-              {text}
-            </a>
-          )
-        },
-        { 
-          title: '카테고리',
-          dataIndex: 'category',
-          width: 100,
-        },
-        { 
-          title: '발행일',
-          dataIndex: 'pub_date',
-          width: 180,
-          render: (date: any) => {
-            const d = new Date(date);
-            return d.getFullYear() + '-' + 
-                  String(d.getMonth() + 1).padStart(2, '0') + '-' + 
-                  String(d.getDate()).padStart(2, '0') + ' ' + 
-                  String(d.getHours()).padStart(2, '0') + ':' + 
-                  String(d.getMinutes()).padStart(2, '0') + ':' + 
-                  String(d.getSeconds()).padStart(2, '0');
+    <div style={{ 
+      width: '100%', 
+      overflowX: 'hidden', 
+      overflowY: 'hidden' 
+    }}>
+      <Table 
+        size="small"
+        columns={[
+          { 
+            title: '제목',
+            dataIndex: 'title',
+            render: (text: any, record: any) => (
+              <a href={record.original_link} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ fontWeight: 600 }}
+                onClick={() => handleCacheNews(record)}
+              >
+                {text}
+              </a>
+            )
+          },
+          { 
+            title: '카테고리',
+            dataIndex: 'category',
+            width: 100,
+          },
+          { 
+            title: '발행일',
+            dataIndex: 'pub_date',
+            width: 180,
+            render: (date: any) => {
+              const d = new Date(date);
+              return d.getFullYear() + '-' + 
+                    String(d.getMonth() + 1).padStart(2, '0') + '-' + 
+                    String(d.getDate()).padStart(2, '0') + ' ' + 
+                    String(d.getHours()).padStart(2, '0') + ':' + 
+                    String(d.getMinutes()).padStart(2, '0') + ':' + 
+                    String(d.getSeconds()).padStart(2, '0');
+            }
           }
-        }
-      ] as any}
-      dataSource={items}
-      rowKey={(record: any) => record.original_link}
-      rowSelection={{
-        onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
-          onSelectChange(selectedRowKeys, selectedRows as NewsItem[]);
-        },
-        selectedRowKeys: selectedKeys,
-      }}
-    />
+        ] as any}
+        dataSource={items}
+        rowKey={(record: any) => record.original_link}
+        rowSelection={{
+          onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
+            onSelectChange(selectedRowKeys, selectedRows as NewsItem[]);
+          },
+          selectedRowKeys: selectedKeys,
+        }}
+        pagination={{ position: ['bottomCenter'] }}
+        scroll={{ x: 'max-content' }}
+      />
+    </div>
   );
 } 
