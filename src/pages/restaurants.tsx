@@ -35,14 +35,17 @@ export default function RestaurantsPage() {
   const [apiMode, setApiMode] = useState<string>('normal');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [categories, setCategories] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(20);
+  const [totalCount, setTotalCount] = useState<number>(0);
   
   // 데이터 로드 함수
-  const fetchData = async (categoryFilter: string = selectedCategory) => {
+  const fetchData = async (categoryFilter: string = selectedCategory, page: number = currentPage, size: number = pageSize) => {
     try {
       setLoading(true);
       setError(null);
       setDebugInfo(null);
-      console.log(`식당 데이터 요청 시작... (카테고리: ${categoryFilter})`);
+      console.log(`식당 데이터 요청 시작... (카테고리: ${categoryFilter}, 페이지: ${page}, 크기: ${size})`);
       
       // API 모드에 따라 쿼리 파라미터 조정
       let url = '/api/restaurants';
@@ -60,6 +63,10 @@ export default function RestaurantsPage() {
       if (categoryFilter !== 'all') {
         params.append('category', categoryFilter);
       }
+      
+      // 페이지네이션 매개변수 추가
+      params.append('page', page.toString());
+      params.append('pageSize', size.toString());
       
       const queryString = params.toString();
       if (queryString) {
@@ -89,6 +96,7 @@ export default function RestaurantsPage() {
       }
       
       setRestaurants(data.items || []);
+      setTotalCount(data.totalCount || data.items.length);
       setIsRealData(data.source !== 'sample-fallback' && data.source !== 'sample-error');
       
       // 카테고리 목록 추출 및 업데이트 (최초 로드 시 또는 필요 시)
@@ -206,8 +214,12 @@ export default function RestaurantsPage() {
   };
 
   useEffect(() => {
-    fetchData(selectedCategory);
-  }, [apiMode, selectedCategory]);
+    // apiMode나 selectedCategory가 변경될 때 페이지를 1로 초기화하고 데이터 로드
+    // 이제 함수 내부에서 직접 처리하므로 여기서는 기본 호출만 합니다
+    if (apiMode !== 'direct') {
+      fetchData(selectedCategory, 1, pageSize);
+    }
+  }, [apiMode]);
 
   const showSuccessMessage = (content: string) => {
     if (typeof window !== 'undefined') {
@@ -298,6 +310,11 @@ export default function RestaurantsPage() {
                   setupError={setupError}
                   debugInfo={debugInfo}
                   setupTable={setupTable}
+                  currentPage={currentPage}
+                  setCurrentPage={setCurrentPage}
+                  pageSize={pageSize}
+                  setPageSize={setPageSize}
+                  totalCount={totalCount}
                 />
               )}
             </div>
@@ -318,12 +335,17 @@ interface RestaurantContentProps {
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
   categories: string[];
-  fetchData: (categoryFilter?: string) => Promise<void>;
+  fetchData: (categoryFilter?: string, page?: number, size?: number) => Promise<void>;
   setupLoading: boolean;
   setupSuccess: boolean;
   setupError: string | null;
   debugInfo: any;
   setupTable: () => Promise<void>;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+  pageSize: number;
+  setPageSize: (size: number) => void;
+  totalCount: number;
 }
 
 // 클라이언트 컴포넌트 분리
@@ -370,7 +392,8 @@ function RestaurantContent(props: RestaurantContentProps) {
   const { 
     restaurants, loading, error, isRealData, apiMode, setApiMode,
     selectedCategory, setSelectedCategory, categories,
-    fetchData, setupLoading, setupSuccess, setupError, debugInfo, setupTable
+    fetchData, setupLoading, setupSuccess, setupError, debugInfo, setupTable,
+    currentPage, setCurrentPage, pageSize, setPageSize, totalCount
   } = props;
 
   return (
@@ -394,7 +417,11 @@ function RestaurantContent(props: RestaurantContentProps) {
           {/* 카테고리 탭 */}
           <Tabs 
             activeKey={selectedCategory} 
-            onChange={(key: string) => setSelectedCategory(key)}
+            onChange={(key: string) => {
+              setSelectedCategory(key);
+              setCurrentPage(1); // 카테고리 변경 시 페이지 초기화
+              fetchData(key, 1, pageSize);
+            }}
             type="card"
             size="large"
             className="custom-tabs"
@@ -512,6 +539,28 @@ function RestaurantContent(props: RestaurantContentProps) {
                 xxl: 5,
               }}
               dataSource={restaurants}
+              pagination={{
+                position: 'bottom',
+                align: 'center',
+                current: currentPage,
+                pageSize: pageSize,
+                total: totalCount,
+                showSizeChanger: true,
+                showTotal: (total: number, range: [number, number]) => `총 ${total}개 중 ${range[0]}-${range[1]}`,
+                pageSizeOptions: ['10', '20', '30', '50'],
+                onChange: (page: number, size: number) => {
+                  setCurrentPage(page);
+                  if (size !== pageSize) {
+                    setPageSize(size);
+                  }
+                  fetchData(selectedCategory, page, size);
+                },
+                onShowSizeChange: (current: number, size: number) => {
+                  setPageSize(size);
+                  setCurrentPage(1);
+                  fetchData(selectedCategory, 1, size);
+                }
+              }}
               renderItem={(item: RestaurantItem) => (
                 <List.Item>
                   {Card && (
