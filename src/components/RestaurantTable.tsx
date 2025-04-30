@@ -27,6 +27,7 @@ export default function RestaurantTable({
   // 카테고리별 텍스트 색상 매핑 (배경색은 제거)
   const getCategoryTextColor = (category: string) => {
     const colorMap: {[key: string]: string} = {
+      '전체': '#000000',
       '중식': '#cf1322',
       '일식/해산물': '#1677ff',
       '이탈리안': '#389e0d',

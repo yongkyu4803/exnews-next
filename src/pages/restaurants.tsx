@@ -353,6 +353,7 @@ function RestaurantContent(props: RestaurantContentProps) {
   // 카테고리별 텍스트 색상 매핑 (배경색 제거)
   const getCategoryTextColor = (category: string) => {
     const colorMap: {[key: string]: string} = {
+      '전체': '#000000',
       '한정식': '#d4380d',
       '고깃집': '#fa541c',
       '중식': '#cf1322',
