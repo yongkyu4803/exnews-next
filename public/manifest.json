@@ -1,0 +1,33 @@
+{
+  "name": "NewsLens",
+  "short_name": "NewsLens",
+  "description": "실시간 단독 및 랭킹 뉴스 모음",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1a4b8c",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "최신뉴스",
+      "url": "/latest",
+      "description": "최신 뉴스 보기"
+    }
+  ],
+  "categories": ["news", "magazines"],
+  "prefer_related_applications": false
+}

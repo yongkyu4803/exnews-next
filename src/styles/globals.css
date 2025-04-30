@@ -1,0 +1,677 @@
+/* 전역 스타일 */
+:root {
+  --primary-color: #1a73e8;
+  --card-border-radius: 8px;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  touch-action: manipulation;
+  height: 100%;
+  width: 100%;
+  overflow: auto;
+  overscroll-behavior: none; /* 오버스크롤 방지 */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative; /* 새로고침 인디케이터를 위한 기준점 */
+  background-color: #ffffff;
+}
+
+/* Mobile 스크롤 최적화 */
+html, body, #__next, main {
+  overscroll-behavior: none;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+  position: relative;
+}
+
+body {
+  touch-action: pan-y; /* 수직 스크롤만 허용 */
+}
+
+/* 딥 레이어 숨김 방지 */
+#__next, main, .virtual-news-list-container {
+  isolation: isolate; /* 새로운 쌓임 맥락 생성 */
+  z-index: 1; /* 쌓임 맥락 설정 */
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.admin-container,
+.admin-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* 카테고리 탭 스타일 */
+.category-tabs {
+  margin-bottom: 20px;
+}
+
+/* 데이터 카드 스타일 */
+.data-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.data-card .ant-card-body {
+  flex: 1;
+}
+
+/* 페이지네이션 스타일 */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0;
+}
+
+/* 관리자 페이지 스타일 */
+.search-form,
+.filters-form {
+  margin-bottom: 16px;
+}
+
+@import './mobile/index.css';
+
+@media (max-width: 768px) {
+  .search-form,
+  .filters-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .search-form .ant-form-item,
+  .filters-form .ant-form-item {
+    margin-bottom: 8px;
+  }
+}
+
+.admin-table-view .ant-table-wrapper {
+  background: white;
+  padding: 16px;
+}
+
+.admin-table-view .ant-card {
+  display: none;  /* 관리자 페이지에서 카드 스타일 비활성화 */
+}
+
+
+/* 관리자 페이지 스타일 재정의 */
+.admin-container {
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+.ant-table-wrapper {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.ant-table {
+  margin: 0 !important;
+}
+
+.category-tabs .ant-tabs-tab {
+  border-radius: 20px !important;  /* 동그란 버튼 스타일 */
+  margin: 0 2px !important;  /* 탭 간격 축소 */
+  padding: 2px !important;  /* 내부 패딩 축소 */
+}
+
+/* 카테고리 탭 스타일 - 배경색 제거하고 텍스트 색상만 적용 */
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="all"] .ant-tabs-tab-btn { color: #333 !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="정치"] .ant-tabs-tab-btn { color: #1677ff !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="경제"] .ant-tabs-tab-btn { color: #389e0d !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="사회"] .ant-tabs-tab-btn { color: #d4380d !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="국제"] .ant-tabs-tab-btn { color: #722ed1 !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="문화"] .ant-tabs-tab-btn { color: #eb2f96 !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="연예/스포츠"] .ant-tabs-tab-btn { color: #fa541c !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="기타"] .ant-tabs-tab-btn { color: #5c6b77 !important; background-color: transparent !important; }
+
+/* 식당 카테고리 색상 */
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="한정식"] .ant-tabs-tab-btn { color: #d4380d !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="고깃집"] .ant-tabs-tab-btn { color: #fa541c !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="중식"] .ant-tabs-tab-btn { color: #cf1322 !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="일식/해산물"] .ant-tabs-tab-btn { color: #1677ff !important; background-color: transparent !important; }
+.category-tabs .ant-tabs-nav .ant-tabs-tab[data-node-key="이탈리안"] .ant-tabs-tab-btn { color: #389e0d !important; background-color: transparent !important; }
+
+/* 호버 및 활성 상태 스타일 */
+.category-tabs .ant-tabs-nav .ant-tabs-tab:hover .ant-tabs-tab-btn {
+  opacity: 0.8;
+}
+
+.category-tabs .ant-tabs-nav .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  font-weight: 600;
+  text-shadow: 0 0 0.1px currentColor;
+}
+
+.category-tabs .ant-tabs-tab-btn {
+  padding: 4px 12px !important;
+  border-radius: 20px !important;  /* 버튼 모서리 둥글게 */
+  min-width: 60px !important;  /* 최소 너비 설정 */
+  text-align: center !important;  /* 텍스트 중앙 정렬 */
+  border: 1px solid #e8e8e8 !important; /* 테두리 추가 */
+  transition: all 0.3s ease !important;
+}
+
+.category-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  border-color: currentColor !important;
+}
+
+/* 탭 네비게이션 여백 조정 */
+.category-tabs .ant-tabs-nav {
+  margin-bottom: 8px !important;
+  padding: 4px !important;
+}
+
+/* 테이블 내 링크 스타일 */
+.ant-table-wrapper .ant-table-tbody a {
+  color: #1a4b8c !important;
+  font-weight: 600 !important;  /* 글자 두께 추가 */
+}
+
+.ant-table-wrapper .ant-table-tbody a:hover {
+  opacity: 0.8;
+}
+
+/* 선택 체크박스 스타일 */
+.ant-table-wrapper .ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #1a4b8c !important;
+  border-color: #1a4b8c !important;
+}
+
+/* 복사 버튼 스타일 */
+.ant-btn-default {
+  background-color: #1a4b8c !important;
+  color: white !important;
+  border: none !important;
+}
+
+.ant-btn-default:hover {
+  opacity: 0.9 !important;
+}
+
+.ant-btn-default:disabled {
+  background-color: #d9d9d9 !important;
+}
+
+/* 가상 리스트 및 스크롤 최적화 */
+.ReactVirtualized__List {
+  overscroll-behavior: none !important;
+  -webkit-overflow-scrolling: touch !important;
+  position: relative !important;
+  overflow-y: auto !important;
+  will-change: transform !important;
+  contain: layout style !important;
+  scrollbar-width: none !important;
+}
+
+.ReactVirtualized__List::-webkit-scrollbar {
+  display: none !important;
+}
+
+.ReactVirtualized__Grid__innerScrollContainer {
+  height: auto !important;
+  contain: content !important; 
+}
+
+/* 가상 리스트 아이템 */
+.ReactVirtualized__Grid__cell {
+  contain: layout style !important;
+  overflow: visible !important;
+}
+
+/* pull-to-refresh 스타일 */
+.ptr-element {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  color: #aaa !important;
+  z-index: 10 !important;
+  text-align: center !important;
+  height: 50px !important;
+  transition: all .25s ease !important;
+}
+
+.ptr-element .ptr-content {
+  position: absolute !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+.ptr-refresh {
+  background: transparent !important;
+}
+
+/* 가상 리스트 컨테이너 */
+.virtual-news-list-container {
+  position: relative !important;
+  width: 100% !important;
+  height: calc(100vh - 180px) !important;
+  overflow: auto !important; 
+  contain: layout style !important;
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+  will-change: transform !important;
+  -webkit-overflow-scrolling: touch !important;
+  background-color: #ffffff;
+}
+
+/* 모바일 가상 스크롤 레이아웃 */
+@media screen and (max-width: 768px) {
+  .virtual-news-list-container {
+    height: calc(100vh - 120px) !important;
+  }
+}
+
+/* 선택된 카드 스타일 */
+.selected-news-card {
+  background-color: rgba(26, 115, 232, 0.1) !important;
+  border-left: 4px solid var(--primary-color) !important;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15) !important;
+  position: relative;
+}
+
+/* 선택됨 라벨 제거 
+.selected-news-card::before {
+  content: "선택됨";
+  position: absolute;
+  top: 6px;
+  right: 30px;
+  font-size: 10px;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1px 6px;
+  border-radius: 10px;
+  z-index: 1;
+}
+*/
+
+.selected-news-card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 20px 20px 0;
+  border-color: transparent var(--primary-color) transparent transparent;
+  pointer-events: none;
+}
+
+/* 풀투리프레시 관련 스타일 */
+.refresh-indicator {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 50px !important;
+  background-color: #f9f9f9 !important;
+  color: #333 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-weight: 500 !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+  transform: translateY(-100%) !important;
+  transition: transform 0.3s ease !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: center !important;
+  font-size: 14px !important;
+}
+
+.refresh-indicator.visible {
+  transform: translateY(0) !important;
+  opacity: 1 !important;
+  visibility: visible;
+}
+
+.PullToRefresh__Content {
+  height: 100% !important;
+  overscroll-behavior: none !important;
+  overflow: visible !important;
+}
+
+.PullToRefresh__Indicator {
+  height: 50px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--primary-color) !important;
+  z-index: 10 !important;
+}
+
+/* 새로고침 관련 스타일 완전 재정의 */
+.virtual-news-list-container > div:first-of-type {
+  z-index: 100 !important; /* 항상 최상단에 표시되도록 */
+  transform: translateY(-100%) !important; /* 초기에 숨김 */
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease !important;
+}
+
+.virtual-news-list-container > div:first-of-type[style*="opacity: 1"] {
+  z-index: 100 !important;
+}
+
+/* pull-to-refresh 동작 중 전체 문서 스크롤 방지 */
+.is-pulling {
+  overflow: hidden !important;
+  touch-action: none !important;
+}
+
+/* 특별히 iOS Safari를 위한 최적화 */
+@supports (-webkit-touch-callout: none) {
+  .virtual-news-list-container {
+    height: -webkit-fill-available !important;
+  }
+  
+  /* iOS에서 끌어당김 동작 최적화 */
+  .virtual-news-list-container > div:first-of-type {
+    /* iOS에서 하드웨어 가속 보장 */
+    transform: translate3d(0, -100%, 0) !important;
+  }
+}
+
+/* 모바일 미디어 쿼리 */
+@media (max-width: 768px) {
+  .virtual-news-list-container {
+    height: 100vh;
+    max-height: -webkit-fill-available;
+  }
+}
+
+/* PullToRefresh 라이브러리 스타일 커스터마이징 */
+.pull-to-refresh-container {
+  width: 100% !important;
+  height: 100% !important;
+  overflow: visible !important;
+  touch-action: pan-y !important;
+  -webkit-overflow-scrolling: touch !important;
+  transform: translateZ(0) !important;
+  will-change: transform !important;
+  z-index: 1 !important;
+  position: relative !important;
+}
+
+/* PullToRefresh 내부 컨텐츠 스타일 */
+.pull-to-refresh-container > div:first-child {
+  position: relative !important;
+  z-index: 100 !important;
+  overflow: visible !important;
+}
+
+/* 풀 인디케이터 스타일 */
+.ptr__pull-down {
+  height: 50px !important;
+  transform: translateZ(0) !important;
+  will-change: transform !important;
+  z-index: 1000 !important;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+
+.ptr__children {
+  background-color: #fff !important;
+  min-height: 100% !important;
+  transform: translateZ(0) !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+.ptr__pull-down--pull-more,
+.ptr__pull-down--pull-more::after {
+  color: var(--primary-color) !important;
+}
+
+.ptr__pull-down--loading {
+  color: var(--primary-color) !important;
+}
+
+/* 모바일 터치 최적화 */
+@supports (-webkit-touch-callout: none) {
+  body, html {
+    height: -webkit-fill-available !important;
+  }
+  
+  .pull-to-refresh-container,
+  .virtual-news-list-container {
+    height: -webkit-fill-available !important;
+  }
+  
+  .ptr__pull-down {
+    transform: translate3d(0, 0, 0) !important;
+  }
+}
+
+/* 스크롤바 숨기기 */
+.virtual-news-list-container::-webkit-scrollbar {
+  display: none;
+}
+
+.virtual-news-list-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 네이티브 새로고침 관련 스타일 */
+body::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  background: transparent;
+  z-index: 0;
+}
+
+/* 새로고침 인디케이터는 자바스크립트에서 동적 생성 */
+/* 스크롤 방지 스타일 */
+body.no-scroll {
+  overflow: hidden !important;
+  position: fixed;
+  width: 100%;
+  height: 100%;
+}
+
+/* iOS Safari에서 당김 최적화 */
+@supports (-webkit-touch-callout: none) {
+  html, body {
+    height: -webkit-fill-available;
+  }
+  
+  .virtual-news-list-container {
+    height: -webkit-fill-available !important;
+  }
+}
+
+/* 모바일 및 터치 최적화 */
+button.micro-button,
+.micro-button {
+  min-width: 8px !important;
+  min-height: 8px !important;
+  width: 8px !important;
+  height: 8px !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 50% !important;
+}
+
+.micro-button svg {
+  width: 4px !important;
+  height: 4px !important;
+}
+
+@media (max-width: 768px) {
+  button.micro-button,
+  .micro-button {
+    min-height: 8px !important;
+    min-width: 8px !important;
+    max-height: 8px !important;
+    max-width: 8px !important;
+    height: 8px !important;
+    width: 8px !important;
+    padding: 0 !important;
+  }
+}
+
+/* 식당 페이지 스타일 */
+.custom-tabs .ant-tabs-nav {
+  margin-bottom: 16px !important;
+  display: flex;
+  justify-content: center;
+}
+
+.custom-tabs .ant-tabs-nav::before {
+  border: none !important;
+}
+
+.custom-tabs .ant-tabs-tab {
+  margin: 0 4px !important;
+  transition: all 0.3s ease;
+  border-radius: 20px !important;
+  padding: 8px 16px !important;
+  font-weight: 500;
+}
+
+.custom-tabs .ant-tabs-tab-active {
+  background-color: #1a73e8 !important;
+}
+
+.custom-tabs .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+.custom-tabs .ant-tabs-tab:hover {
+  color: #d4dfee;
+}
+
+.custom-tabs .ant-tabs-ink-bar {
+  display: none !important;
+}
+
+/* 카테고리 탭 색상 - 텍스트 색상만 사용 */
+.custom-tabs .ant-tabs-tab[data-node-key="all"] .ant-tabs-tab-btn { 
+  color: #333 !important;
+  background-color: transparent !important;
+}
+.custom-tabs .ant-tabs-tab[data-node-key="한정식"] .ant-tabs-tab-btn { 
+  color: #d4380d !important;
+  background-color: transparent !important;
+}
+.custom-tabs .ant-tabs-tab[data-node-key="고깃집"] .ant-tabs-tab-btn { 
+  color: #fa541c !important;
+  background-color: transparent !important;
+}
+.custom-tabs .ant-tabs-tab[data-node-key="중식"] .ant-tabs-tab-btn { 
+  color: #cf1322 !important;
+  background-color: transparent !important;
+}
+.custom-tabs .ant-tabs-tab[data-node-key="일식/해산물"] .ant-tabs-tab-btn { 
+  color: #1677ff !important;
+  background-color: transparent !important;
+}
+.custom-tabs .ant-tabs-tab[data-node-key="이탈리안"] .ant-tabs-tab-btn { 
+  color: #389e0d !important;
+  background-color: transparent !important;
+}
+.custom-tabs .ant-tabs-tab[data-node-key="기타"] .ant-tabs-tab-btn { 
+  color: #5c6b77 !important;
+  background-color: transparent !important;
+}
+
+/* 맛집 카드 스타일 */
+.ant-card.h-full {
+  border-radius: 12px;
+  overflow: hidden;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.ant-card.h-full .ant-card-head {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.ant-card.h-full:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.ant-card.h-full .ant-card-body {
+  padding: 16px;
+  height: calc(100% - 56px);
+}
+
+/* 식당 카드 내 텍스트 스타일 */
+.ant-card.h-full .ant-card-body div {
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+/* 디버그 정보 영역 스타일 개선 */
+.opacity-60.hover\:opacity-100 {
+  transition: opacity 0.3s ease;
+}
+
+/* 식당 페이지 전체 스타일 */
+@media (min-width: 768px) {
+  .container.mx-auto.px-4.py-8 {
+    padding-top: 1.5rem;
+    padding-bottom: 3rem;
+  }
+}
+
+/* 내비게이션 바 스타일 */
+header.w-full {
+  width: 100%;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+@media (min-width: 768px) {
+  header .container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* 식당 페이지 새로고침 버튼 */
+.flex.justify-end {
+  display: flex !important;
+  justify-content: flex-end !important;
+  width: 100% !important;
+  margin-left: auto !important;
+}
+
+.flex.justify-end button {
+  margin-left: auto !important;
+}
