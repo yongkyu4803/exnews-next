@@ -5,6 +5,7 @@ import { trackEvent } from '@/utils/analyticsUtils';
 import { copySelectedNewsToClipboard } from '@/utils/clipboardUtils';
 import MicroButton from '@/components/common/MicroButton';
 import FloatingButtonWrapper from '@/components/common/FloatingButtonWrapper';
+import RefreshIcon from '@/components/common/RefreshIcon';
 
 // 클라이언트 사이드에서만 로드되는 컴포넌트
 const ReactWindowComponents = dynamic(() => import('./ReactWindowComponents'), {
@@ -121,15 +122,6 @@ const CopyIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
     <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-  </svg>
-);
-
-const RefreshIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-    <path d="M23 4v6h-6"></path>
-    <path d="M1 20v-6h6"></path>
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
-    <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
   </svg>
 );
 
