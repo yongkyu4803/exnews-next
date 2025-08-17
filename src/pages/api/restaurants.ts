@@ -48,7 +48,7 @@ export default async function handler(
       console.log('데이터 쿼리 시작...');
       let dataQuery = supabase
         .from('nares')
-        .select('id, category, name, location, pnum, price, remark, link');
+        .select('id, category, name, location, building_name, pnum, price, remark, link');
       
       if (category && category !== 'all') {
         dataQuery = dataQuery.eq('category', category);
@@ -156,6 +156,7 @@ export default async function handler(
         category: item.category || '기타',
         name: item.name || '이름 없음',
         location: item.location || '위치 정보 없음',
+        building_name: item.building_name || undefined,
         pnum: item.pnum || '전화번호 정보 없음',
         price: item.price || '가격 정보 없음',
         remark: item.remark || '',
@@ -211,6 +212,7 @@ export default async function handler(
 // 샘플 데이터 생성 함수
 function generateSampleItems(count: number): RestaurantItem[] {
   const categories = ['한식', '양식', '중식', '일식', '분식'];
+  const buildings = ['샘플빌딩', '테스트센터', '개발타워', '코딩빌딩', '프로그래밍센터'];
   const items: RestaurantItem[] = [];
   
   for (let i = 0; i < count; i++) {
@@ -218,7 +220,8 @@ function generateSampleItems(count: number): RestaurantItem[] {
       id: `sample-${i+1}`,
       category: categories[i % categories.length],
       name: `샘플 식당 ${i+1}`,
-      location: `서울시 영등포구 여의도동 ${i+1}`,
+      location: `서울시 영등포구 여의도동 ${buildings[i % buildings.length]} B1`,
+      building_name: buildings[i % buildings.length],
       pnum: `02-123-456${i}`,
       price: `${(i+1) * 10000}원`,
       remark: i % 2 === 0 ? '점심 특선 메뉴 있음' : '',

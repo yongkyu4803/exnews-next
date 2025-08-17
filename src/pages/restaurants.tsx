@@ -2,10 +2,30 @@ import React, { useState, useEffect, ReactNode } from 'react';
 import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
+
 import { RestaurantItem } from '@/types';
 import Image from 'next/image';
+
 import TopNavBar from '@/components/mobile/TopNavBar';
+import dynamic from 'next/dynamic';
+
+// SimpleBuildingView를 동적으로 로드
+const SimpleBuildingView = dynamic(() => import('@/components/SimpleBuildingView'), {
+  ssr: false,
+  loading: () => <div>빌딩별 뷰 로딩 중...</div>
+});
+import { message } from 'antd';
+import Alert from 'antd/lib/alert';
+import Button from 'antd/lib/button';
+import Card from 'antd/lib/card';
+import Collapse from 'antd/lib/collapse';
+import List from 'antd/lib/list';
+import Radio from 'antd/lib/radio';
+import Spin from 'antd/lib/spin';
+import Tag from 'antd/lib/tag';
+import Typography from 'antd/lib/typography';
+import Tabs from 'antd/lib/tabs';
+
 
 // 클라이언트 컴포넌트 
 const ClientOnly = ({ children, ...delegated }: { children: ReactNode; [key: string]: any }) => {
@@ -38,6 +58,11 @@ export default function RestaurantsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(20);
   const [totalCount, setTotalCount] = useState<number>(0);
+  
+  // 뷰 모드 상태 추가
+  const [viewMode, setViewMode] = useState<'category' | 'building'>('category');
+  const [allRestaurants, setAllRestaurants] = useState<RestaurantItem[]>([]);
+  const [buildingLoading, setBuildingLoading] = useState<boolean>(false);
   
   // 데이터 로드 함수
   const fetchData = async (categoryFilter: string = selectedCategory, page: number = currentPage, size: number = pageSize) => {
@@ -213,6 +238,42 @@ export default function RestaurantsPage() {
     }
   };
 
+  // 빌딩별 보기용 전체 데이터 로드 함수
+  const fetchAllRestaurants = async () => {
+    try {
+      setBuildingLoading(true);
+      setError(null);
+      console.log('빌딩별 보기용 전체 식당 데이터 요청...');
+      
+      const response = await fetch('/api/restaurants?all=true');
+      const responseText = await response.text();
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e: any) {
+        throw new Error(`응답이 유효한 JSON 형식이 아닙니다: ${e.message}`);
+      }
+      
+      if (!data.items) {
+        throw new Error('응답에 items 필드가 없습니다.');
+      }
+      
+      setAllRestaurants(data.items || []);
+      setIsRealData(data.source !== 'sample-fallback' && data.source !== 'sample-error');
+      
+      if (data.error) {
+        setError(data.error);
+      }
+    } catch (err: any) {
+      console.error('전체 데이터 가져오기 오류:', err);
+      setError(err.message || '전체 데이터 로드 중 오류가 발생했습니다.');
+      setAllRestaurants([]);
+    } finally {
+      setBuildingLoading(false);
+    }
+  };
+
   useEffect(() => {
     // apiMode나 selectedCategory가 변경될 때 페이지를 1로 초기화하고 데이터 로드
     // 이제 함수 내부에서 직접 처리하므로 여기서는 기본 호출만 합니다
@@ -221,14 +282,18 @@ export default function RestaurantsPage() {
     }
   }, [apiMode]);
 
-  const showSuccessMessage = (content: string) => {
-    if (typeof window !== 'undefined') {
-      // 동적 import 후 message 사용
-      import('antd/lib/message').then(mod => {
-        const message = mod.default;
-        message.success(content);
-      });
+  // 뷰 모드 변경 핸들러
+  const handleViewModeChange = async (mode: 'category' | 'building') => {
+    setViewMode(mode);
+    
+    if (mode === 'building' && allRestaurants.length === 0) {
+      // 빌딩별 보기 선택 시 전체 데이터 로드
+      await fetchAllRestaurants();
     }
+  };
+
+  const showSuccessMessage = (content: string) => {
+    message.success(content);
   };
 
   const setupTable = async () => {
@@ -315,6 +380,11 @@ export default function RestaurantsPage() {
                   pageSize={pageSize}
                   setPageSize={setPageSize}
                   totalCount={totalCount}
+                  viewMode={viewMode}
+                  setViewMode={handleViewModeChange}
+                  allRestaurants={allRestaurants}
+                  buildingLoading={buildingLoading}
+                  fetchAllRestaurants={fetchAllRestaurants}
                 />
               )}
             </div>
@@ -346,31 +416,15 @@ interface RestaurantContentProps {
   pageSize: number;
   setPageSize: (size: number) => void;
   totalCount: number;
+  viewMode: 'category' | 'building';
+  setViewMode: (mode: 'category' | 'building') => Promise<void>;
+  allRestaurants: RestaurantItem[];
+  buildingLoading: boolean;
+  fetchAllRestaurants: () => Promise<void>;
 }
 
 // 클라이언트 컴포넌트 분리
 function RestaurantContent(props: RestaurantContentProps) {
-  // 클라이언트 사이드에서만 import 
-  const { 
-    Alert, Button, Card, Collapse, List, Radio, 
-    Spin, Tag, Typography, Tabs
-  } = React.useMemo(() => {
-    if (typeof window !== 'undefined') {
-      return {
-        Alert: require('antd/lib/alert').default,
-        Button: require('antd/lib/button').default,
-        Card: require('antd/lib/card').default,
-        Collapse: require('antd/lib/collapse').default,
-        List: require('antd/lib/list').default,
-        Radio: require('antd/lib/radio').default,
-        Spin: require('antd/lib/spin').default,
-        Tag: require('antd/lib/tag').default,
-        Typography: require('antd/lib/typography').default,
-        Tabs: require('antd/lib/tabs').default
-      };
-    }
-    return {};
-  }, []);
 
   // 카테고리별 텍스트 색상 매핑 (배경색 제거)
   const getCategoryTextColor = (category: string) => {
@@ -386,56 +440,200 @@ function RestaurantContent(props: RestaurantContentProps) {
     return colorMap[category] || '#333';
   };
 
-  // Tabs 컴포넌트 로드 확인
-  if (!Alert || !Button || !Tabs) return null; 
+
 
   const { 
     restaurants, loading, error, isRealData, apiMode, setApiMode,
     selectedCategory, setSelectedCategory, categories,
     fetchData, setupLoading, setupSuccess, setupError, debugInfo, setupTable,
-    currentPage, setCurrentPage, pageSize, setPageSize, totalCount
+    currentPage, setCurrentPage, pageSize, setPageSize, totalCount,
+    viewMode, setViewMode, allRestaurants, buildingLoading, fetchAllRestaurants
   } = props;
 
   return (
     <>
+      {/* 스피너 애니메이션을 위한 스타일 */}
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+      
       {/* 상단 헤더 섹션 */}
-      <div className="bg-gray-50 py-6 mb-8 rounded-lg shadow-sm">
-        <div className="container mx-auto px-4">
-          <div className="flex justify-end w-full mb-6" style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-            {/* 새로고침 버튼 - 우측 상단으로 배치 */}
-            <Button
-              onClick={() => fetchData(selectedCategory)}
-              loading={loading}
-              type="primary"
-              icon={<span className="mr-1">🔄</span>}
-              style={{ marginLeft: 'auto' }}
+      <div style={{
+        backgroundColor: '#f9fafb',
+        padding: '24px',
+        marginBottom: '32px',
+        borderRadius: '8px',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
+      }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 16px' }}>
+          {/* 뷰 모드 선택 및 새로고침 버튼 */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+            gap: '20px',
+            flexWrap: 'wrap'
+          }}>
+            {/* 뷰 모드 선택 - 커스텀 스타일 */}
+            <div style={{
+              display: 'flex',
+              backgroundColor: 'white',
+              borderRadius: '8px',
+              padding: '4px',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+            }}>
+              <button
+                onClick={() => setViewMode('category')}
+                style={{
+                  padding: '12px 20px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: viewMode === 'category' ? '#3b82f6' : 'transparent',
+                  color: viewMode === 'category' ? 'white' : '#6b7280',
+                  fontWeight: '500',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  marginRight: '2px'
+                }}
+                onMouseEnter={(e) => {
+                  if (viewMode !== 'category') {
+                    e.currentTarget.style.backgroundColor = '#f3f4f6';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (viewMode !== 'category') {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                📂 카테고리별
+              </button>
+              <button
+                onClick={() => setViewMode('building')}
+                style={{
+                  padding: '12px 20px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  backgroundColor: viewMode === 'building' ? '#3b82f6' : 'transparent',
+                  color: viewMode === 'building' ? 'white' : '#6b7280',
+                  fontWeight: '500',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (viewMode !== 'building') {
+                    e.currentTarget.style.backgroundColor = '#f3f4f6';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (viewMode !== 'building') {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                🏢 빌딩별
+              </button>
+            </div>
+            
+            {/* 새로고침 버튼 - 커스텀 스타일 */}
+            <button
+              onClick={() => viewMode === 'category' ? fetchData(selectedCategory) : fetchAllRestaurants()}
+              disabled={viewMode === 'category' ? loading : buildingLoading}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: '#10b981',
+                color: 'white',
+                fontWeight: '500',
+                fontSize: '14px',
+                cursor: (viewMode === 'category' ? loading : buildingLoading) ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 2px 4px 0 rgba(16, 185, 129, 0.2)',
+                opacity: (viewMode === 'category' ? loading : buildingLoading) ? 0.6 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+              onMouseEnter={(e) => {
+                if (!(viewMode === 'category' ? loading : buildingLoading)) {
+                  e.currentTarget.style.backgroundColor = '#059669';
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 4px 8px 0 rgba(16, 185, 129, 0.3)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!(viewMode === 'category' ? loading : buildingLoading)) {
+                  e.currentTarget.style.backgroundColor = '#10b981';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 2px 4px 0 rgba(16, 185, 129, 0.2)';
+                }
+              }}
             >
-              새로고침
-            </Button>
+              {(viewMode === 'category' ? loading : buildingLoading) ? (
+                <>
+                  <span style={{ 
+                    width: '16px', 
+                    height: '16px', 
+                    border: '2px solid #ffffff', 
+                    borderTop: '2px solid transparent', 
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite' 
+                  }}></span>
+                  로딩 중...
+                </>
+              ) : (
+                <>
+                  🔄 새로고침
+                </>
+              )}
+            </button>
           </div>
           
-          {/* 카테고리 탭 */}
-          <Tabs 
-            activeKey={selectedCategory} 
-            onChange={(key: string) => {
-              setSelectedCategory(key);
-              setCurrentPage(1); // 카테고리 변경 시 페이지 초기화
-              fetchData(key, 1, pageSize);
-            }}
-            type="card"
-            size="large"
-            className="custom-tabs"
-            items={categories.map(cat => ({ 
-              key: cat, 
-              label: cat === 'all' ? '전체' : cat,
-              className: selectedCategory === cat ? 'font-bold' : ''
-            }))}
-          />
+          {/* 카테고리 탭 - 카테고리별 뷰일 때만 표시 */}
+          {viewMode === 'category' && (
+            <Tabs 
+              activeKey={selectedCategory} 
+              onChange={(key: string) => {
+                setSelectedCategory(key);
+                setCurrentPage(1); // 카테고리 변경 시 페이지 초기화
+                fetchData(key, 1, pageSize);
+              }}
+              type="card"
+              size="large"
+              className="custom-tabs"
+              items={categories.map(cat => ({ 
+                key: cat, 
+                label: cat === 'all' ? '전체' : cat,
+                className: selectedCategory === cat ? 'font-bold' : ''
+              }))}
+            />
+          )}
+          
+          {/* 빌딩별 뷰 설명 */}
+          {viewMode === 'building' && (
+            <div className="text-center py-4">
+              <Typography.Title level={4} style={{ marginBottom: '8px' }}>
+                🏢 빌딩별 식당 보기
+              </Typography.Title>
+              <Typography.Text type="secondary">
+                식당이 3개 이상인 빌딩부터 탭으로 정렬되어 표시됩니다
+              </Typography.Text>
+            </div>
+          )}
         </div>
       </div>
       
       {/* 상태 표시 */}
-      {!isRealData && !loading && (
+      <div style={{ marginTop: '24px' }}>
+        {!isRealData && !loading && (
         <Alert
           message="샘플 데이터 표시 중"
           description={
@@ -521,14 +719,18 @@ function RestaurantContent(props: RestaurantContentProps) {
         </div>
       )}
       
-      {loading ? (
+      {/* 로딩 상태 */}
+      {(viewMode === 'category' ? loading : buildingLoading) ? (
         <div className="flex justify-center items-center py-20">
-          {Spin && <Spin size="large" tip="데이터를 불러오는 중..." />}
+          {Spin && <Spin size="large" tip={viewMode === 'category' ? "데이터를 불러오는 중..." : "빌딩별 데이터를 불러오는 중..."} />}
         </div>
       ) : (
-        <div className="overflow-x-auto px-4">
-          {List && (
-            <List
+        <>
+          {/* 카테고리별 보기 */}
+          {viewMode === 'category' && (
+            <div className="overflow-x-auto px-4">
+              {List && (
+                <List
               grid={{
                 gutter: 24,
                 xs: 1,
@@ -566,13 +768,7 @@ function RestaurantContent(props: RestaurantContentProps) {
                   {Card && (
                     <Card
                       title={
-                        <div style={{ 
-                          fontSize: '1.15rem', 
-                          fontWeight: 600, 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'space-between' 
-                        }}>
+                        <div className="text-xl font-semibold flex items-center justify-between">
                           {item.link ? (
                             <a 
                               href={item.link} 
@@ -588,7 +784,7 @@ function RestaurantContent(props: RestaurantContentProps) {
                           {item.category && Tag && (
                             <Tag 
                               color={getCategoryTextColor(item.category)} 
-                              style={{ marginLeft: 8, fontSize: '0.8rem', borderColor: 'transparent', backgroundColor: 'transparent' }}
+                              className="ml-2 text-sm border-transparent bg-transparent"
                             >
                               {item.category}
                             </Tag>
@@ -636,10 +832,22 @@ function RestaurantContent(props: RestaurantContentProps) {
                   )}
                 </List.Item>
               )}
-            />
+                />
+              )}
+            </div>
           )}
-        </div>
+          
+          {/* 빌딩별 보기 */}
+          {viewMode === 'building' && (
+            <div className="px-4">
+              <SimpleBuildingView
+                items={allRestaurants}
+              />
+            </div>
+          )}
+        </>
       )}
+      </div>
     </>
   );
 }
@@ -649,4 +857,4 @@ export const getServerSideProps: GetServerSideProps = async () => {
   return {
     props: {} // 초기 props 전달
   };
-}; 
+};
