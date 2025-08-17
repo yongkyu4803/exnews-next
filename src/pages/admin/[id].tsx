@@ -1,41 +1,111 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useQuery } from 'react-query';
 import dynamic from 'next/dynamic';
+import { useQuery } from 'react-query';
+
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import { fetchNewsItemById, fetchCategories } from '@/lib/api';
 import { NewsItem } from '@/types';
 
 // 동적 임포트
-const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
-const Card = dynamic(() => import('antd/lib/card'), { ssr: false }) as any;
-const Form = dynamic(() => import('antd/lib/form'), { ssr: false }) as any;
-const Input = dynamic(() => import('antd/lib/input'), { ssr: false }) as any;
-const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
-const Select = dynamic(() => import('antd/lib/select'), { ssr: false }) as any;
-const DatePicker = dynamic(() => import('antd/lib/date-picker'), { ssr: false }) as any;
-const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
-const Spin = dynamic(() => import('antd/lib/spin'), { ssr: false }) as any;
-const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
+const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false });
+const Card = dynamic(() => import('antd/lib/card'), { ssr: false });
+const Form = dynamic(() => import('antd/lib/form'), { ssr: false });
+const Input = dynamic(() => import('antd/lib/input'), { ssr: false });
+const Button = dynamic(() => import('antd/lib/button'), { ssr: false });
+const Select = dynamic(() => import('antd/lib/select'), { ssr: false });
+const DatePicker = dynamic(() => import('antd/lib/date-picker'), { ssr: false });
+const Space = dynamic(() => import('antd/lib/space'), { ssr: false });
+const Spin = dynamic(() => import('antd/lib/spin'), { ssr: false });
+const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false });
+const FormItem = dynamic(() => import('antd/lib/form').then(mod => mod.default.Item), { ssr: false });
 
 // 컴포넌트 서브모듈
-const { Title, Text, Paragraph } = Typography;
-const { Option } = Select;
-const { TextArea } = Input;
+// const { Title, Text, Paragraph } = Typography; // Moved inside component
+const Option = dynamic(() => import('antd/lib/select').then(mod => mod.default.Option), { ssr: false });
+const TextArea = dynamic(() => import('antd/lib/input').then(mod => mod.default.TextArea), { ssr: false });
 
 // AdminDetailPage 컴포넌트
+interface FormItemsProps {
+  formInstance: any;
+  categories: string[] | undefined;
+  Input: any;
+  Select: any;
+  DatePicker: any;
+  TextArea: any;
+  FormItem: any;
+}
+
+const FormItems: React.FC<FormItemsProps> = ({ formInstance, categories, Input, Select, DatePicker, TextArea, FormItem }) => {
+  if (!formInstance) return null;
+
+  return (
+    <>
+      <FormItem
+        name="title"
+        label="제목"
+        rules={[{ required: true, message: '제목을 입력해주세요.' }]}
+      >
+        <Input />
+      </FormItem>
+
+      <FormItem
+        name="original_link"
+        label="원본 링크"
+        rules={[{ required: true, message: '원본 링크를 입력해주세요.' }]}
+      >
+        <Input />
+      </FormItem>
+
+      <FormItem
+        name="category"
+        label="카테고리"
+        rules={[{ required: true, message: '카테고리를 선택해주세요.' }]}
+      >
+        <Select 
+          placeholder="카테고리 선택"
+          options={categories?.map((category: string) => ({
+            value: category,
+            label: category
+          }))}
+        />
+      </FormItem>
+
+      <FormItem name="pub_date" label="발행일">
+        <DatePicker showTime />
+      </FormItem>
+
+      <FormItem name="description" label="내용">
+        <TextArea rows={6} />
+      </FormItem>
+
+      <FormItem />
+    </>
+  );
+};
+
 function AdminDetailPage() {
   const router = useRouter();
   const { id } = router.query;
+
+  // 클라이언트 사이드에서만 실행
   const [formInstance, setFormInstance] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // 클라이언트 사이드에서만 실행
+  // 컴포넌트 서브모듈
+  const Title = dynamic(() => import('antd/lib/typography').then(mod => mod.default.Title), { ssr: false });
+  const Text = dynamic(() => import('antd/lib/typography').then(mod => mod.default.Text), { ssr: false });
+  const Paragraph = dynamic(() => import('antd/lib/typography').then(mod => mod.default.Paragraph), { ssr: false });
+
   useEffect(() => {
-    setIsMounted(true);
-    if (Form) {
-      setFormInstance(Form.useForm()[0]);
+    // Ensure Form is available before calling useForm
+    if (typeof window !== 'undefined') {
+      setIsMounted(true);
+      import('antd/lib/form').then(mod => {
+        const AntdForm = mod.default;
+        setFormInstance(AntdForm.useForm()[0]);
+      });
     }
   }, []);
 
@@ -44,7 +114,7 @@ function AdminDetailPage() {
     ['newsItem', id],
     () => fetchNewsItemById(id as string),
     {
-      enabled: !!id && isMounted,
+      enabled: router.isReady && !!id && isMounted,
       onSuccess: (data) => {
         // 폼 초기값 설정 (formInstance가 존재할 때만)
         if (formInstance) {
@@ -59,7 +129,7 @@ function AdminDetailPage() {
 
   // 카테고리 목록 가져오기
   const { data: categories, isLoading: isCategoriesLoading } = useQuery('categories', fetchCategories, {
-    enabled: isMounted
+    enabled: router.isReady && isMounted
   });
 
   const handleSubmit = async (values: any) => {
@@ -93,6 +163,10 @@ function AdminDetailPage() {
   const handleCancel = () => {
     router.push('/admin');
   };
+
+  if (!isMounted) {
+    return null; // 클라이언트에서 마운트되기 전에는 아무것도 렌더링하지 않음
+  }
 
   if (isNewsLoading || isCategoriesLoading || !formInstance) {
     return (
@@ -137,52 +211,23 @@ function AdminDetailPage() {
             description: '',
           }}
         >
-          <Form.Item
-            name="title"
-            label="제목"
-            rules={[{ required: true, message: '제목을 입력해주세요.' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="original_link"
-            label="원본 링크"
-            rules={[{ required: true, message: '원본 링크를 입력해주세요.' }]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            name="category"
-            label="카테고리"
-            rules={[{ required: true, message: '카테고리를 선택해주세요.' }]}
-          >
-            <Select 
-              placeholder="카테고리 선택"
-              options={categories?.map((category: string) => ({
-                value: category,
-                label: category
-              }))}
-            />
-          </Form.Item>
-
-          <Form.Item name="pub_date" label="발행일">
-            <DatePicker showTime />
-          </Form.Item>
-
-          <Form.Item name="description" label="내용">
-            <TextArea rows={6} />
-          </Form.Item>
-
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit" loading={isSubmitting}>
-                저장
-              </Button>
-              <Button onClick={handleCancel}>취소</Button>
-            </Space>
-          </Form.Item>
+          <FormItems
+            formInstance={formInstance}
+            categories={categories}
+            Input={Input}
+            Select={Select}
+            DatePicker={DatePicker}
+            TextArea={TextArea}
+            FormItem={FormItem}
+          />
+            <FormItem>
+              <Space>
+                <Button type="primary" htmlType="submit" loading={isSubmitting}>
+                  저장
+                </Button>
+                <Button onClick={handleCancel}>취소</Button>
+              </Space>
+            </FormItem>
         </Form>
       </Card>
     </div>
