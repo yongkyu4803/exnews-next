@@ -56,8 +56,9 @@ export default async function handler(
           res.status(400).json({ error: '잘못된 페이지 또는 페이지 크기입니다.' });
         }
       }
-    } catch (error: any) {
-      console.error('뉴스 데이터 조회 오류:', error.message);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('뉴스 데이터 조회 오류:', errorMessage);
       res.status(500).json({ error: '데이터 조회 중 오류가 발생했습니다.' });
     }
   } else {

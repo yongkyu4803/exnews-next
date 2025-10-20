@@ -95,8 +95,9 @@ export default async function handler(
         items: items,
         totalCount: totalCount || items.length,
       });
-    } catch (error: any) {
-      console.error('랭킹 뉴스 데이터 조회 오류:', error.message);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('랭킹 뉴스 데이터 조회 오류:', errorMessage);
       // 오류 발생 시 샘플 데이터 반환
       const sampleItems = generateSampleItems(20);
       res.status(200).json({

@@ -23,9 +23,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const categories = Array.from(categorySet)
       
       res.status(200).json(categories)
-    } catch (error: any) {
+    } catch (error) {
       // 오류 발생 시 대체 카테고리 반환
-      console.error('카테고리 조회 오류:', error.message)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('카테고리 조회 오류:', errorMessage)
       res.status(200).json(['정치', '경제', '사회', '국제', '문화', '연예/스포츠', '기타'])
     }
   } else {
