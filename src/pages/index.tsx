@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-// Remove unused import since LoadMoreButton component is not being used
 import VirtualNewsList from '@/components/mobile/VirtualNewsList';
 import VirtualRankingNewsList from '@/components/mobile/VirtualRankingNewsList';
 import { CopyOutlined, ShopOutlined } from '@ant-design/icons';
@@ -13,6 +12,9 @@ import { NewsItem, NewsResponse, RankingNewsItem, RankingNewsResponse } from '@/
 import { Pagination } from 'antd';
 import BottomNav from '@/components/mobile/BottomNav';
 import TopNavBar from '@/components/mobile/TopNavBar';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('Pages:Home');
 
 // 동적으로 Ant Design 컴포넌트 임포트
 import type {
@@ -113,23 +115,23 @@ const HomePage = () => {
   const { data, isLoading, error } = useQuery<NewsResponse, Error>(
     ['newsItems', selectedCategory],
     async () => {
-      console.log('뉴스 데이터 요청 시작:', { category: selectedCategory });
+      logger.debug('뉴스 데이터 요청 시작', { category: selectedCategory });
       const response = await fetch(`/api/news?all=true${selectedCategory ? `&category=${selectedCategory}` : ''}`);
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('뉴스 API 응답 오류:', response.status, errorText);
+        logger.error('뉴스 API 응답 오류', { status: response.status, errorText });
         throw new Error(`Failed to fetch news items: ${response.status} ${errorText}`);
       }
       const result = await response.json();
-      console.log('뉴스 API 응답:', result?.items?.length || 0, '개 항목');
+      logger.info('뉴스 API 응답', { itemCount: result?.items?.length || 0 });
       return result;
     },
-    { 
+    {
       keepPreviousData: true,
-      enabled: isMounted, // 클라이언트 사이드에서만 실행
-      retry: 2, // 재시도 횟수 추가
+      enabled: isMounted,
+      retry: 2,
       onError: (error) => {
-        console.error('뉴스 쿼리 오류:', error);
+        logger.error('뉴스 쿼리 오류', error);
       }
     }
   );

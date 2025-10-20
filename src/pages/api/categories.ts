@@ -1,5 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/lib/supabaseClient'
+import { createLogger } from '@/utils/logger'
+
+const logger = createLogger('API:Categories')
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
@@ -25,8 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.status(200).json(categories)
     } catch (error) {
       // 오류 발생 시 대체 카테고리 반환
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error('카테고리 조회 오류:', errorMessage)
+      logger.error('카테고리 조회 오류', error)
       res.status(200).json(['정치', '경제', '사회', '국제', '문화', '연예/스포츠', '기타'])
     }
   } else {
