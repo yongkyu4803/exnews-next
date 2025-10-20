@@ -234,6 +234,28 @@ export default function VirtualRankingNewsList({
     onSelectChange(newKeys, selectedRows);
   }, [items, selectedKeys, onSelectChange]);
 
+  // 화면에 표시할 고정 높이 값 사용 (React Hooks는 조건문 전에 호출)
+  const listHeight = React.useMemo(() => {
+    if (typeof window === 'undefined') return 400;
+
+    // 고정 높이 접근 방식 (페이지네이션 문제 해결용)
+    const standardHeight = 600; // 기본 고정 높이
+
+    // 아이템 수에 따라 계산하되 최소 높이 설정
+    const itemSize = 86; // 카드 높이(80px) + 여백(6px)
+    const calculatedHeight = Math.max(
+      paginatedItems.length * itemSize + 5, // 현재 아이템에 맞는 높이
+      standardHeight * 0.5 // 최소 화면 높이의 50%
+    );
+
+    console.log('랭킹 뉴스 리스트 높이 계산 (개선됨):', {
+      paginatedItemsLength: paginatedItems.length,
+      calculatedHeight
+    });
+
+    return calculatedHeight;
+  }, [paginatedItems.length]);
+
   // 데이터가 없는 경우
   if (items.length === 0 && !isLoading) {
     console.log('랭킹 뉴스 데이터 없음 표시');
@@ -242,11 +264,11 @@ export default function VirtualRankingNewsList({
         <EmptyView>
           <h3>랭킹 뉴스가 없습니다.</h3>
           <p>새로운 뉴스가 업데이트되면 이곳에 표시됩니다.</p>
-          <button 
+          <button
             onClick={handleRefresh}
-            style={{ 
-              marginTop: '16px', 
-              padding: '8px 16px', 
+            style={{
+              marginTop: '16px',
+              padding: '8px 16px',
               background: 'var(--primary-color, #1a73e8)',
               color: 'white',
               border: 'none',
@@ -266,28 +288,6 @@ export default function VirtualRankingNewsList({
     console.log('랭킹 뉴스 로딩 표시');
     return <LoadingView />;
   }
-
-  // 화면에 표시할 고정 높이 값 사용
-  const listHeight = React.useMemo(() => {
-    if (typeof window === 'undefined') return 400;
-    
-    // 고정 높이 접근 방식 (페이지네이션 문제 해결용)
-    const standardHeight = 600; // 기본 고정 높이
-    
-    // 아이템 수에 따라 계산하되 최소 높이 설정
-    const itemSize = 86; // 카드 높이(80px) + 여백(6px)
-    const calculatedHeight = Math.max(
-      paginatedItems.length * itemSize + 5, // 현재 아이템에 맞는 높이
-      standardHeight * 0.5 // 최소 화면 높이의 50%
-    );
-    
-    console.log('랭킹 뉴스 리스트 높이 계산 (개선됨):', {
-      paginatedItemsLength: paginatedItems.length,
-      calculatedHeight
-    });
-    
-    return calculatedHeight;
-  }, [paginatedItems.length]);
   
   console.log('랭킹 뉴스 목록 렌더링:', { 
     itemsLength: items.length, 

@@ -1,17 +1,18 @@
 // 간단한 분석 이벤트 추적 유틸리티
 
 // 이벤트 타입 정의
-type EventType = 
-  | 'click_news' 
-  | 'share_news' 
-  | 'save_news' 
-  | 'unsave_news' 
-  | 'select_news' 
-  | 'load_more' 
+type EventType =
+  | 'click_news'
+  | 'share_news'
+  | 'save_news'
+  | 'unsave_news'
+  | 'select_news'
+  | 'load_more'
   | 'refresh_news'
   | 'refresh_news_list'
   | 'page_view'
   | 'copy_selected_news'
+  | 'copy_news_simple'
   | 'share_selected_news'
   | 'click_ranking_news'
   | 'share_ranking_news'

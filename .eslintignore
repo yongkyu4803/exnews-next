@@ -5,3 +5,4 @@ dist
 public/sw.js
 public/workbox-*.js
 *.config.js
+src/pages/admin/
