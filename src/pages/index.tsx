@@ -4,7 +4,6 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-// Remove unused import since LoadMoreButton component is not being used
 import VirtualNewsList from '@/components/mobile/VirtualNewsList';
 import VirtualRankingNewsList from '@/components/mobile/VirtualRankingNewsList';
 import { CopyOutlined, ShopOutlined } from '@ant-design/icons';
@@ -13,14 +12,26 @@ import { NewsItem, NewsResponse, RankingNewsItem, RankingNewsResponse } from '@/
 import { Pagination } from 'antd';
 import BottomNav from '@/components/mobile/BottomNav';
 import TopNavBar from '@/components/mobile/TopNavBar';
+import { createLogger } from '@/utils/logger';
+
+const logger = createLogger('Pages:Home');
 
 // 동적으로 Ant Design 컴포넌트 임포트
-const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
-const Title = dynamic(() => import('antd/lib/typography/Title'), { ssr: false }) as any;
-const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
-const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
-const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
-const Tabs = dynamic(() => import('antd/lib/tabs'), { ssr: false }) as any;
+import type {
+  DynamicTypography,
+  DynamicTitle,
+  DynamicSpace,
+  DynamicAlert,
+  DynamicButton,
+  DynamicTabs
+} from '@/types/antd-dynamic';
+
+const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as DynamicTypography;
+const Title = dynamic(() => import('antd/lib/typography/Title'), { ssr: false }) as DynamicTitle;
+const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as DynamicSpace;
+const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as DynamicAlert;
+const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as DynamicButton;
+const Tabs = dynamic(() => import('antd/lib/tabs'), { ssr: false }) as DynamicTabs;
 
 // 테이블 컴포넌트를 동적으로 불러옴
 const NewsTable = dynamic(() => import('@/components/NewsTable'), { 
@@ -104,23 +115,23 @@ const HomePage = () => {
   const { data, isLoading, error } = useQuery<NewsResponse, Error>(
     ['newsItems', selectedCategory],
     async () => {
-      console.log('뉴스 데이터 요청 시작:', { category: selectedCategory });
+      logger.debug('뉴스 데이터 요청 시작', { category: selectedCategory });
       const response = await fetch(`/api/news?all=true${selectedCategory ? `&category=${selectedCategory}` : ''}`);
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('뉴스 API 응답 오류:', response.status, errorText);
+        logger.error('뉴스 API 응답 오류', { status: response.status, errorText });
         throw new Error(`Failed to fetch news items: ${response.status} ${errorText}`);
       }
       const result = await response.json();
-      console.log('뉴스 API 응답:', result?.items?.length || 0, '개 항목');
+      logger.info('뉴스 API 응답', { itemCount: result?.items?.length || 0 });
       return result;
     },
-    { 
+    {
       keepPreviousData: true,
-      enabled: isMounted, // 클라이언트 사이드에서만 실행
-      retry: 2, // 재시도 횟수 추가
+      enabled: isMounted,
+      retry: 2,
       onError: (error) => {
-        console.error('뉴스 쿼리 오류:', error);
+        logger.error('뉴스 쿼리 오류', error);
       }
     }
   );

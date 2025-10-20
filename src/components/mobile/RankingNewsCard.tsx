@@ -245,4 +245,4 @@ const RankingNewsCard: React.FC<RankingNewsCardProps> = ({
   );
 };
 
-export default RankingNewsCard; 
+export default React.memo(RankingNewsCard); 

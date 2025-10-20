@@ -280,51 +280,32 @@ export default function VirtualNewsList({
     };
   }, [items]);
   
-  // items prop 변경 감지
+  // items prop 변경 감지 및 스크롤 초기화 (중복 제거 및 통합)
   useEffect(() => {
     if (!mountedRef.current) return;
-    
+
     // 참조 업데이트
     itemsRef.current = items;
-    
-    // 즉시 상태 업데이트하도록 수정
+
+    // 즉시 상태 업데이트
     visualLog('[VirtualNewsList] 아이템 업데이트: ' + items.length, 'info');
     setLocalItems(items);
-    
-    // 리스트 참조가 있으면 스크롤 초기화 시도
-    // 실제 스크롤 처리는 ReactWindowComponents 내부에서 수행되므로
-    // 여기서는 로그만 출력
+
+    // 스크롤 초기화 처리
     if (!isFirstRender) {
-      visualLog('아이템 목록 변경됨. 스크롤 리셋 필요', 'info');
-    }
-  }, [items, isFirstRender, visualLog]);
-  
-  // items prop 변경 감지
-  useEffect(() => {
-    if (!mountedRef.current) return;
-    
-    // 참조 업데이트
-    itemsRef.current = items;
-    
-    // 즉시 상태 업데이트하도록 수정
-    visualLog('[VirtualNewsList] 아이템 업데이트: ' + items.length, 'info');
-    setLocalItems(items);
-    
-    // 페이지네이션 동작과 함께 활용할 수 있도록 즉시 처리 (지연 없이)
-    visualLog('아이템 목록 변경됨. 페이지네이션과 스크롤 상태 확인', 'info');
-    
-    // DOM 요소로 스크롤 이동
-    if (containerRef.current) {
-      try {
-        // 스크롤 초기화를 위해 컨테이너 상단으로 이동
-        window.scrollTo({
-          top: 0,
-          behavior: 'auto' // 즉시 스크롤 (부드러운 전환 없이)
-        });
-        
-        visualLog('컨테이너 상단으로 스크롤 이동 완료', 'info');
-      } catch (error) {
-        visualLog('스크롤 이동 실패: ' + (error as Error).message, 'error');
+      visualLog('아이템 목록 변경됨. 페이지네이션과 스크롤 상태 확인', 'info');
+
+      // DOM 요소로 스크롤 이동
+      if (containerRef.current) {
+        try {
+          window.scrollTo({
+            top: 0,
+            behavior: 'auto'
+          });
+          visualLog('컨테이너 상단으로 스크롤 이동 완료', 'info');
+        } catch (error) {
+          visualLog('스크롤 이동 실패: ' + (error as Error).message, 'error');
+        }
       }
     }
   }, [items, isFirstRender, visualLog]);

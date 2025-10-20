@@ -32,20 +32,20 @@ const withPWA = nextPWA({
 })
 
 const nextConfig = {
-  reactStrictMode: false,
+  reactStrictMode: true,  // Enable React Strict Mode for better development warnings
   transpilePackages: [
-    'rc-util', 
-    'rc-tree', 
-    'rc-input', 
-    'antd', 
-    '@ant-design', 
-    'rc-pagination', 
+    'rc-util',
+    'rc-tree',
+    'rc-input',
+    'antd',
+    '@ant-design',
+    'rc-pagination',
     'rc-picker',
     '@rc-component',
     'rc-table'
   ],
   images: {
-    unoptimized: true
+    unoptimized: true  // TODO: Enable image optimization in future
   }
 }
 

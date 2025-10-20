@@ -1,6 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/lib/supabaseClient'
 import { NewsItem, NewsResponse } from '@/types'
+import { createLogger } from '@/utils/logger'
+
+const logger = createLogger('API:News')
 
 export default async function handler(
   req: NextApiRequest,
@@ -56,8 +59,8 @@ export default async function handler(
           res.status(400).json({ error: '잘못된 페이지 또는 페이지 크기입니다.' });
         }
       }
-    } catch (error: any) {
-      console.error('뉴스 데이터 조회 오류:', error.message);
+    } catch (error) {
+      logger.error('뉴스 데이터 조회 오류', error);
       res.status(500).json({ error: '데이터 조회 중 오류가 발생했습니다.' });
     }
   } else {

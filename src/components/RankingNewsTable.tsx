@@ -1,10 +1,12 @@
 import React from 'react';
 import dynamic from 'next/dynamic';
+import type { ComponentType } from 'react';
+import type { TableProps } from 'antd/lib/table';
 import { RankingNewsItem } from '@/types';
 import { trackEvent } from '@/utils/analyticsUtils';
 
 // antd/lib/table에서 직접 가져오기
-const Table = dynamic(() => import('antd/lib/table'), { ssr: false }) as any;
+const Table = dynamic(() => import('antd/lib/table'), { ssr: false }) as ComponentType<TableProps<RankingNewsItem>>;
 
 interface RankingNewsTableProps {
   items: RankingNewsItem[];
@@ -25,8 +27,9 @@ export default function RankingNewsTable({ items, selectedKeys, onSelectChange }
         {
           title: '제목',
           dataIndex: 'title',
-          render: (text: any, record: RankingNewsItem) => (
-            <a href={record.link} 
+          key: 'title',
+          render: (text: string, record: RankingNewsItem) => (
+            <a href={record.link}
               target="_blank"
               rel="noopener noreferrer"
               style={{ fontWeight: 600 }}
@@ -39,14 +42,15 @@ export default function RankingNewsTable({ items, selectedKeys, onSelectChange }
         {
           title: '매체',
           dataIndex: 'media_name',
+          key: 'media_name',
           width: 120,
         }
-      ] as any}
+      ]}
       dataSource={items}
       rowKey={(record: RankingNewsItem) => record.id || record.title}
       rowSelection={{
-        onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
-          onSelectChange(selectedRowKeys, selectedRows as RankingNewsItem[]);
+        onChange: (selectedRowKeys: React.Key[], selectedRows: RankingNewsItem[]) => {
+          onSelectChange(selectedRowKeys, selectedRows);
         },
         selectedRowKeys: selectedKeys,
       }}

@@ -1,6 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/lib/supabaseClient'
 import { RankingNewsItem, RankingNewsResponse } from '@/types'
+import { createLogger } from '@/utils/logger'
+
+const logger = createLogger('API:RankingNews')
 
 export default async function handler(
   req: NextApiRequest,
@@ -8,7 +11,7 @@ export default async function handler(
 ) {
   if (req.method === 'GET') {
     try {
-      console.log('랭킹 뉴스 API 요청 시작');
+      logger.info('랭킹 뉴스 API 요청 시작');
       const { page = '1', pageSize = '20', all = 'false' } = req.query;
       
       // 먼저 전체 카운트를 계산하기 위한 쿼리
@@ -42,23 +45,23 @@ export default async function handler(
       }
       
       // 두 쿼리 동시 실행
-      console.log('Supabase 쿼리 실행 중...');
+      logger.debug('Supabase 쿼리 실행 중...');
       const [countResult, dataResult] = await Promise.all([
         countQuery,
         dataQuery
       ]);
-      
+
       if (countResult.error) {
-        console.error('Supabase count 쿼리 오류:', countResult.error);
+        logger.error('Supabase count 쿼리 오류', countResult.error);
         throw countResult.error;
       }
       if (dataResult.error) {
-        console.error('Supabase data 쿼리 오류:', dataResult.error);
+        logger.error('Supabase data 쿼리 오류', dataResult.error);
         throw dataResult.error;
       }
-      
+
       let items: RankingNewsItem[] = dataResult.data || [];
-      console.log('Supabase 쿼리 결과:', { count: countResult.count, itemCount: items.length });
+      logger.debug('Supabase 쿼리 결과', { count: countResult.count, itemCount: items.length });
       
       // 필수 필드가 없는 아이템 제거
       const filteredItems = items.filter(item => 
@@ -70,9 +73,11 @@ export default async function handler(
       );
       
       if (filteredItems.length !== items.length) {
-        console.log(`유효하지 않은 항목 ${items.length - filteredItems.length}개 필터링됨`);
+        logger.warn(`유효하지 않은 항목 필터링됨`, {
+          filtered: items.length - filteredItems.length
+        });
       }
-      
+
       // 필드 확인 및 기본값 제공
       items = filteredItems.map(item => ({
         id: item.id,
@@ -80,23 +85,23 @@ export default async function handler(
         link: item.link || '#',
         media_name: item.media_name || '미상',
       }));
-      
+
       // 실제 총 개수
       const totalCount = countResult.count || 0;
-      
+
       // 데이터가 없는 경우 샘플 데이터로 대체
       if (items.length === 0) {
-        console.log('랭킹 뉴스 데이터가 없어 샘플 데이터 사용');
+        logger.warn('랭킹 뉴스 데이터가 없어 샘플 데이터 사용');
         items = generateSampleItems(20);
       }
-      
-      console.log('랭킹 뉴스 API 응답 완료:', { itemCount: items.length, totalCount });
+
+      logger.info('랭킹 뉴스 API 응답 완료', { itemCount: items.length, totalCount });
       res.status(200).json({
         items: items,
         totalCount: totalCount || items.length,
       });
-    } catch (error: any) {
-      console.error('랭킹 뉴스 데이터 조회 오류:', error.message);
+    } catch (error) {
+      logger.error('랭킹 뉴스 데이터 조회 오류', error);
       // 오류 발생 시 샘플 데이터 반환
       const sampleItems = generateSampleItems(20);
       res.status(200).json({
