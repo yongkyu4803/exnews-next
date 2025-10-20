@@ -163,6 +163,7 @@ const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
 // 사용자 알림 설정 인터페이스
 interface NotificationPreferences {
   enabled: boolean;
+  notificationMode?: 'all' | 'keyword'; // 알림 모드: 전체 뉴스 or 키워드만
   categories: {
     [key: string]: boolean;
   };
@@ -171,11 +172,13 @@ interface NotificationPreferences {
     afternoon: boolean;
     evening: boolean;
   };
+  keywords?: string[]; // 관심 키워드 목록
 }
 
 // 기본 알림 설정
 const DEFAULT_PREFERENCES: NotificationPreferences = {
   enabled: false,
+  notificationMode: 'all',
   categories: {
     all: true,
     정치: false,
@@ -190,7 +193,8 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
     morning: true,
     afternoon: false,
     evening: true
-  }
+  },
+  keywords: []
 };
 
 // 알림 설정 가져오기
@@ -346,8 +350,10 @@ export async function fetchNotificationSettings(): Promise<NotificationPreferenc
     // 서버 데이터를 NotificationPreferences 형식으로 변환
     return {
       enabled: data.enabled,
+      notificationMode: data.notificationMode || 'all',
       categories: data.categories,
-      schedule: data.schedule
+      schedule: data.schedule,
+      keywords: data.keywords || []
     };
   } catch (error) {
     console.error('서버 설정 가져오기 실패:', error);
@@ -373,7 +379,8 @@ export async function saveNotificationSettingsToServer(
         device_id: deviceId,
         enabled: preferences.enabled,
         categories: preferences.categories,
-        schedule: preferences.schedule
+        schedule: preferences.schedule,
+        keywords: preferences.keywords || []
       })
     });
 

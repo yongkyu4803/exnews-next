@@ -10,6 +10,7 @@ import {
   saveNotificationSettingsToServer,
   sendTestNotification
 } from '@/utils/pushNotification';
+import KeywordManager from './KeywordManager';
 
 const Container = styled.div`
   max-width: 100%;
@@ -325,6 +326,30 @@ const MobileNotificationSettings: React.FC = () => {
     await saveNotificationSettingsToServer(updated);
   };
 
+  // 알림 모드 변경
+  const handleNotificationModeChange = async (mode: 'all' | 'keyword') => {
+    const updated = {
+      ...preferences,
+      notificationMode: mode
+    };
+
+    setPreferences(updated);
+    saveNotificationPreferences(updated);
+    await saveNotificationSettingsToServer(updated);
+  };
+
+  // 키워드 변경
+  const handleKeywordChange = async (keywords: string[]) => {
+    const updated = {
+      ...preferences,
+      keywords
+    };
+
+    setPreferences(updated);
+    saveNotificationPreferences(updated);
+    await saveNotificationSettingsToServer(updated);
+  };
+
   // 테스트 알림
   const handleTestNotification = async () => {
     setLoading(true);
@@ -402,22 +427,55 @@ const MobileNotificationSettings: React.FC = () => {
       {preferences.enabled && permissionGranted && (
         <>
           <Card>
-            <SettingTitle style={{ marginBottom: 12 }}>관심 카테고리</SettingTitle>
-            <SettingDescription>관심 있는 뉴스 카테고리를 선택하세요</SettingDescription>
+            <SettingTitle style={{ marginBottom: 12 }}>알림 방식</SettingTitle>
+            <SettingDescription>어떤 뉴스에 대해 알림을 받으시겠습니까?</SettingDescription>
 
-            <ChipGroup>
-              {Object.entries(preferences.categories).map(([category, enabled]) => (
-                <Chip
-                  key={category}
-                  selected={enabled}
-                  onClick={() => handleCategoryChange(category)}
-                  disabled={loading}
-                >
-                  {category === 'all' ? '전체' : category}
-                </Chip>
-              ))}
+            <ChipGroup style={{ marginTop: 16 }}>
+              <Chip
+                selected={preferences.notificationMode === 'all'}
+                onClick={() => handleNotificationModeChange('all')}
+                disabled={loading}
+              >
+                📰 전체 뉴스
+              </Chip>
+              <Chip
+                selected={preferences.notificationMode === 'keyword'}
+                onClick={() => handleNotificationModeChange('keyword')}
+                disabled={loading}
+              >
+                🔍 키워드 뉴스만
+              </Chip>
             </ChipGroup>
           </Card>
+
+          {preferences.notificationMode === 'keyword' ? (
+            <Card>
+              <KeywordManager
+                keywords={preferences.keywords || []}
+                onChange={handleKeywordChange}
+                maxKeywords={10}
+                disabled={loading}
+              />
+            </Card>
+          ) : (
+            <Card>
+              <SettingTitle style={{ marginBottom: 12 }}>관심 카테고리</SettingTitle>
+              <SettingDescription>관심 있는 뉴스 카테고리를 선택하세요</SettingDescription>
+
+              <ChipGroup>
+                {Object.entries(preferences.categories).map(([category, enabled]) => (
+                  <Chip
+                    key={category}
+                    selected={enabled}
+                    onClick={() => handleCategoryChange(category)}
+                    disabled={loading}
+                  >
+                    {category === 'all' ? '전체' : category}
+                  </Chip>
+                ))}
+              </ChipGroup>
+            </Card>
+          )}
 
           <Card>
             <SettingTitle style={{ marginBottom: 12 }}>알림 시간</SettingTitle>
