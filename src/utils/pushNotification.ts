@@ -2,6 +2,8 @@
  * 푸시 알림 유틸리티 함수
  */
 
+import { getOrCreateDeviceId } from './deviceId';
+
 const PUBLIC_VAPID_KEY = process.env.NEXT_PUBLIC_VAPID_KEY || '';
 
 // 푸시 알림 지원 여부 확인
@@ -74,10 +76,10 @@ export const subscribeToPush = async (): Promise<PushSubscription | null> => {
     }
     
     console.log('푸시 구독 정보:', subscription);
-    
-    // 서버에 구독 정보 전송 (실제 구현 필요)
-    // await sendSubscriptionToServer(subscription);
-    
+
+    // 서버에 구독 정보 전송
+    await sendSubscriptionToServer(subscription);
+
     return subscription;
   } catch (error) {
     console.error('푸시 구독 실패:', error);
@@ -95,9 +97,9 @@ export const unsubscribeFromPush = async (): Promise<boolean> => {
       return true;
     }
     
-    // 서버에서 구독 정보 삭제 요청 (실제 구현 필요)
-    // await deleteSubscriptionFromServer(subscription);
-    
+    // 서버에서 구독 정보 삭제 요청
+    await deleteSubscriptionFromServer();
+
     const result = await subscription.unsubscribe();
     console.log('푸시 구독 취소:', result);
     return result;
@@ -267,4 +269,122 @@ export const sendTestNotification = async (): Promise<boolean> => {
     console.error('테스트 알림 전송 실패:', error);
     return false;
   }
-}; 
+};
+
+/**
+ * 서버에 푸시 구독 정보 전송
+ */
+async function sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
+  try {
+    const deviceId = getOrCreateDeviceId();
+
+    const response = await fetch('/api/notifications/subscribe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        device_id: deviceId,
+        subscription: subscription.toJSON()
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`서버 응답 오류: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('서버 구독 등록 성공:', data);
+  } catch (error) {
+    console.error('서버 구독 전송 실패:', error);
+    throw error;
+  }
+}
+
+/**
+ * 서버에서 푸시 구독 정보 삭제
+ */
+async function deleteSubscriptionFromServer(): Promise<void> {
+  try {
+    const deviceId = getOrCreateDeviceId();
+
+    const response = await fetch(`/api/notifications/settings?device_id=${deviceId}`, {
+      method: 'DELETE'
+    });
+
+    if (!response.ok && response.status !== 204) {
+      throw new Error(`서버 응답 오류: ${response.status}`);
+    }
+
+    console.log('서버 구독 삭제 성공');
+  } catch (error) {
+    console.error('서버 구독 삭제 실패:', error);
+    // 삭제 실패해도 로컬 구독 취소는 진행
+  }
+}
+
+/**
+ * 서버에서 알림 설정 가져오기
+ */
+export async function fetchNotificationSettings(): Promise<NotificationPreferences | null> {
+  try {
+    const deviceId = getOrCreateDeviceId();
+
+    const response = await fetch(`/api/notifications/settings?device_id=${deviceId}`);
+
+    if (response.status === 404) {
+      // 설정이 없는 경우 - 정상
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new Error(`서버 응답 오류: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // 서버 데이터를 NotificationPreferences 형식으로 변환
+    return {
+      enabled: data.enabled,
+      categories: data.categories,
+      schedule: data.schedule
+    };
+  } catch (error) {
+    console.error('서버 설정 가져오기 실패:', error);
+    return null;
+  }
+}
+
+/**
+ * 서버에 알림 설정 저장
+ */
+export async function saveNotificationSettingsToServer(
+  preferences: NotificationPreferences
+): Promise<boolean> {
+  try {
+    const deviceId = getOrCreateDeviceId();
+
+    const response = await fetch('/api/notifications/settings', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        device_id: deviceId,
+        enabled: preferences.enabled,
+        categories: preferences.categories,
+        schedule: preferences.schedule
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`서버 응답 오류: ${response.status}`);
+    }
+
+    console.log('서버 설정 저장 성공');
+    return true;
+  } catch (error) {
+    console.error('서버 설정 저장 실패:', error);
+    return false;
+  }
+} 

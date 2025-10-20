@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouter } from 'next/router';
-import { HomeOutlined, UnorderedListOutlined, UserOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { HomeOutlined, UnorderedListOutlined, UserOutlined, LeftOutlined, RightOutlined, BellOutlined } from '@ant-design/icons';
 import styled from '@emotion/styled';
 
 const NavContainer = styled.nav`
@@ -102,12 +102,12 @@ export default function BottomNav({ currentPage = 1, totalPages = 1, onPageChang
         <RightOutlined style={{ fontSize: '24px' }} />
         <span>다음</span>
       </NavItem>
-      <NavItem 
-        active={currentPath === '/categories'} 
-        onClick={() => router.push('/categories')}
+      <NavItem
+        active={currentPath === '/notifications'}
+        onClick={() => router.push('/notifications')}
       >
-        <UnorderedListOutlined style={{ fontSize: '24px' }} />
-        <span>카테고리</span>
+        <BellOutlined style={{ fontSize: '24px' }} />
+        <span>알림</span>
       </NavItem>
     </NavContainer>
   );
