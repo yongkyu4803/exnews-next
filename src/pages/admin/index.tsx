@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import dynamic from 'next/dynamic';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
@@ -9,14 +10,14 @@ import Filters from '@/components/Admin/Filters';
 import { NewsItem } from '@/types';
 
 // 동적 임포트
-const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
-const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
-const Spin = dynamic(() => import('antd/lib/spin'), { ssr: false }) as any;
-const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
-const Table = dynamic(() => import('antd/lib/table'), { ssr: false }) as any;
-const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
+import Typography from 'antd/lib/typography';
+import Space from 'antd/lib/space';
+import Spin from 'antd/lib/spin';
+import Alert from 'antd/lib/alert';
+import Table from 'antd/lib/table';
+import Button from 'antd/lib/button';
 
-const { Title } = Typography;
+
 
 // Keep the helper function
 const getErrorMessage = (error: unknown): string => {
@@ -32,7 +33,13 @@ interface NewsItemsResponse {
 
 // AdminPage 컴포넌트
 function AdminPage() {
+  const { Title } = Typography;
   const [page, setPage] = useState(1);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   const [pageSize, setPageSize] = useState(20);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
@@ -41,7 +48,9 @@ function AdminPage() {
   // 카테고리 목록 가져오기
   // Add proper type annotations to useQuery calls
   const { data: categories = [], isLoading: isCategoriesLoading, error: categoriesError } = 
-    useQuery<string[], Error>('categories', fetchCategories);
+    useQuery<string[], Error>('categories', fetchCategories, {
+      enabled: isMounted
+    });
 
   const { data, isLoading, error } = useQuery<NewsItemsResponse, Error>(
     ['adminNewsItems', page, pageSize, searchTerm, selectedCategory, dateRange],
@@ -53,6 +62,7 @@ function AdminPage() {
       dateRange
     }),
     {
+      enabled: isMounted,
       keepPreviousData: true,
     }
   );

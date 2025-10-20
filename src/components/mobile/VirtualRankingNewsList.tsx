@@ -6,6 +6,7 @@ import RankingNewsCard from './RankingNewsCard';
 import { RankingNewsItem } from '@/types';
 import MicroButton from '@/components/common/MicroButton';
 import FloatingButtonWrapper from '@/components/common/FloatingButtonWrapper';
+import RefreshIcon from '@/components/common/RefreshIcon';
 import { Pagination } from 'antd';
 
 // 클라이언트 사이드에서만 로드되는 컴포넌트
@@ -101,16 +102,6 @@ const Toast = styled.div`
     to { opacity: 1; transform: translate(-50%, 0); }
   }
 `;
-
-// 아이콘 컴포넌트
-const RefreshIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-    <path d="M23 4v6h-6"></path>
-    <path d="M1 20v-6h6"></path>
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"></path>
-    <path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"></path>
-  </svg>
-);
 
 // 로딩 뷰 컴포넌트
 const LoadingView = () => (

@@ -8,6 +8,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Repository**: https://github.com/yongkyu4803/exnews-next
 
+### Core Features
+- **Dual News Views**: Exclusive news (단독 뉴스) and ranking news (랭킹 뉴스) with separate data sources
+- **Mobile-First PWA**: Progressive Web App with responsive design optimized for mobile devices
+- **Data Management**: Supabase backend with category filtering, pagination, and search functionality
+- **Admin Interface**: Restaurant management and data administration capabilities
+
 ## Development Commands
 
 ```bash
@@ -42,33 +48,28 @@ These are public variables exposed to the browser. The Supabase client is initia
 ### Technology Stack
 
 - **Next.js 15.2.3** - Using Pages Router (not App Router)
-- **React 18.2.0** - Strict Mode disabled for compatibility with Ant Design
-- **TypeScript 5.1.6** - Strict mode enabled
+- **React 18.2.0** - Strict Mode enabled (Phase 1 improvement)
+- **TypeScript 5.1.6** - Strict mode enabled with improved type safety
 - **Ant Design 5.7.0** - Primary UI component library
 - **Emotion** - CSS-in-JS styling solution
 - **Supabase** - Backend database and authentication
 - **React Query 3.39.3** - Server state management and caching
-- **Redux Toolkit** - Client-side UI state management
 - **next-pwa** - Progressive Web App support (production only)
 
 ### State Management Architecture
 
-This project uses a **multi-layer state management strategy**:
+This project uses React Query for server state management:
 
-1. **Redux Toolkit** ([src/store/](src/store/)) - Global UI state
-   - `dataSlice` - News items, loading states, error handling
-   - `uiSlice` - Pagination, selected category, page size
-
-2. **React Query** - Server state and data fetching
+1. **React Query** - Server state and data fetching
    - Configured in [src/pages/_app.tsx](src/pages/_app.tsx)
    - Query keys: `['newsItems', category]`, `'rankingNewsItems'`, `'categories'`
    - `refetchOnWindowFocus: false` to prevent unnecessary refetching
 
-3. **Local Storage / IndexedDB** - Persistent cache
+2. **Local Storage / IndexedDB** - Persistent cache
    - Utils in [src/utils/indexedDBUtils.ts](src/utils/indexedDBUtils.ts)
    - User preferences in [src/utils/localStorage.ts](src/utils/localStorage.ts)
 
-**Note**: Recoil is installed but not actively used.
+**Note**: Redux Toolkit and Recoil have been removed (Phase 1 improvement).
 
 ### Data Flow Pattern
 
@@ -144,7 +145,7 @@ import { NewsItem } from '@/types'
 
 ### Dual Tab Interface
 
-Main page at [src/pages/index.tsx](src/pages/index.tsx) (~608 lines):
+Main page at [src/pages/index.tsx](src/pages/index.tsx):
 
 1. **🚨 단독 뉴스 (Exclusive News)**
    - Category tabs: 정치, 경제, 사회, 국제, 문화, 연예/스포츠, 기타
@@ -171,6 +172,7 @@ Tables in Supabase (see [src/types.ts](src/types.ts)):
   category: string
   description?: string
   processed_at?: string
+  building_name?: string
 }
 ```
 
@@ -184,6 +186,19 @@ Tables in Supabase (see [src/types.ts](src/types.ts)):
 }
 ```
 
+**RestaurantItem**:
+```typescript
+{
+  id: number
+  category: string
+  name: string
+  location: string
+  pnum: string
+  price: string
+  building_name?: string
+}
+```
+
 **Categories** enum:
 ```typescript
 All | 정치 | 경제 | 사회 | 국제 | 문화 | 연예/스포츠 | 기타
@@ -192,9 +207,9 @@ All | 정치 | 경제 | 사회 | 국제 | 문화 | 연예/스포츠 | 기타
 ### Mobile Optimizations
 
 1. **Pull-to-Refresh** - `react-pull-to-refresh` for native gesture
-2. **Swipe Detection** - `react-swipeable` for touch interactions
-3. **Virtual Scrolling** - `react-window` renders only visible items
-4. **Infinite Loader** - `react-window-infinite-loader` for pagination
+2. **Virtual Scrolling** - `react-window` renders only visible items
+3. **Error Boundary** - App-wide error handling with fallback UI (Phase 2 improvement)
+4. **Component Optimization** - React.memo for NewsCard and RankingNewsCard (Phase 2 improvement)
 
 ### Analytics & Tracking
 
@@ -211,7 +226,7 @@ Push notifications support in [src/utils/pushNotification.ts](src/utils/pushNoti
 ### next.config.js
 
 ```javascript
-reactStrictMode: false  // Disabled for Ant Design compatibility
+reactStrictMode: true  // Enabled in Phase 1
 
 // Required for Ant Design to work with Next.js 15
 transpilePackages: [
@@ -241,11 +256,15 @@ This project uses **Pages Router** despite Next.js 15 supporting App Router. Key
 1. Create file in [src/pages/api/](src/pages/api/)
 2. Use Supabase client from `@/lib/supabaseClient`
 3. Return JSON response with error handling
+4. Use logger utility instead of console.log (Phase 2 improvement)
 
 Example:
 ```typescript
 import { supabase } from '@/lib/supabaseClient'
+import { createLogger } from '@/utils/logger'
 import type { NextApiRequest, NextApiResponse } from 'next'
+
+const logger = createLogger('API:YourEndpoint')
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -254,8 +273,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select('*')
 
     if (error) throw error
+    logger.info('Data fetched successfully', { count: data.length })
     res.status(200).json({ data })
   } catch (error) {
+    logger.error('Failed to fetch data', error)
     res.status(500).json({ error: error.message })
   }
 }
@@ -267,9 +288,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 2. Use Emotion styled components for styling
 3. Implement responsive design with media queries
 4. Use virtual scrolling for lists
+5. Apply React.memo for optimization if needed (Phase 2 improvement)
 
 Example:
 ```typescript
+import React from 'react'
 import styled from '@emotion/styled'
 
 const Container = styled.div`
@@ -279,6 +302,12 @@ const Container = styled.div`
     padding: 8px;
   }
 `
+
+const MyComponent: React.FC<Props> = ({ data }) => {
+  return <Container>{/* component content */}</Container>
+}
+
+export default React.memo(MyComponent)
 ```
 
 ### Using React Query for Data Fetching
@@ -296,19 +325,6 @@ const { data, isLoading, error } = useQuery(
 )
 ```
 
-### Updating Redux State
-
-```typescript
-import { useDispatch, useSelector } from 'react-redux'
-import { setCurrentPage, setSelectedCategory } from '@/store/slices/uiSlice'
-
-const dispatch = useDispatch()
-const { currentPage, selectedCategory } = useSelector((state) => state.ui)
-
-dispatch(setCurrentPage(2))
-dispatch(setSelectedCategory('정치'))
-```
-
 ## Performance Considerations
 
 1. **Virtual Scrolling** - Use for lists >50 items
@@ -316,24 +332,45 @@ dispatch(setSelectedCategory('정치'))
 3. **PWA Caching** - Production builds cache HTTP requests (30 days)
 4. **Code Splitting** - Ant Design components loaded on-demand
 5. **IndexedDB** - Use for offline data persistence
+6. **Bundle Optimization** - Removed unused dependencies (Phase 1: ~180KB savings)
+
+## Quality Improvements
+
+### Phase 1: Immediate Fixes ✅
+- ESLint configuration with TypeScript rules
+- Removed 39 unused packages (Redux, Recoil, etc.)
+- Environment variable validation
+- Removed duplicate code
+- Enabled React Strict Mode
+
+### Phase 2: Code Quality ✅
+- TypeScript type safety improvements (30+ 'any' types replaced)
+- Logger utility for development mode
+- ErrorBoundary component for app-wide error handling
+- React.memo optimization for NewsCard and RankingNewsCard
+
+See [QUALITY_IMPROVEMENTS_PROGRESS.md](QUALITY_IMPROVEMENTS_PROGRESS.md) and [PHASE_3-7_GUIDE.md](PHASE_3-7_GUIDE.md) for details.
 
 ## Known Limitations
 
-- No automated tests configured
 - Image optimization disabled (`unoptimized: true`)
-- React Strict Mode disabled for Ant Design compatibility
 - Service worker only runs in production builds
 - No server-side rendering on main page (`ssr: false`)
 
 ## Future Roadmap
 
-Based on project documentation:
+### Quality Improvements (Phase 3-7)
+1. **Testing Infrastructure** - Jest + Testing Library setup
+2. **Performance Optimization** - Bundle analysis, SSR pagination
+3. **Security Hardening** - Authentication, input validation
+4. **Accessibility** - WCAG 2.1 AA compliance
+5. **PWA Completion** - Enhanced offline support
 
+### Features
 1. **Admin Panel** - Full CRUD functionality ([src/pages/admin/](src/pages/admin/))
 2. **Advanced Search** - Full-text search capabilities
 3. **Push Notifications** - Real-time alerts for new articles
 4. **Subscription Management** - User subscription system
-5. **Restaurant Features** - Dedicated restaurant listing
 
 ## Deployment
 
@@ -353,21 +390,23 @@ src/
 │   ├── mobile/          # Mobile-optimized components
 │   ├── common/          # Reusable components
 │   ├── layouts/         # Layout components
-│   └── Admin/           # Admin panel components
+│   ├── Admin/           # Admin panel components
+│   └── ErrorBoundary.tsx # Error boundary component
 ├── pages/
 │   ├── _app.tsx         # App wrapper with providers
 │   ├── index.tsx        # Main home page (dual tabs)
 │   ├── api/             # API routes
 │   ├── admin/           # Admin pages
 │   └── offline.tsx      # PWA offline fallback
-├── store/
-│   ├── index.ts         # Redux store configuration
-│   └── slices/          # Redux slices
 ├── lib/
 │   ├── supabaseClient.ts  # Supabase initialization
 │   └── api.ts             # Data fetching functions
-├── utils/               # Utility functions
-├── types/               # TypeScript types
+├── utils/
+│   ├── logger.ts        # Logger utility
+│   └── ...              # Other utilities
+├── types/
+│   ├── antd-dynamic.d.ts # Ant Design types
+│   └── ...              # TypeScript types
 └── styles/              # Global and component styles
 ```
 
@@ -377,13 +416,15 @@ src/
 
 **Main Dependencies**:
 - UI: Ant Design 5.7.0, Emotion
-- State: Redux Toolkit, React Query
+- State: React Query 3.39.3
 - Database: Supabase JS Client 2.26.0
-- Mobile: react-window, react-pull-to-refresh, react-swipeable
+- Mobile: react-window, react-pull-to-refresh
 - PWA: next-pwa 5.6.0
 
 **Key Files**:
-- [src/pages/index.tsx](src/pages/index.tsx) - Main page (608 lines)
+- [src/pages/index.tsx](src/pages/index.tsx) - Main page
 - [src/lib/supabaseClient.ts](src/lib/supabaseClient.ts) - Database client
 - [next.config.js](next.config.js) - PWA and build configuration
 - [src/types.ts](src/types.ts) - Core data types
+- [src/utils/logger.ts](src/utils/logger.ts) - Logger utility
+- [src/components/ErrorBoundary.tsx](src/components/ErrorBoundary.tsx) - Error handling

@@ -25,6 +25,7 @@ export interface RestaurantItem {
   category: string;
   name: string;
   location: string;
+  building_name?: string; // 빌딩명 필드 추가
   pnum: string;
   price: string;
   remark?: string;

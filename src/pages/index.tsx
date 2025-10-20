@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
 import Head from 'next/head';
 import VirtualNewsList from '@/components/mobile/VirtualNewsList';
 import VirtualRankingNewsList from '@/components/mobile/VirtualRankingNewsList';
@@ -12,6 +10,9 @@ import { NewsItem, NewsResponse, RankingNewsItem, RankingNewsResponse } from '@/
 import { Pagination } from 'antd';
 import BottomNav from '@/components/mobile/BottomNav';
 import TopNavBar from '@/components/mobile/TopNavBar';
+import FloatingButtonWrapper from '@/components/common/FloatingButtonWrapper';
+import MicroButton from '@/components/common/MicroButton';
+import RefreshIcon from '@/components/common/RefreshIcon';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('Pages:Home');
@@ -58,7 +59,6 @@ const HomePage = () => {
   const [rankingSelectedRows, setRankingSelectedRows] = useState<RankingNewsItem[]>([]);
   const [rankingSelectedKeys, setRankingSelectedKeys] = useState<React.Key[]>([]);
   const queryClient = useQueryClient();
-  const router = useRouter();
 
   // URL에서 tab 파라미터 체크
   useEffect(() => {
@@ -505,6 +505,22 @@ const HomePage = () => {
                         }}
                       />
                     )}
+                    
+                    {/* 데스크탑 새로고침 버튼 - 단독 뉴스 */}
+                    {!isMobile && activeTab === 'exclusive' && (
+                      <FloatingButtonWrapper position="primary" bottom={100}>
+                        <MicroButton 
+                          onClick={handleRefresh}
+                          icon={<RefreshIcon />}
+                          label="단독 뉴스 새로고침"
+                          color="#4CAF50"
+                          style={{
+                            animation: isLoading ? 'rotate 1s linear infinite' : 'none'
+                          }}
+                          disabled={isLoading}
+                        />
+                      </FloatingButtonWrapper>
+                    )}
                   </>
                 )}
                 
@@ -579,6 +595,22 @@ const HomePage = () => {
                           />
                         )}
                       </div>
+                    )}
+                    
+                    {/* 데스크탑 새로고침 버튼 - 랭킹 뉴스 */}
+                    {!isMobile && activeTab === 'ranking' && (
+                      <FloatingButtonWrapper position="primary" bottom={100}>
+                        <MicroButton 
+                          onClick={handleRankingRefresh}
+                          icon={<RefreshIcon />}
+                          label="랭킹 뉴스 새로고침"
+                          color="#4CAF50"
+                          style={{
+                            animation: rankingIsLoading ? 'rotate 1s linear infinite' : 'none'
+                          }}
+                          disabled={rankingIsLoading}
+                        />
+                      </FloatingButtonWrapper>
                     )}
                   </>
                 )}
