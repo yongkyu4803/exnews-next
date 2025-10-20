@@ -34,10 +34,12 @@ export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration
   if (!('serviceWorker' in navigator)) {
     throw new Error('이 브라우저는 서비스 워커를 지원하지 않습니다.');
   }
-  
+
   try {
-    const registration = await navigator.serviceWorker.register('/service-worker.js');
+    // next-pwa가 생성한 sw.js 사용
+    const registration = await navigator.serviceWorker.register('/sw.js');
     console.log('서비스 워커 등록 성공:', registration.scope);
+    await navigator.serviceWorker.ready;
     return registration;
   } catch (error) {
     console.error('서비스 워커 등록 실패:', error);
@@ -52,29 +54,42 @@ export const subscribeToPush = async (): Promise<PushSubscription | null> => {
       console.log('푸시 알림이 지원되지 않습니다.');
       return null;
     }
-    
+
     const permission = await requestNotificationPermission();
     if (permission !== 'granted') {
       console.log('알림 권한이 없습니다.');
       return null;
     }
-    
-    const registration = await navigator.serviceWorker.ready;
-    
+
+    // 서비스 워커가 없으면 등록
+    let registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) {
+      registration = await registerServiceWorker();
+    }
+
+    // 서비스 워커가 준비될 때까지 대기
+    await navigator.serviceWorker.ready;
+
     // 기존 구독 확인
     let subscription = await registration.pushManager.getSubscription();
-    
+
     // 기존 구독이 없으면 새로 구독
     if (!subscription) {
+      // VAPID 키가 없으면 에러 발생
+      if (!PUBLIC_VAPID_KEY) {
+        console.error('VAPID 키가 설정되지 않았습니다. .env.local에 NEXT_PUBLIC_VAPID_KEY를 추가해주세요.');
+        throw new Error('VAPID 키가 설정되지 않았습니다.');
+      }
+
       // Public VAPID Key를 Uint8Array로 변환
       const applicationServerKey = urlBase64ToUint8Array(PUBLIC_VAPID_KEY);
-      
+
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey
       });
     }
-    
+
     console.log('푸시 구독 정보:', subscription);
 
     // 서버에 구독 정보 전송
@@ -83,7 +98,7 @@ export const subscribeToPush = async (): Promise<PushSubscription | null> => {
     return subscription;
   } catch (error) {
     console.error('푸시 구독 실패:', error);
-    return null;
+    throw error;
   }
 };
 
