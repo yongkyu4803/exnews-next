@@ -267,28 +267,39 @@ const MobileNotificationSettings: React.FC = () => {
     try {
       if (enabled) {
         // 알림 구독
+        console.log('알림 구독 시작...');
         const subscription = await subscribeToPush();
+        console.log('구독 결과:', subscription);
+
         if (subscription) {
           const updated = { ...preferences, enabled: true };
           setPreferences(updated);
           saveNotificationPreferences(updated);
           await saveNotificationSettingsToServer(updated);
           showMessage('알림이 활성화되었습니다', 'success');
+        } else {
+          showMessage('알림 구독에 실패했습니다. 콘솔을 확인해주세요.', 'warning');
         }
       } else {
         // 알림 구독 취소
+        console.log('알림 구독 취소 시작...');
         const result = await unsubscribeFromPush();
+        console.log('구독 취소 결과:', result);
+
         if (result) {
           const updated = { ...preferences, enabled: false };
           setPreferences(updated);
           saveNotificationPreferences(updated);
           await saveNotificationSettingsToServer(updated);
           showMessage('알림이 비활성화되었습니다', 'info');
+        } else {
+          showMessage('알림 비활성화에 실패했습니다', 'warning');
         }
       }
     } catch (error) {
       console.error('알림 설정 변경 실패:', error);
-      showMessage('알림 설정 변경에 실패했습니다', 'warning');
+      const errorMessage = error instanceof Error ? error.message : '알림 설정 변경에 실패했습니다';
+      showMessage(errorMessage, 'warning');
     } finally {
       setLoading(false);
     }

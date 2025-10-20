@@ -36,13 +36,11 @@ export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration
   }
 
   try {
-    // 개발 모드에서는 간단한 sw-dev.js 사용, 프로덕션에서는 next-pwa의 sw.js 사용
-    const isDev = process.env.NODE_ENV !== 'production';
-    const swPath = isDev ? '/sw-dev.js' : '/sw.js';
-
-    const registration = await navigator.serviceWorker.register(swPath);
+    // next-pwa가 생성한 sw.js 사용 (개발/프로덕션 모두)
+    const registration = await navigator.serviceWorker.register('/sw.js');
     console.log('서비스 워커 등록 성공:', registration.scope);
     await navigator.serviceWorker.ready;
+    console.log('서비스 워커 준비 완료');
     return registration;
   } catch (error) {
     console.error('서비스 워커 등록 실패:', error);
