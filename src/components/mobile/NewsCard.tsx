@@ -81,6 +81,13 @@ const CardCategory = styled.span`
   border-radius: 4px;
 `;
 
+const MediaName = styled.span`
+  font-size: 11px;
+  color: #999;
+  margin-left: 6px;
+  font-weight: 500;
+`;
+
 const ActionButtons = styled.div`
   display: flex;
   gap: 8px;
@@ -213,6 +220,7 @@ interface NewsCardProps {
   category: string;
   original_link: string;
   id: string;
+  media_name?: string; // 추가: 언론사/미디어명
   isSelected?: boolean;
   onSelect?: (id: string, selected: boolean) => void;
   onClick?: () => void;
@@ -225,6 +233,7 @@ const NewsCard: React.FC<NewsCardProps> = ({
   category,
   original_link,
   id,
+  media_name,
   isSelected = false,
   onSelect,
   onClick
@@ -335,7 +344,10 @@ const NewsCard: React.FC<NewsCardProps> = ({
       </CardHeader>
       
       <CardFooter isSelected={isSelected}>
-        <Date>{safeDate}</Date>
+        <Date>
+          {safeDate}
+          {media_name && <MediaName>| {media_name}</MediaName>}
+        </Date>
         <ActionButtons>
           <IconButton onClick={handleClickShare} aria-label="공유" style={{ opacity: 1, visibility: 'visible' }}>
             <ShareIcon />

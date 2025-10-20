@@ -13,6 +13,7 @@ interface NewsItem {
   pub_date?: string;
   original_link: string;
   category?: string;
+  media_name?: string;
 }
 
 /**
@@ -24,8 +25,9 @@ export function formatNewsForClipboard(items: NewsItem[]): string {
   return items.map(item => {
     const date = item.date || item.pub_date || '';
     const formattedDate = date ? new Date(date).toLocaleDateString('ko-KR') : '';
-    
-    return `[${item.title}]
+    const mediaInfo = item.media_name ? `[${item.media_name}] ` : '';
+
+    return `${mediaInfo}${item.title}
 ${item.description || ''}
 ${formattedDate}
 원문 링크: ${item.original_link}

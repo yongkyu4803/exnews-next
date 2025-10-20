@@ -253,13 +253,14 @@ export default function ReactWindowComponents({
       
       return (
         <div style={{ ...style, height: ITEM_HEIGHT, padding: '4px 12px' }}>
-          <NewsCard 
-            key={item.id} 
+          <NewsCard
+            key={item.id}
             title={item.title || '제목 없음'}
             description={item.description || '내용 없음'}
             date={item.pub_date ? new Date(item.pub_date).toLocaleString('ko-KR') : new Date().toLocaleString('ko-KR')}
             category={item.category || '일반'}
             original_link={item.original_link || '#'}
+            media_name={item.media_name}
             id={item.id?.toString() || `item-${index}`}
             isSelected={isSelected}
             onSelect={() => onSelectItem?.(item.id || `item-${index}`, !isSelected)}

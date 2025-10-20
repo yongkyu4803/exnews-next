@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 import { supabase } from '@/lib/supabaseClient'
 import { NewsItem, NewsResponse } from '@/types'
 import { createLogger } from '@/utils/logger'
+import { extractMediaName } from '@/utils/mediaExtractor'
 
 const logger = createLogger('API:News')
 
@@ -26,33 +27,45 @@ export default async function handler(
       if (all === 'true') {
         // 전체 데이터 가져오기 (제한 없음)
         const { data, error, count } = await dataQuery;
-        
+
         if (error) throw error;
-        
+
         // 날짜 기준으로 정렬 (최신순)
-        const sortedData = data?.sort((a, b) => 
+        const sortedData = data?.sort((a, b) =>
           new Date(b.pub_date).getTime() - new Date(a.pub_date).getTime()
         ) || [];
-        
+
+        // original_link에서 미디어명 추출
+        const itemsWithMedia = sortedData.map(item => ({
+          ...item,
+          media_name: extractMediaName(item.original_link)
+        }));
+
         res.status(200).json({
-          items: sortedData,
+          items: itemsWithMedia,
           totalCount: count || 0,
         });
       } else {
         // 일반 페이지네이션 적용
         const pageNum = parseInt(page as string, 10);
         const pageSizeNum = parseInt(pageSize as string, 10);
-        
+
         if (pageNum > 0 && pageSizeNum > 0) {
           const startIndex = (pageNum - 1) * pageSizeNum;
           const { data, error, count } = await dataQuery
             .order('pub_date', { ascending: false })
             .range(startIndex, startIndex + pageSizeNum - 1);
-          
+
           if (error) throw error;
-          
+
+          // original_link에서 미디어명 추출
+          const itemsWithMedia = (data || []).map(item => ({
+            ...item,
+            media_name: extractMediaName(item.original_link)
+          }));
+
           res.status(200).json({
-            items: data || [],
+            items: itemsWithMedia,
             totalCount: count || 0,
           });
         } else {

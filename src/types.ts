@@ -7,6 +7,7 @@ export interface NewsItem {
   category: string;
   description?: string;
   processed_at?: string;
+  media_name?: string; // 추가: original_link에서 추출된 미디어명
   [key: string]: any; // 추가 필드 허용
 }
 

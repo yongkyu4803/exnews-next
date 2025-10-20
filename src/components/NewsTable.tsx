@@ -11,6 +11,7 @@ interface NewsItem {
   category: string;
   description?: string;
   processed_at?: string;
+  media_name?: string; // 추가: 미디어명
 }
 
 // antd/lib/table에서 직접 가져오기
@@ -57,6 +58,15 @@ export default function NewsTable({ items, selectedKeys, onSelectChange }: NewsT
             dataIndex: 'category',
             key: 'category',
             width: 100,
+          },
+          {
+            title: '언론사',
+            dataIndex: 'media_name',
+            key: 'media_name',
+            width: 120,
+            render: (media_name: string) => (
+              <span style={{ color: '#666' }}>{media_name || '미상'}</span>
+            )
           },
           {
             title: '발행일',
