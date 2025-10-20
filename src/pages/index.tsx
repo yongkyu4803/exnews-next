@@ -15,12 +15,21 @@ import BottomNav from '@/components/mobile/BottomNav';
 import TopNavBar from '@/components/mobile/TopNavBar';
 
 // 동적으로 Ant Design 컴포넌트 임포트
-const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
-const Title = dynamic(() => import('antd/lib/typography/Title'), { ssr: false }) as any;
-const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
-const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
-const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
-const Tabs = dynamic(() => import('antd/lib/tabs'), { ssr: false }) as any;
+import type {
+  DynamicTypography,
+  DynamicTitle,
+  DynamicSpace,
+  DynamicAlert,
+  DynamicButton,
+  DynamicTabs
+} from '@/types/antd-dynamic';
+
+const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as DynamicTypography;
+const Title = dynamic(() => import('antd/lib/typography/Title'), { ssr: false }) as DynamicTitle;
+const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as DynamicSpace;
+const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as DynamicAlert;
+const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as DynamicButton;
+const Tabs = dynamic(() => import('antd/lib/tabs'), { ssr: false }) as DynamicTabs;
 
 // 테이블 컴포넌트를 동적으로 불러옴
 const NewsTable = dynamic(() => import('@/components/NewsTable'), { 
