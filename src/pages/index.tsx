@@ -358,7 +358,7 @@ const HomePage = () => {
             onTabChange={handleTabChange}
           />
           
-          <div style={{ paddingBottom: isMobile ? '16px' : '20px' }}>
+          <div style={{ paddingBottom: isMobile ? '76px' : '20px' }}>
             <style jsx global>{`
               /* 작은 버튼 스타일 오버라이드 */
               .small-action-button {
@@ -617,6 +617,25 @@ const HomePage = () => {
               </Space>
             </div>
           </div>
+
+          {/* 모바일 하단 네비게이션 */}
+          {isMobile && (
+            <div style={{
+              position: 'fixed',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '60px',
+              zIndex: 1000,
+              backgroundColor: 'white'
+            }}>
+              <BottomNav
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            </div>
+          )}
         </>
       )}
       {/* 푸터 추가 */}
