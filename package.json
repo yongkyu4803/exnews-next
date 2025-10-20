@@ -12,7 +12,6 @@
     "@ant-design/icons": "^5.1.4",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@reduxjs/toolkit": "^1.9.5",
     "@supabase/supabase-js": "^2.26.0",
     "antd": "^5.7.0",
     "date-fns": "^4.1.0",
@@ -23,11 +22,8 @@
     "react-dom": "18.2.0",
     "react-pull-to-refresh": "^2.0.1",
     "react-query": "^3.39.3",
-    "react-redux": "^8.1.1",
-    "react-swipeable": "^7.0.2",
     "react-window": "^1.8.11",
-    "react-window-infinite-loader": "^1.0.10",
-    "recoil": "^0.7.7"
+    "react-window-infinite-loader": "^1.0.10"
   },
   "devDependencies": {
     "@types/antd": "^0.12.32",

@@ -39,16 +39,43 @@ ${formattedDate}
  */
 export async function copySelectedNewsToClipboard(items: NewsItem[]): Promise<boolean> {
   if (!items || items.length === 0) return false;
-  
+
   try {
     const text = formatNewsForClipboard(items);
     await navigator.clipboard.writeText(text);
-    
+
     trackEvent('copy_selected_news', { count: items.length });
     return true;
   } catch (error) {
     console.error('클립보드 복사 실패:', error);
     return false;
+  }
+}
+
+/**
+ * 뉴스 항목을 간단한 형식으로 클립보드에 복사 (제목, 링크, 날짜만)
+ */
+export async function copyNewsSimple<T extends { title: string; [key: string]: unknown }>(
+  items: T[],
+  formatFn: (item: T) => string
+): Promise<{ success: boolean; message: string }> {
+  if (!items || items.length === 0) {
+    return { success: false, message: '선택된 기사가 없습니다.' };
+  }
+
+  const textToCopy = items.map(formatFn).join('\n');
+
+  if (typeof navigator === 'undefined' || !navigator.clipboard) {
+    return { success: false, message: '클립보드 접근이 지원되지 않는 환경입니다.' };
+  }
+
+  try {
+    await navigator.clipboard.writeText(textToCopy);
+    trackEvent('copy_news_simple', { count: items.length });
+    return { success: true, message: '클립보드에 복사되었습니다.' };
+  } catch (error) {
+    console.error('클립보드 복사 실패:', error);
+    return { success: false, message: '클립보드 복사에 실패했습니다.' };
   }
 }
 
