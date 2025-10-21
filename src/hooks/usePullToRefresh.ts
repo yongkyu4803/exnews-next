@@ -54,16 +54,19 @@ export function usePullToRefresh(options: UsePullToRefreshOptions): UsePullToRef
 
   // Touch Start 핸들러
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    console.log('[Pull-to-Refresh] Touch Start', { enabled, isRefreshing });
     if (!enabled || isRefreshing) return;
 
     // Window 스크롤 위치 확인
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    console.log('[Pull-to-Refresh] Scroll Top:', scrollTop);
 
     if (scrollTop === 0) {
       const touch = e.touches[0];
       startYRef.current = touch.clientY;
       currentScrollRef.current = scrollTop;
       setIsPulling(true);
+      console.log('[Pull-to-Refresh] Pulling started at Y:', touch.clientY);
     }
   }, [enabled, isRefreshing]);
 
@@ -73,11 +76,12 @@ export function usePullToRefresh(options: UsePullToRefreshOptions): UsePullToRef
 
     const touch = e.touches[0];
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+    const deltaY = touch.clientY - startYRef.current;
+
+    console.log('[Pull-to-Refresh] Touch Move', { scrollTop, deltaY, clientY: touch.clientY, startY: startYRef.current });
 
     // 스크롤이 최상단이고 아래로 당기는 경우만
     if (scrollTop === 0 && touch.clientY > startYRef.current) {
-      const deltaY = touch.clientY - startYRef.current;
-
       if (deltaY > minimumPullDown) {
         // 네이티브 스크롤 방지
         e.preventDefault();
@@ -86,10 +90,12 @@ export function usePullToRefresh(options: UsePullToRefreshOptions): UsePullToRef
         const resistedPullDistance = deltaY / resistance;
         const limitedPullDistance = Math.min(resistedPullDistance, maxPullDown);
 
+        console.log('[Pull-to-Refresh] Pull Distance:', limitedPullDistance);
         setPullDistance(limitedPullDistance);
       }
     } else {
       // 스크롤이 발생하면 Pull-to-Refresh 취소
+      console.log('[Pull-to-Refresh] Cancelled');
       setIsPulling(false);
       setPullDistance(0);
     }
