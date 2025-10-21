@@ -491,7 +491,7 @@ export default function VirtualNewsList({
         {consoleVisible ? '×' : '디버그'}
       </button>
       
-      <Container ref={containerRef} {...handlers}>
+      <Container ref={containerRef}>
         {/* Pull-to-Refresh 인디케이터 */}
         <PullToRefreshIndicator
           pullDistance={pullDistance}
@@ -500,7 +500,7 @@ export default function VirtualNewsList({
           isPulling={isPulling}
         />
 
-        <PullToRefreshContainer className="window-container">
+        <PullToRefreshContainer className="window-container" {...handlers}>
           {/* 로딩 상태 또는 가상 목록 */}
           {isLoading && localItems.length === 0 ? (
             <LoadingView />

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 
 export interface UsePullToRefreshOptions {
   onRefresh: () => Promise<void>;
@@ -24,7 +24,7 @@ export interface UsePullToRefreshReturn {
  * Pull-to-Refresh 기능을 제공하는 커스텀 훅
  *
  * 네이티브 Touch 이벤트를 사용하여 구현
- * react-window와의 스크롤 충돌 방지 로직 포함
+ * Window 스크롤 기반으로 동작
  *
  * @example
  * const { pullDistance, isPulling, isRefreshing, handlers } = usePullToRefresh({
@@ -50,108 +50,71 @@ export function usePullToRefresh(options: UsePullToRefreshOptions): UsePullToRef
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const startYRef = useRef<number>(0);
-  const currentYRef = useRef<number>(0);
-  const scrollContainerRef = useRef<Element | null>(null);
-
-  // 스크롤 컨테이너 찾기 (react-window의 스크롤 영역)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    // react-window의 스크롤 컨테이너 또는 window
-    const findScrollContainer = () => {
-      const reactWindowList = document.querySelector('[data-testid="virtuoso-scroller"], .react-window-list, [role="list"]');
-      return reactWindowList || window;
-    };
-
-    scrollContainerRef.current = findScrollContainer() as Element;
-  }, []);
-
-  // 현재 스크롤 위치 확인
-  const getScrollTop = useCallback(() => {
-    const container = scrollContainerRef.current;
-
-    if (!container) return 0;
-
-    // Window 객체인 경우
-    if (container instanceof Window) {
-      return window.scrollY || document.documentElement.scrollTop;
-    }
-
-    // Element 객체인 경우
-    return (container as Element).scrollTop;
-  }, []);
+  const currentScrollRef = useRef<number>(0);
 
   // Touch Start 핸들러
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (!enabled || isRefreshing) return;
 
-    const touch = e.touches[0];
-    startYRef.current = touch.clientY;
-    currentYRef.current = touch.clientY;
+    // Window 스크롤 위치 확인
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
 
-    // 스크롤이 최상단일 때만 Pull-to-Refresh 활성화
-    const scrollTop = getScrollTop();
     if (scrollTop === 0) {
+      const touch = e.touches[0];
+      startYRef.current = touch.clientY;
+      currentScrollRef.current = scrollTop;
       setIsPulling(true);
     }
-  }, [enabled, isRefreshing, getScrollTop]);
+  }, [enabled, isRefreshing]);
 
   // Touch Move 핸들러
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!enabled || isRefreshing || !isPulling) return;
 
     const touch = e.touches[0];
-    currentYRef.current = touch.clientY;
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
 
-    const deltaY = currentYRef.current - startYRef.current;
-    const scrollTop = getScrollTop();
+    // 스크롤이 최상단이고 아래로 당기는 경우만
+    if (scrollTop === 0 && touch.clientY > startYRef.current) {
+      const deltaY = touch.clientY - startYRef.current;
 
-    // 조건:
-    // 1. 스크롤이 최상단에 있어야 함
-    // 2. 아래로 당기는 동작이어야 함 (deltaY > 0)
-    // 3. 최소 당김 거리 이상
-    if (scrollTop === 0 && deltaY > minimumPullDown) {
-      // 네이티브 스크롤 방지
-      e.preventDefault();
+      if (deltaY > minimumPullDown) {
+        // 네이티브 스크롤 방지
+        e.preventDefault();
 
-      // 저항값을 적용한 당김 거리 계산
-      const resistedPullDistance = deltaY / resistance;
-      const limitedPullDistance = Math.min(resistedPullDistance, maxPullDown);
+        // 저항값 적용
+        const resistedPullDistance = deltaY / resistance;
+        const limitedPullDistance = Math.min(resistedPullDistance, maxPullDown);
 
-      setPullDistance(limitedPullDistance);
-    } else {
-      // 조건 불만족 시 Pull-to-Refresh 취소
-      if (scrollTop > 0 || deltaY < 0) {
-        setIsPulling(false);
-        setPullDistance(0);
+        setPullDistance(limitedPullDistance);
       }
+    } else {
+      // 스크롤이 발생하면 Pull-to-Refresh 취소
+      setIsPulling(false);
+      setPullDistance(0);
     }
-  }, [enabled, isRefreshing, isPulling, resistance, maxPullDown, minimumPullDown, getScrollTop]);
+  }, [enabled, isRefreshing, isPulling, resistance, maxPullDown, minimumPullDown]);
 
   // Touch End 핸들러
   const handleTouchEnd = useCallback(async () => {
-    if (!enabled || isRefreshing) {
-      setIsPulling(false);
-      setPullDistance(0);
-      return;
-    }
+    if (!enabled || isRefreshing) return;
 
     setIsPulling(false);
 
-    // Threshold 초과 시 새로고침 실행
+    // 임계값 이상 당긴 경우 새로고침 실행
     if (pullDistance >= threshold) {
       setIsRefreshing(true);
 
       try {
         await onRefresh();
       } catch (error) {
-        console.error('[Pull-to-Refresh] Refresh failed:', error);
+        console.error('Pull-to-Refresh error:', error);
       } finally {
         setIsRefreshing(false);
         setPullDistance(0);
       }
     } else {
-      // Threshold 미달 시 애니메이션으로 원위치
+      // 임계값 미만이면 원래 위치로 복귀
       setPullDistance(0);
     }
   }, [enabled, isRefreshing, pullDistance, threshold, onRefresh]);
