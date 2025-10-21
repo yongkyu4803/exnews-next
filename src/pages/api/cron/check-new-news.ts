@@ -30,20 +30,32 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<CronResponse>
 ) {
-  // Vercel Cron 인증 확인
+  // Vercel Cron 또는 GitHub Actions 인증 확인
   const isVercelCron = req.headers['x-vercel-cron'] === '1';
+  const isGitHubActions = req.headers['x-github-actions'];
+  const cronApiKey = req.headers['authorization'];
+  const validApiKey = `Bearer ${process.env.CRON_API_KEY || ''}`;
 
-  if (!isVercelCron) {
-    console.log('[Cron] Unauthorized request - missing x-vercel-cron header');
+  // 인증 확인: Vercel Cron, GitHub Actions (with API key), 또는 개발 환경
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isAuthorized = isVercelCron ||
+                       (isGitHubActions && cronApiKey === validApiKey && validApiKey !== 'Bearer ') ||
+                       isDevelopment;
+
+  if (!isAuthorized) {
+    console.log('[Cron] Unauthorized request');
     return res.status(401).json({
       success: false,
       processedNews: 0,
       keywordSent: 0,
       categorySent: 0,
       failed: 0,
-      error: 'Unauthorized - This endpoint can only be called by Vercel Cron'
+      error: 'Unauthorized'
     });
   }
+
+  const source = isVercelCron ? 'Vercel Cron' : (isGitHubActions ? 'GitHub Actions' : 'Development');
+  console.log(`[Cron] Authorized request from ${source}`);
 
   console.log('[Cron] Starting check-new-news job...');
   const startTime = Date.now();

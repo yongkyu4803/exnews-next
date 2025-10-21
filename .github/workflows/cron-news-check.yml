@@ -1,0 +1,42 @@
+name: Check New News (Every 5 Minutes)
+
+on:
+  schedule:
+    # 5분마다 실행 (UTC 기준)
+    # GitHub Actions는 최소 5분 간격 지원
+    - cron: '*/5 * * * *'
+
+  # 수동 실행 가능
+  workflow_dispatch:
+
+jobs:
+  check-news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check new news and send push notifications
+        run: |
+          echo "Calling news check API..."
+
+          response=$(curl -s -w "\n%{http_code}" -X POST https://news.ggal.kr/api/cron/check-new-news \
+            -H "Content-Type: application/json" \
+            -H "x-github-actions: ${{ github.run_id }}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | head -n-1)
+
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+
+          if [ "$http_code" -ne 200 ]; then
+            echo "Error: API call failed with status $http_code"
+            exit 1
+          fi
+
+          echo "News check completed successfully"
+
+      - name: Log execution time
+        run: |
+          echo "Executed at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo "Run ID: ${{ github.run_id }}"
