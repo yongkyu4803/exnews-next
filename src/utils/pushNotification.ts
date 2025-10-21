@@ -251,19 +251,22 @@ export const sendTestNotification = async (): Promise<boolean> => {
     console.error('이 브라우저는 알림을 지원하지 않습니다.');
     return false;
   }
-  
+
   if (Notification.permission !== 'granted') {
     console.log('알림 권한이 없습니다.');
     return false;
   }
-  
+
   try {
-    const notification = new Notification('단독 뉴스 테스트 알림', {
+    // Service Worker를 통한 알림 (actions 지원)
+    const registration = await navigator.serviceWorker.ready;
+
+    await registration.showNotification('단독 뉴스 테스트 알림', {
       body: '알림 기능이 정상 작동하고 있습니다.',
       icon: '/icons/icon-192x192.png',
       badge: '/icons/badge-72x72.png',
       tag: 'test-notification',
-      renotify: true,
+      requireInteraction: false,
       data: {
         url: '/'
       },
@@ -278,12 +281,8 @@ export const sendTestNotification = async (): Promise<boolean> => {
         }
       ]
     });
-    
-    notification.onclick = () => {
-      window.focus();
-      notification.close();
-    };
-    
+
+    console.log('테스트 알림 전송 성공');
     return true;
   } catch (error) {
     console.error('테스트 알림 전송 실패:', error);
