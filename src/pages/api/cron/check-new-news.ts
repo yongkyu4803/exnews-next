@@ -23,7 +23,7 @@ interface CronResponse {
 /**
  * Vercel Cron Job - 새 뉴스 체크 및 푸시 알림 자동 발송
  *
- * 스케줄: 매 5분마다 (*/5 * * * *)
+ * 스케줄: 매 5분마다
  * 동작: 최근 6분 이내 발행된 미발송 뉴스에 대해 푸시 알림 발송
  */
 export default async function handler(
@@ -198,7 +198,7 @@ async function sendKeywordNotifications(newsItem: NewsItem): Promise<{
     // 푸시 알림 발송
     const subscriptions = matchedUsers.map(user => ({
       device_id: user.device_id,
-      subscription: user.push_subscription
+      subscription: user.subscription
     }));
 
     const payload = createKeywordNotificationPayload(

@@ -6,6 +6,8 @@ import { copySelectedNewsToClipboard } from '@/utils/clipboardUtils';
 import MicroButton from '@/components/common/MicroButton';
 import FloatingButtonWrapper from '@/components/common/FloatingButtonWrapper';
 import RefreshIcon from '@/components/common/RefreshIcon';
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import PullToRefreshIndicator from '@/components/common/PullToRefreshIndicator';
 
 // 클라이언트 사이드에서만 로드되는 컴포넌트
 const ReactWindowComponents = dynamic(() => import('./ReactWindowComponents'), {
@@ -383,23 +385,23 @@ export default function VirtualNewsList({
   // 새로고침 처리 함수
   const handleRefresh = useCallback(async () => {
     if (refreshing || isLoading || !mountedRef.current) return;
-    
+
     try {
       setRefreshing(true);
       visualLog('[VirtualNewsList] 새로고침 시작', 'info');
       showToast('새로고침 중...');
-      
+
       // onRefresh 함수를 Promise로 래핑
       const refreshPromise = Promise.resolve().then(() => onRefresh());
-      
+
       // 타임아웃 설정
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('새로고침 시간 초과')), 10000);
       });
-      
+
       // Promise.race를 사용하여 타임아웃 처리
       await Promise.race([refreshPromise, timeoutPromise]);
-      
+
       if (mountedRef.current) {
         showToast('새로고침 완료');
         visualLog('[VirtualNewsList] 새로고침 완료', 'info');
@@ -408,11 +410,11 @@ export default function VirtualNewsList({
     } catch (error) {
       if (mountedRef.current) {
         console.error('새로고침 오류:', error);
-        
-        const errorMessage = error instanceof Error 
-          ? `${error.name}: ${error.message}` 
+
+        const errorMessage = error instanceof Error
+          ? `${error.name}: ${error.message}`
           : String(error);
-        
+
         visualLog(`[VirtualNewsList] 새로고침 실패: ${errorMessage}`, 'error');
         showToast(`새로고침 실패: ${errorMessage}`);
       }
@@ -422,6 +424,16 @@ export default function VirtualNewsList({
       }
     }
   }, [refreshing, isLoading, onRefresh, showToast, visualLog]);
+
+  // Pull-to-Refresh 훅 통합
+  const { pullDistance, isPulling, isRefreshing: isPullRefreshing, handlers } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    threshold: 80,
+    resistance: 2.5,
+    enabled: !isLoading && !refreshing,
+    maxPullDown: 150,
+    minimumPullDown: 5
+  });
   
   // 무한 스크롤 로드 함수 개선
   const loadMoreItems = useCallback(() => {
@@ -479,7 +491,15 @@ export default function VirtualNewsList({
         {consoleVisible ? '×' : '디버그'}
       </button>
       
-      <Container ref={containerRef}>
+      <Container ref={containerRef} {...handlers}>
+        {/* Pull-to-Refresh 인디케이터 */}
+        <PullToRefreshIndicator
+          pullDistance={pullDistance}
+          threshold={80}
+          isRefreshing={isPullRefreshing || refreshing}
+          isPulling={isPulling}
+        />
+
         <PullToRefreshContainer className="window-container">
           {/* 로딩 상태 또는 가상 목록 */}
           {isLoading && localItems.length === 0 ? (
