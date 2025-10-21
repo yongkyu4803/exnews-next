@@ -10,9 +10,9 @@ export interface NotificationSettings {
     [key: string]: boolean;
   };
   schedule: {
-    morning: boolean;
-    afternoon: boolean;
-    evening: boolean;
+    enabled: boolean;    // 시간 제한 활성화 여부
+    startTime: string;   // 시작 시간 (HH:mm 형식, 한국 시간 KST)
+    endTime: string;     // 종료 시간 (HH:mm 형식, 한국 시간 KST)
   };
   keywords?: string[];
   media_names?: string[];

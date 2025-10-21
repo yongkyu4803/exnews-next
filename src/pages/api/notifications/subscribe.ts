@@ -72,9 +72,9 @@ export default async function handler(
             기타: false
           },
           schedule: {
-            morning: true,
-            afternoon: false,
-            evening: true
+            enabled: false,     // 기본적으로 시간 제한 비활성화 (24시간 알림)
+            startTime: '09:00', // 기본 시작 시간: 오전 9시 (KST)
+            endTime: '22:00'    // 기본 종료 시간: 오후 10시 (KST)
           },
           keywords: [],
           media_names: [],

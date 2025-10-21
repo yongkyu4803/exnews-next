@@ -183,6 +183,53 @@ const TimeSlotTime = styled.div`
   color: #999;
 `;
 
+const TimePickerRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+`;
+
+const TimePickerLabel = styled.div`
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  min-width: 60px;
+`;
+
+const TimeInput = styled.input`
+  flex: 1;
+  padding: 12px 16px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  background: white;
+  transition: all 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #1a4b8c;
+    background: #f7faff;
+  }
+
+  &:disabled {
+    background: #f5f5f5;
+    color: #999;
+  }
+`;
+
+const TimeZoneNote = styled.div`
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #f7faff;
+  border-radius: 6px;
+  border-left: 3px solid #1a4b8c;
+`;
+
 const Alert = styled.div<{ type: 'info' | 'warning' | 'success' }>`
   padding: 16px;
   border-radius: 8px;
@@ -321,14 +368,43 @@ const MobileNotificationSettings: React.FC = () => {
     await saveNotificationSettingsToServer(updated);
   };
 
-  // 스케줄 변경
-  const handleScheduleChange = async (time: 'morning' | 'afternoon' | 'evening') => {
-    const isEnabled = !preferences.schedule[time];
+  // 알림 시간 제한 활성화/비활성화
+  const handleScheduleToggle = async (enabled: boolean) => {
     const updated = {
       ...preferences,
       schedule: {
         ...preferences.schedule,
-        [time]: isEnabled
+        enabled
+      }
+    };
+
+    setPreferences(updated);
+    saveNotificationPreferences(updated);
+    await saveNotificationSettingsToServer(updated);
+  };
+
+  // 알림 시작 시간 변경
+  const handleStartTimeChange = async (startTime: string) => {
+    const updated = {
+      ...preferences,
+      schedule: {
+        ...preferences.schedule,
+        startTime
+      }
+    };
+
+    setPreferences(updated);
+    saveNotificationPreferences(updated);
+    await saveNotificationSettingsToServer(updated);
+  };
+
+  // 알림 종료 시간 변경
+  const handleEndTimeChange = async (endTime: string) => {
+    const updated = {
+      ...preferences,
+      schedule: {
+        ...preferences.schedule,
+        endTime
       }
     };
 
@@ -489,43 +565,51 @@ const MobileNotificationSettings: React.FC = () => {
           )}
 
           <Card>
-            <SettingTitle style={{ marginBottom: 12 }}>알림 시간</SettingTitle>
-            <SettingDescription>알림을 받을 시간대를 선택하세요</SettingDescription>
-
-            <TimeSlotGrid>
-              <TimeSlot
-                selected={preferences.schedule.morning}
-                onClick={() => handleScheduleChange('morning')}
+            <SettingItem>
+              <SettingLabel>
+                <div>
+                  <div>알림 시간 제한</div>
+                  <SettingDescription style={{ marginTop: 4 }}>
+                    {preferences.schedule.enabled
+                      ? '설정한 시간대에만 알림을 받습니다'
+                      : '24시간 알림을 받습니다'}
+                  </SettingDescription>
+                </div>
+              </SettingLabel>
+              <Toggle
+                active={preferences.schedule.enabled}
+                onClick={() => handleScheduleToggle(!preferences.schedule.enabled)}
                 disabled={loading}
-              >
-                <TimeSlotTitle color={preferences.schedule.morning ? '#1a4b8c' : undefined}>
-                  아침
-                </TimeSlotTitle>
-                <TimeSlotTime>7AM - 9AM</TimeSlotTime>
-              </TimeSlot>
+              />
+            </SettingItem>
 
-              <TimeSlot
-                selected={preferences.schedule.afternoon}
-                onClick={() => handleScheduleChange('afternoon')}
-                disabled={loading}
-              >
-                <TimeSlotTitle color={preferences.schedule.afternoon ? '#1a4b8c' : undefined}>
-                  오후
-                </TimeSlotTitle>
-                <TimeSlotTime>12PM - 2PM</TimeSlotTime>
-              </TimeSlot>
+            {preferences.schedule.enabled && (
+              <>
+                <TimePickerRow>
+                  <TimePickerLabel>시작 시간</TimePickerLabel>
+                  <TimeInput
+                    type="time"
+                    value={preferences.schedule.startTime}
+                    onChange={(e) => handleStartTimeChange(e.target.value)}
+                    disabled={loading}
+                  />
+                </TimePickerRow>
 
-              <TimeSlot
-                selected={preferences.schedule.evening}
-                onClick={() => handleScheduleChange('evening')}
-                disabled={loading}
-              >
-                <TimeSlotTitle color={preferences.schedule.evening ? '#1a4b8c' : undefined}>
-                  저녁
-                </TimeSlotTitle>
-                <TimeSlotTime>6PM - 8PM</TimeSlotTime>
-              </TimeSlot>
-            </TimeSlotGrid>
+                <TimePickerRow>
+                  <TimePickerLabel>종료 시간</TimePickerLabel>
+                  <TimeInput
+                    type="time"
+                    value={preferences.schedule.endTime}
+                    onChange={(e) => handleEndTimeChange(e.target.value)}
+                    disabled={loading}
+                  />
+                </TimePickerRow>
+
+                <TimeZoneNote>
+                  ⏰ 한국 시간(KST, UTC+9) 기준으로 설정됩니다
+                </TimeZoneNote>
+              </>
+            )}
           </Card>
 
           <Card>

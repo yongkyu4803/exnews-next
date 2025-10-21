@@ -187,14 +187,44 @@ const NotificationSettings: React.FC = () => {
     }
   };
   
-  // 스케줄 설정 변경
-  const handleScheduleChange = (time: 'morning' | 'afternoon' | 'evening', checked: boolean) => {
+  // 시간 제한 활성화/비활성화
+  const handleScheduleToggle = (checked: boolean) => {
     setPreferences(prev => {
       const updated = {
         ...prev,
         schedule: {
           ...prev.schedule,
-          [time]: checked
+          enabled: checked
+        }
+      };
+      saveNotificationPreferences(updated);
+      return updated;
+    });
+  };
+
+  // 시작 시간 변경
+  const handleStartTimeChange = (startTime: string) => {
+    setPreferences(prev => {
+      const updated = {
+        ...prev,
+        schedule: {
+          ...prev.schedule,
+          startTime
+        }
+      };
+      saveNotificationPreferences(updated);
+      return updated;
+    });
+  };
+
+  // 종료 시간 변경
+  const handleEndTimeChange = (endTime: string) => {
+    setPreferences(prev => {
+      const updated = {
+        ...prev,
+        schedule: {
+          ...prev.schedule,
+          endTime
         }
       };
       saveNotificationPreferences(updated);
@@ -293,40 +323,61 @@ const NotificationSettings: React.FC = () => {
               ))}
             </CategoryList>
             
-            <Divider>알림 시간</Divider>
-            <Text>알림을 받을 시간대를 선택하세요:</Text>
-            
-            <ScheduleGrid>
-              <ScheduleItem>
-                <Text strong>아침</Text>
-                <Text type="secondary">7AM - 9AM</Text>
-                <Checkbox
-                  checked={preferences.schedule.morning}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleScheduleChange('morning', e.target.checked)}
-                  style={{ marginTop: 10 }}
-                />
-              </ScheduleItem>
-              
-              <ScheduleItem>
-                <Text strong>오후</Text>
-                <Text type="secondary">12PM - 2PM</Text>
-                <Checkbox
-                  checked={preferences.schedule.afternoon}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleScheduleChange('afternoon', e.target.checked)}
-                  style={{ marginTop: 10 }}
-                />
-              </ScheduleItem>
-              
-              <ScheduleItem>
-                <Text strong>저녁</Text>
-                <Text type="secondary">6PM - 8PM</Text>
-                <Checkbox
-                  checked={preferences.schedule.evening}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleScheduleChange('evening', e.target.checked)}
-                  style={{ marginTop: 10 }}
-                />
-              </ScheduleItem>
-            </ScheduleGrid>
+            <Divider>알림 시간 설정</Divider>
+
+            <div style={{ marginBottom: 16 }}>
+              <Checkbox
+                checked={preferences.schedule.enabled}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleScheduleToggle(e.target.checked)}
+              >
+                <Text strong>알림 시간 제한 설정</Text>
+              </Checkbox>
+              <Text type="secondary" style={{ display: 'block', marginLeft: 24, marginTop: 4 }}>
+                {preferences.schedule.enabled
+                  ? '설정한 시간대에만 알림을 받습니다'
+                  : '24시간 알림을 받습니다'}
+              </Text>
+            </div>
+
+            {preferences.schedule.enabled && (
+              <div style={{ marginLeft: 24, marginTop: 16 }}>
+                <div style={{ marginBottom: 12 }}>
+                  <Text strong style={{ display: 'block', marginBottom: 8 }}>시작 시간</Text>
+                  <input
+                    type="time"
+                    value={preferences.schedule.startTime}
+                    onChange={(e) => handleStartTimeChange(e.target.value)}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d9d9d9',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      width: '150px'
+                    }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: 12 }}>
+                  <Text strong style={{ display: 'block', marginBottom: 8 }}>종료 시간</Text>
+                  <input
+                    type="time"
+                    value={preferences.schedule.endTime}
+                    onChange={(e) => handleEndTimeChange(e.target.value)}
+                    style={{
+                      padding: '8px 12px',
+                      border: '1px solid #d9d9d9',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      width: '150px'
+                    }}
+                  />
+                </div>
+
+                <Text type="secondary" style={{ fontSize: 12 }}>
+                  ⏰ 한국 시간(KST, UTC+9) 기준으로 설정됩니다
+                </Text>
+              </div>
+            )}
             
             <Divider />
             
