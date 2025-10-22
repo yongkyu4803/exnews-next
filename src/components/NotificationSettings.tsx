@@ -122,10 +122,12 @@ const NotificationSettings: React.FC = () => {
   
   // 알림 활성화 변경
   const handleToggleEnabled = async (enabled: boolean) => {
+    console.log('🔔🔔🔔 [NotificationSettings] handleToggleEnabled 호출! enabled:', enabled);
     setLoading(true);
     try {
       if (enabled) {
         // 알림 구독
+        console.log('🔔🔔🔔 [NotificationSettings] subscribeToPush 호출 시작...');
         const subscription = await subscribeToPush();
         if (subscription) {
           setPreferences(prev => {
