@@ -17,16 +17,12 @@ jobs:
       - name: Check new news and send push notifications
         run: |
           echo "Calling news check API..."
-          echo "Target: https://news.ggal.kr/api/cron/check-new-news"
+          echo "Target: https://exnews-next.vercel.app/api/cron/check-new-news"
           echo "Run ID: ${{ github.run_id }}"
-
-          # DNS 확인
-          echo "Testing DNS resolution..."
-          nslookup news.ggal.kr || echo "DNS lookup failed"
 
           # curl with error handling (set +e to continue on error)
           set +e
-          response=$(curl -s -w "\n%{http_code}" -X POST https://news.ggal.kr/api/cron/check-new-news \
+          response=$(curl -s -w "\n%{http_code}" -X POST https://exnews-next.vercel.app/api/cron/check-new-news \
             -H "Content-Type: application/json" \
             -H "x-github-actions: ${{ github.run_id }}" \
             -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}" \
