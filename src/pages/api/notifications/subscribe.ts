@@ -16,6 +16,15 @@ export default async function handler(
   }
 
   try {
+    // 환경변수 검증 로깅
+    console.log('[Subscribe API] 🔍 환경변수 확인:', {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      anonKeyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 30) + '...',
+      anonKeyLength: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length,
+      expectedLength: 208 // 로컬 .env.local의 키 길이
+    });
+
     const { device_id, subscription } = req.body;
 
     if (!device_id) {

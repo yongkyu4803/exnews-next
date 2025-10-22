@@ -17,4 +17,13 @@ function getRequiredEnvVar(key: string): string {
 const supabaseUrl = getRequiredEnvVar('NEXT_PUBLIC_SUPABASE_URL');
 const supabaseAnonKey = getRequiredEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY');
 
+// 개발 모드에서 환경변수 로깅
+if (process.env.NODE_ENV !== 'production') {
+  console.log('[Supabase Client] 초기화:', {
+    url: supabaseUrl,
+    keyPrefix: supabaseAnonKey.substring(0, 30) + '...',
+    keyLength: supabaseAnonKey.length
+  });
+}
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
