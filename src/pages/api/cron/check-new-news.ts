@@ -99,7 +99,11 @@ export default async function handler(
     let totalFailed = 0;
 
     for (const newsItem of recentNews as NewsItem[]) {
-      console.log(`[Cron] Processing news: ${newsItem.title}`);
+      console.log(`[Cron] Processing news:`, {
+        title: newsItem.title,
+        category: newsItem.category,
+        pub_date: newsItem.pub_date
+      });
 
       // 2a. 키워드 기반 알림 발송
       const keywordResult = await sendKeywordNotifications(newsItem);
@@ -165,7 +169,10 @@ async function sendKeywordNotifications(newsItem: NewsItem): Promise<{
       .not('keywords', 'is', null)
       .neq('keywords', '{}');
 
+    console.log(`[Cron][Keyword] Fetched ${users?.length || 0} users with keywords`);
+
     if (error || !users || users.length === 0) {
+      console.log(`[Cron][Keyword] No users to process (error: ${error?.message || 'none'})`);
       return { sent, failed };
     }
 
@@ -176,15 +183,32 @@ async function sendKeywordNotifications(newsItem: NewsItem): Promise<{
       matchedKeywords: string[];
     }> = [];
 
+    let usersWithValidKeywords = 0;
+    let usersWithSubscription = 0;
+    let usersPassedSchedule = 0;
+
     for (const user of users) {
-      if (!user.keywords || user.keywords.length === 0) continue;
-      if (!user.push_subscription) continue;
+      if (!user.keywords || user.keywords.length === 0) {
+        console.log(`[Cron][Keyword] User ${user.device_id}: no keywords`);
+        continue;
+      }
+      usersWithValidKeywords++;
+
+      if (!user.push_subscription) {
+        console.log(`[Cron][Keyword] User ${user.device_id}: no push_subscription`);
+        continue;
+      }
+      usersWithSubscription++;
 
       // 시간대 체크
       if (!isWithinSchedule(user.schedule)) {
-        console.log(`[Cron] Skipping user ${user.device_id} - outside schedule`);
+        console.log(`[Cron][Keyword] User ${user.device_id}: outside schedule`, {
+          schedule: user.schedule,
+          currentTime: new Date().toISOString()
+        });
         continue;
       }
+      usersPassedSchedule++;
 
       // 키워드 매칭
       const matchResult = matchKeywords(
@@ -195,6 +219,11 @@ async function sendKeywordNotifications(newsItem: NewsItem): Promise<{
         user.keywords
       );
 
+      console.log(`[Cron][Keyword] User ${user.device_id}: keyword match = ${matchResult.matched}`, {
+        userKeywords: user.keywords,
+        matchedKeywords: matchResult.matchedKeywords
+      });
+
       if (matchResult.matched) {
         matchedUsers.push({
           device_id: user.device_id,
@@ -203,6 +232,14 @@ async function sendKeywordNotifications(newsItem: NewsItem): Promise<{
         });
       }
     }
+
+    console.log(`[Cron][Keyword] Filter results:`, {
+      totalUsers: users.length,
+      withValidKeywords: usersWithValidKeywords,
+      withSubscription: usersWithSubscription,
+      passedSchedule: usersPassedSchedule,
+      finalMatched: matchedUsers.length
+    });
 
     if (matchedUsers.length === 0) {
       return { sent, failed };
@@ -262,23 +299,57 @@ async function sendCategoryNotifications(newsItem: NewsItem): Promise<{
       .select('device_id, push_subscription, categories, schedule')
       .eq('enabled', true);
 
+    console.log(`[Cron][Category] News category: "${newsItem.category}"`);
+    console.log(`[Cron][Category] Fetched ${users?.length || 0} enabled users`);
+
     if (error || !users || users.length === 0) {
+      console.log(`[Cron][Category] No users to process (error: ${error?.message || 'none'})`);
       return { sent, failed };
     }
 
     // 카테고리 매칭 및 시간대 필터링
+    let usersWithSubscription = 0;
+    let usersPassedSchedule = 0;
+    let usersMatchedCategory = 0;
+
     const matchedUsers = users.filter(user => {
-      if (!user.push_subscription) return false;
+      if (!user.push_subscription) {
+        console.log(`[Cron][Category] User ${user.device_id}: no push_subscription`);
+        return false;
+      }
+      usersWithSubscription++;
 
       // 시간대 체크
       if (!isWithinSchedule(user.schedule)) {
-        console.log(`[Cron] Skipping user ${user.device_id} - outside schedule`);
+        console.log(`[Cron][Category] User ${user.device_id}: outside schedule`, {
+          schedule: user.schedule,
+          currentTime: new Date().toISOString()
+        });
         return false;
       }
+      usersPassedSchedule++;
 
       // 카테고리 매칭
       const categories = user.categories || {};
-      return categories['all'] === true || categories[newsItem.category] === true;
+      const matched = categories['all'] === true || categories[newsItem.category] === true;
+
+      console.log(`[Cron][Category] User ${user.device_id}: category match = ${matched}`, {
+        userCategories: categories,
+        newsCategory: newsItem.category,
+        hasAll: categories['all'] === true,
+        hasSpecific: categories[newsItem.category] === true
+      });
+
+      if (matched) usersMatchedCategory++;
+      return matched;
+    });
+
+    console.log(`[Cron][Category] Filter results:`, {
+      totalUsers: users.length,
+      withSubscription: usersWithSubscription,
+      passedSchedule: usersPassedSchedule,
+      matchedCategory: usersMatchedCategory,
+      finalMatched: matchedUsers.length
     });
 
     if (matchedUsers.length === 0) {
