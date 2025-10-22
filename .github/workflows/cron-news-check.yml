@@ -17,11 +17,24 @@ jobs:
       - name: Check new news and send push notifications
         run: |
           echo "Calling news check API..."
+          echo "Target: https://news.ggal.kr/api/cron/check-new-news"
+          echo "Run ID: ${{ github.run_id }}"
 
           response=$(curl -s -w "\n%{http_code}" -X POST https://news.ggal.kr/api/cron/check-new-news \
             -H "Content-Type: application/json" \
             -H "x-github-actions: ${{ github.run_id }}" \
-            -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}")
+            -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}" \
+            --connect-timeout 10 \
+            --max-time 30)
+
+          curl_exit=$?
+          echo "Curl exit code: $curl_exit"
+
+          if [ $curl_exit -ne 0 ]; then
+            echo "Error: curl failed with exit code $curl_exit"
+            echo "This usually means network timeout or connection refused"
+            exit 1
+          fi
 
           http_code=$(echo "$response" | tail -n1)
           body=$(echo "$response" | head -n-1)
@@ -31,6 +44,7 @@ jobs:
 
           if [ "$http_code" -ne 200 ]; then
             echo "Error: API call failed with status $http_code"
+            echo "Response body: $body"
             exit 1
           fi
 
