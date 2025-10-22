@@ -290,19 +290,25 @@ const MobileNotificationSettings: React.FC = () => {
 
   // 알림 권한 요청
   const handleRequestPermission = async () => {
+    console.log('🔔 [handleRequestPermission] 호출됨!');
     setLoading(true);
     try {
+      console.log('🔔 [handleRequestPermission] 권한 요청 시작...');
       const permission = await requestNotificationPermission();
+      console.log('🔔 [handleRequestPermission] 권한 결과:', permission);
       setPermissionGranted(permission === 'granted');
 
       if (permission === 'granted') {
         // 권한이 허용되면 구독 활성화
+        console.log('🔔 [handleRequestPermission] 권한 승인됨, 구독 시작...');
         await handleToggleEnabled(true);
         showMessage('알림이 활성화되었습니다', 'success');
+      } else {
+        console.warn('🔔 [handleRequestPermission] 권한 거부됨:', permission);
       }
     } catch (error) {
       showMessage('알림 권한 요청 실패', 'warning');
-      console.error('알림 권한 요청 실패:', error);
+      console.error('🔔 [handleRequestPermission] 알림 권한 요청 실패:', error);
     } finally {
       setLoading(false);
     }
@@ -310,11 +316,12 @@ const MobileNotificationSettings: React.FC = () => {
 
   // 알림 활성화 토글
   const handleToggleEnabled = async (enabled: boolean) => {
+    console.log('🔔 [handleToggleEnabled] 호출됨! enabled:', enabled);
     setLoading(true);
     try {
       if (enabled) {
         // 알림 구독
-        console.log('알림 구독 시작...');
+        console.log('🔔 [handleToggleEnabled] 알림 구독 시작...');
         const subscription = await subscribeToPush();
         console.log('구독 결과:', subscription);
 
