@@ -62,14 +62,17 @@ export default async function handler(
 
   try {
     // 1. 최근 6분 이내 발행된 미발송 뉴스 조회
+    // Vercel 무료 플랜: 최대 10초 제한 - 배치 크기 제한 필요
     const sixMinutesAgo = new Date(Date.now() - 6 * 60 * 1000);
+    const BATCH_SIZE = 5; // 한 번에 최대 5개만 처리
 
     const { data: recentNews, error: newsError } = await supabase
       .from('news')
       .select('*')
       .gte('pub_date', sixMinutesAgo.toISOString())
       .is('notification_sent_at', null)
-      .order('pub_date', { ascending: false });
+      .order('pub_date', { ascending: false })
+      .limit(BATCH_SIZE);
 
     if (newsError) {
       console.error('[Cron] Error fetching news:', newsError);
