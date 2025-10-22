@@ -20,19 +20,34 @@ jobs:
           echo "Target: https://news.ggal.kr/api/cron/check-new-news"
           echo "Run ID: ${{ github.run_id }}"
 
+          # DNS 확인
+          echo "Testing DNS resolution..."
+          nslookup news.ggal.kr || echo "DNS lookup failed"
+
+          # curl with error handling (set +e to continue on error)
+          set +e
           response=$(curl -s -w "\n%{http_code}" -X POST https://news.ggal.kr/api/cron/check-new-news \
             -H "Content-Type: application/json" \
             -H "x-github-actions: ${{ github.run_id }}" \
             -H "Authorization: Bearer ${{ secrets.CRON_API_KEY }}" \
             --connect-timeout 10 \
-            --max-time 30)
+            --max-time 30 \
+            2>&1)
 
           curl_exit=$?
+          set -e
+
           echo "Curl exit code: $curl_exit"
 
           if [ $curl_exit -ne 0 ]; then
             echo "Error: curl failed with exit code $curl_exit"
-            echo "This usually means network timeout or connection refused"
+            case $curl_exit in
+              6) echo "Could not resolve host - DNS issue" ;;
+              7) echo "Failed to connect to host" ;;
+              28) echo "Operation timeout" ;;
+              *) echo "Unknown curl error" ;;
+            esac
+            echo "Response: $response"
             exit 1
           fi
 
