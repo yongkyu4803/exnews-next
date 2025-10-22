@@ -50,55 +50,80 @@ export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration
 
 // 푸시 구독 등록
 export const subscribeToPush = async (): Promise<PushSubscription | null> => {
+  console.log('[subscribeToPush] 🚀 시작...');
+
   try {
+    console.log('[subscribeToPush] Step 1: 지원 여부 확인');
     if (!isPushNotificationSupported()) {
-      console.log('푸시 알림이 지원되지 않습니다.');
+      console.error('[subscribeToPush] ❌ 푸시 알림이 지원되지 않습니다.');
       return null;
     }
+    console.log('[subscribeToPush] ✅ 푸시 알림 지원됨');
 
+    console.log('[subscribeToPush] Step 2: 권한 요청');
     const permission = await requestNotificationPermission();
+    console.log('[subscribeToPush] 권한 결과:', permission);
     if (permission !== 'granted') {
-      console.log('알림 권한이 없습니다.');
+      console.error('[subscribeToPush] ❌ 알림 권한이 없습니다:', permission);
       return null;
     }
+    console.log('[subscribeToPush] ✅ 알림 권한 승인됨');
 
-    // 서비스 워커가 없으면 등록
+    console.log('[subscribeToPush] Step 3: 서비스 워커 확인');
     let registration = await navigator.serviceWorker.getRegistration();
     if (!registration) {
+      console.log('[subscribeToPush] 서비스 워커 없음, 등록 시작...');
       registration = await registerServiceWorker();
     }
+    console.log('[subscribeToPush] ✅ 서비스 워커 등록됨:', registration?.scope);
 
-    // 서비스 워커가 준비될 때까지 대기
+    console.log('[subscribeToPush] Step 4: 서비스 워커 준비 대기');
     await navigator.serviceWorker.ready;
+    console.log('[subscribeToPush] ✅ 서비스 워커 준비 완료');
 
-    // 기존 구독 확인
+    console.log('[subscribeToPush] Step 5: 기존 구독 확인');
     let subscription = await registration.pushManager.getSubscription();
+    console.log('[subscribeToPush] 기존 구독:', subscription ? '있음' : '없음');
 
     // 기존 구독이 없으면 새로 구독
     if (!subscription) {
+      console.log('[subscribeToPush] Step 6: 새 구독 생성');
+
       // VAPID 키가 없으면 에러 발생
       if (!PUBLIC_VAPID_KEY) {
-        console.error('VAPID 키가 설정되지 않았습니다. .env.local에 NEXT_PUBLIC_VAPID_KEY를 추가해주세요.');
+        console.error('[subscribeToPush] ❌ VAPID 키가 설정되지 않았습니다!');
+        console.error('[subscribeToPush] PUBLIC_VAPID_KEY:', PUBLIC_VAPID_KEY);
         throw new Error('VAPID 키가 설정되지 않았습니다.');
       }
+      console.log('[subscribeToPush] ✅ VAPID 키 확인:', PUBLIC_VAPID_KEY.substring(0, 20) + '...');
 
       // Public VAPID Key를 Uint8Array로 변환
       const applicationServerKey = urlBase64ToUint8Array(PUBLIC_VAPID_KEY);
+      console.log('[subscribeToPush] VAPID 키 변환 완료, 구독 시도 중...');
 
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey
       });
+      console.log('[subscribeToPush] ✅ 새 구독 생성 성공!');
     }
 
-    console.log('푸시 구독 정보:', subscription);
+    console.log('[subscribeToPush] Step 7: 구독 정보 확인');
+    console.log('[subscribeToPush] Endpoint:', subscription.endpoint);
+    console.log('[subscribeToPush] Keys:', Object.keys(subscription.toJSON().keys || {}));
 
-    // 서버에 구독 정보 전송
+    console.log('[subscribeToPush] Step 8: 서버에 구독 정보 전송');
     await sendSubscriptionToServer(subscription);
+    console.log('[subscribeToPush] ✅ 서버 전송 성공!');
 
+    console.log('[subscribeToPush] 🎉 전체 프로세스 완료!');
     return subscription;
   } catch (error) {
-    console.error('푸시 구독 실패:', error);
+    console.error('[subscribeToPush] ❌❌❌ 푸시 구독 실패:', error);
+    console.error('[subscribeToPush] 에러 상세:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
     throw error;
   }
 };
@@ -294,9 +319,20 @@ export const sendTestNotification = async (): Promise<boolean> => {
  * 서버에 푸시 구독 정보 전송
  */
 async function sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
+  console.log('[sendSubscriptionToServer] 🚀 시작...');
+
   try {
     const deviceId = getOrCreateDeviceId();
+    console.log('[sendSubscriptionToServer] Device ID:', deviceId);
 
+    const subscriptionJSON = subscription.toJSON();
+    console.log('[sendSubscriptionToServer] Subscription JSON:', {
+      endpoint: subscriptionJSON.endpoint?.substring(0, 50) + '...',
+      hasKeys: !!subscriptionJSON.keys,
+      keysCount: Object.keys(subscriptionJSON.keys || {}).length
+    });
+
+    console.log('[sendSubscriptionToServer] API 호출 중...');
     const response = await fetch('/api/notifications/subscribe', {
       method: 'POST',
       headers: {
@@ -304,18 +340,30 @@ async function sendSubscriptionToServer(subscription: PushSubscription): Promise
       },
       body: JSON.stringify({
         device_id: deviceId,
-        subscription: subscription.toJSON()
+        subscription: subscriptionJSON
       })
     });
 
+    console.log('[sendSubscriptionToServer] API 응답:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok
+    });
+
     if (!response.ok) {
-      throw new Error(`서버 응답 오류: ${response.status}`);
+      const errorText = await response.text();
+      console.error('[sendSubscriptionToServer] ❌ 서버 응답 오류:', errorText);
+      throw new Error(`서버 응답 오류: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('서버 구독 등록 성공:', data);
+    console.log('[sendSubscriptionToServer] ✅ 서버 구독 등록 성공:', data);
   } catch (error) {
-    console.error('서버 구독 전송 실패:', error);
+    console.error('[sendSubscriptionToServer] ❌❌❌ 서버 구독 전송 실패:', error);
+    console.error('[sendSubscriptionToServer] 에러 상세:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined
+    });
     throw error;
   }
 }
