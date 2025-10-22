@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 export interface NotificationSettings {
   id?: string;
   device_id: string;
-  push_subscription?: PushSubscriptionJSON | null;
+  subscription_data?: PushSubscriptionJSON | null;
   enabled: boolean;
   categories: {
     [key: string]: boolean;
@@ -118,7 +118,7 @@ async function handlePost(
     .from('user_notification_settings')
     .insert({
       device_id: settings.device_id,
-      push_subscription: settings.push_subscription || null,
+      subscription_data: settings.subscription_data || null,
       enabled: settings.enabled,
       categories: settings.categories,
       schedule: settings.schedule,
@@ -153,7 +153,7 @@ async function handlePut(
   const { data, error } = await supabase
     .from('user_notification_settings')
     .update({
-      push_subscription: settings.push_subscription || null,
+      subscription_data: settings.subscription_data || null,
       enabled: settings.enabled,
       categories: settings.categories,
       schedule: settings.schedule,
