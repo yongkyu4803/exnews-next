@@ -42,9 +42,9 @@ export default async function handler(
         subscription_preview: JSON.stringify(subscription).substring(0, 100)
       });
 
-      // 업데이트할 데이터 준비
+      // 업데이트할 데이터 준비 (TEXT 타입이므로 JSON 문자열로 변환)
       const updateData = {
-        push_subscription: subscription,  // 객체 그대로 전달!
+        push_subscription: JSON.stringify(subscription),  // TEXT 타입이면 문자열로!
         updated_at: new Date().toISOString()
       };
 
@@ -97,7 +97,7 @@ export default async function handler(
         .from('user_notification_settings')
         .insert({
           device_id,
-          push_subscription: subscription,  // 객체 그대로 전달!
+          push_subscription: JSON.stringify(subscription),  // TEXT 타입이면 문자열로!
           enabled: true,
           categories: {
             all: true,

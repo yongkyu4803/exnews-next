@@ -225,9 +225,14 @@ async function sendKeywordNotifications(newsItem: NewsItem): Promise<{
       });
 
       if (matchResult.matched) {
+        // TEXT 타입이면 JSON.parse 필요
+        const subscription = typeof user.push_subscription === 'string'
+          ? JSON.parse(user.push_subscription)
+          : user.push_subscription;
+
         matchedUsers.push({
           device_id: user.device_id,
-          subscription: user.push_subscription,
+          subscription: subscription,
           matchedKeywords: matchResult.matchedKeywords
         });
       }
@@ -344,6 +349,14 @@ async function sendCategoryNotifications(newsItem: NewsItem): Promise<{
       return matched;
     });
 
+    // TEXT 타입이면 subscription을 JSON.parse
+    const subscriptions = matchedUsers.map(user => ({
+      device_id: user.device_id,
+      subscription: typeof user.push_subscription === 'string'
+        ? JSON.parse(user.push_subscription)
+        : user.push_subscription
+    }));
+
     console.log(`[Cron][Category] Filter results:`, {
       totalUsers: users.length,
       withSubscription: usersWithSubscription,
@@ -357,12 +370,6 @@ async function sendCategoryNotifications(newsItem: NewsItem): Promise<{
     }
 
     console.log(`[Cron] Matched ${matchedUsers.length} users for category notifications`);
-
-    // 푸시 알림 발송
-    const subscriptions = matchedUsers.map(user => ({
-      device_id: user.device_id,
-      subscription: user.push_subscription
-    }));
 
     const payload = createCategoryNotificationPayload(
       newsItem.title,
