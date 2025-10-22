@@ -19,7 +19,8 @@ body {
   height: 100%;
   width: 100%;
   overflow: auto;
-  overscroll-behavior: none; /* 오버스크롤 방지 */
+  overscroll-behavior-y: none; /* Chrome Pull-to-Refresh 비활성화 (중요!) */
+  overscroll-behavior-x: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   position: relative; /* 새로고침 인디케이터를 위한 기준점 */
@@ -37,8 +38,9 @@ html, body, #__next, main {
 }
 
 body {
-  touch-action: auto; /* Pull-to-Refresh를 위해 auto로 변경 */
-  overscroll-behavior-y: contain; /* Pull-to-Refresh를 위한 overscroll 허용 */
+  touch-action: pan-x pan-y; /* 모든 방향 스크롤 허용하되 제스처 허용 */
+  overscroll-behavior: none; /* Chrome 네이티브 Pull-to-Refresh 완전 비활성화 */
+  overscroll-behavior-y: none; /* 수직 overscroll 완전 차단 */
   -webkit-user-select: none; /* 텍스트 선택만 방지 */
   user-select: none; /* 텍스트 선택만 방지 */
 }
