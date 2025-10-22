@@ -38,20 +38,15 @@ export default async function handler(
       console.log('[Subscribe API] 기존 설정 발견, 업데이트 시작:', {
         device_id,
         existing_id: existing.id,
+        subscription_type: typeof subscription,
         subscription_preview: JSON.stringify(subscription).substring(0, 100)
       });
 
-      // JSONB 타입 문제 해결: 명시적으로 JSON 문자열로 변환 후 다시 파싱
-      const subscriptionString = typeof subscription === 'string'
-        ? subscription
-        : JSON.stringify(subscription);
-
-      console.log('[Subscribe API] Subscription 타입:', typeof subscription, 'length:', subscriptionString.length);
-
+      // Supabase는 객체를 자동으로 JSONB로 변환하므로 그대로 전달
       const { data, error } = await supabase
         .from('user_notification_settings')
         .update({
-          push_subscription: subscriptionString,
+          push_subscription: subscription,  // 객체 그대로 전달!
           updated_at: new Date().toISOString()
         })
         .eq('device_id', device_id)
@@ -80,17 +75,16 @@ export default async function handler(
       });
     } else {
       // 새로운 설정 생성 (기본값 사용)
-      const subscriptionString = typeof subscription === 'string'
-        ? subscription
-        : JSON.stringify(subscription);
-
-      console.log('[Subscribe API] 새 레코드 생성, Subscription 타입:', typeof subscription);
+      console.log('[Subscribe API] 새 레코드 생성:', {
+        device_id,
+        subscription_type: typeof subscription
+      });
 
       const { data, error } = await supabase
         .from('user_notification_settings')
         .insert({
           device_id,
-          push_subscription: subscriptionString,
+          push_subscription: subscription,  // 객체 그대로 전달!
           enabled: true,
           categories: {
             all: true,
