@@ -41,10 +41,17 @@ export default async function handler(
         subscription_preview: JSON.stringify(subscription).substring(0, 100)
       });
 
+      // JSONB 타입 문제 해결: 명시적으로 JSON 문자열로 변환 후 다시 파싱
+      const subscriptionString = typeof subscription === 'string'
+        ? subscription
+        : JSON.stringify(subscription);
+
+      console.log('[Subscribe API] Subscription 타입:', typeof subscription, 'length:', subscriptionString.length);
+
       const { data, error } = await supabase
         .from('user_notification_settings')
         .update({
-          push_subscription: subscription,
+          push_subscription: subscriptionString,
           updated_at: new Date().toISOString()
         })
         .eq('device_id', device_id)
@@ -73,11 +80,17 @@ export default async function handler(
       });
     } else {
       // 새로운 설정 생성 (기본값 사용)
+      const subscriptionString = typeof subscription === 'string'
+        ? subscription
+        : JSON.stringify(subscription);
+
+      console.log('[Subscribe API] 새 레코드 생성, Subscription 타입:', typeof subscription);
+
       const { data, error } = await supabase
         .from('user_notification_settings')
         .insert({
           device_id,
-          push_subscription: subscription,
+          push_subscription: subscriptionString,
           enabled: true,
           categories: {
             all: true,
