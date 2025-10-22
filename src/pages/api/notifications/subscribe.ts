@@ -42,13 +42,23 @@ export default async function handler(
         subscription_preview: JSON.stringify(subscription).substring(0, 100)
       });
 
+      // 업데이트할 데이터 준비
+      const updateData = {
+        push_subscription: subscription,  // 객체 그대로 전달!
+        updated_at: new Date().toISOString()
+      };
+
+      console.log('[Subscribe API] ⚠️ UPDATE 직전 데이터 확인:', {
+        updateData_type: typeof updateData.push_subscription,
+        updateData_is_null: updateData.push_subscription === null,
+        updateData_is_undefined: updateData.push_subscription === undefined,
+        updateData_full: JSON.stringify(updateData)
+      });
+
       // Supabase는 객체를 자동으로 JSONB로 변환하므로 그대로 전달
       const { data, error } = await supabase
         .from('user_notification_settings')
-        .update({
-          push_subscription: subscription,  // 객체 그대로 전달!
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('device_id', device_id)
         .select()
         .single();
@@ -56,8 +66,11 @@ export default async function handler(
       console.log('[Subscribe API] Update 결과:', {
         success: !error,
         error: error?.message,
+        error_full: error,
         data_id: data?.id,
-        has_subscription: !!data?.push_subscription
+        has_subscription: !!data?.push_subscription,
+        returned_subscription_type: typeof data?.push_subscription,
+        returned_subscription_value: data?.push_subscription
       });
 
       if (error) {
