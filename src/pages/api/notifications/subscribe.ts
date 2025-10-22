@@ -35,6 +35,12 @@ export default async function handler(
 
     if (existing) {
       // 기존 설정 업데이트 (push_subscription만)
+      console.log('[Subscribe API] 기존 설정 발견, 업데이트 시작:', {
+        device_id,
+        existing_id: existing.id,
+        subscription_preview: JSON.stringify(subscription).substring(0, 100)
+      });
+
       const { data, error } = await supabase
         .from('user_notification_settings')
         .update({
@@ -45,8 +51,20 @@ export default async function handler(
         .select()
         .single();
 
+      console.log('[Subscribe API] Update 결과:', {
+        success: !error,
+        error: error?.message,
+        data_id: data?.id,
+        has_subscription: !!data?.push_subscription
+      });
+
       if (error) {
+        console.error('[Subscribe API] ❌ Update 실패:', error);
         throw error;
+      }
+
+      if (!data?.push_subscription) {
+        console.error('[Subscribe API] ⚠️ Update는 성공했지만 push_subscription이 NULL!');
       }
 
       return res.status(200).json({
