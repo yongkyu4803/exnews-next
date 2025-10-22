@@ -38,6 +38,7 @@ html, body, #__next, main {
 
 body {
   touch-action: pan-y; /* 수직 스크롤만 허용 */
+  overscroll-behavior-y: contain; /* Pull-to-Refresh를 위한 overscroll 허용 */
 }
 
 /* 딥 레이어 숨김 방지 */

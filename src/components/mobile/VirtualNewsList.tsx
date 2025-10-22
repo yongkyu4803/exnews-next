@@ -425,8 +425,8 @@ export default function VirtualNewsList({
     }
   }, [refreshing, isLoading, onRefresh, showToast, visualLog]);
 
-  // Pull-to-Refresh 훅 통합
-  const { pullDistance, isPulling, isRefreshing: isPullRefreshing, handlers } = usePullToRefresh({
+  // Pull-to-Refresh 훅 통합 (Window 레벨 이벤트)
+  const { pullDistance, isPulling, isRefreshing: isPullRefreshing } = usePullToRefresh({
     onRefresh: handleRefresh,
     threshold: 80,
     resistance: 2.5,
@@ -500,7 +500,7 @@ export default function VirtualNewsList({
           isPulling={isPulling}
         />
 
-        <PullToRefreshContainer className="window-container" {...handlers}>
+        <PullToRefreshContainer className="window-container">
           {/* 로딩 상태 또는 가상 목록 */}
           {isLoading && localItems.length === 0 ? (
             <LoadingView />
