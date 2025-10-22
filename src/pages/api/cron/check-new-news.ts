@@ -164,7 +164,7 @@ async function sendKeywordNotifications(newsItem: NewsItem): Promise<{
     // 키워드 알림 활성화 사용자 조회
     const { data: users, error } = await supabase
       .from('user_notification_settings')
-      .select('device_id, push_subscription, keywords, schedule')
+      .select('device_id, subscription_data, keywords, schedule')
       .eq('enabled', true)
       .not('keywords', 'is', null)
       .neq('keywords', '{}');
@@ -194,8 +194,8 @@ async function sendKeywordNotifications(newsItem: NewsItem): Promise<{
       }
       usersWithValidKeywords++;
 
-      if (!user.push_subscription) {
-        console.log(`[Cron][Keyword] User ${user.device_id}: no push_subscription`);
+      if (!user.subscription_data) {
+        console.log(`[Cron][Keyword] User ${user.device_id}: no subscription_data`);
         continue;
       }
       usersWithSubscription++;
@@ -226,9 +226,9 @@ async function sendKeywordNotifications(newsItem: NewsItem): Promise<{
 
       if (matchResult.matched) {
         // TEXT 타입이면 JSON.parse 필요
-        const subscription = typeof user.push_subscription === 'string'
-          ? JSON.parse(user.push_subscription)
-          : user.push_subscription;
+        const subscription = typeof user.subscription_data === 'string'
+          ? JSON.parse(user.subscription_data)
+          : user.subscription_data;
 
         matchedUsers.push({
           device_id: user.device_id,
@@ -301,7 +301,7 @@ async function sendCategoryNotifications(newsItem: NewsItem): Promise<{
     // 해당 카테고리 알림 활성화 사용자 조회
     const { data: users, error } = await supabase
       .from('user_notification_settings')
-      .select('device_id, push_subscription, categories, schedule')
+      .select('device_id, subscription_data, categories, schedule')
       .eq('enabled', true);
 
     console.log(`[Cron][Category] News category: "${newsItem.category}"`);
@@ -318,8 +318,8 @@ async function sendCategoryNotifications(newsItem: NewsItem): Promise<{
     let usersMatchedCategory = 0;
 
     const matchedUsers = users.filter(user => {
-      if (!user.push_subscription) {
-        console.log(`[Cron][Category] User ${user.device_id}: no push_subscription`);
+      if (!user.subscription_data) {
+        console.log(`[Cron][Category] User ${user.device_id}: no subscription_data`);
         return false;
       }
       usersWithSubscription++;
@@ -352,9 +352,9 @@ async function sendCategoryNotifications(newsItem: NewsItem): Promise<{
     // TEXT 타입이면 subscription을 JSON.parse
     const subscriptions = matchedUsers.map(user => ({
       device_id: user.device_id,
-      subscription: typeof user.push_subscription === 'string'
-        ? JSON.parse(user.push_subscription)
-        : user.push_subscription
+      subscription: typeof user.subscription_data === 'string'
+        ? JSON.parse(user.subscription_data)
+        : user.subscription_data
     }));
 
     console.log(`[Cron][Category] Filter results:`, {
