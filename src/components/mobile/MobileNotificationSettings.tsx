@@ -406,18 +406,6 @@ const MobileNotificationSettings: React.FC = () => {
     await saveNotificationSettingsToServer(updated);
   };
 
-  // 알림 모드 변경
-  const handleNotificationModeChange = async (mode: 'all' | 'keyword') => {
-    const updated = {
-      ...preferences,
-      notificationMode: mode
-    };
-
-    setPreferences(updated);
-    saveNotificationPreferences(updated);
-    await saveNotificationSettingsToServer(updated);
-  };
-
   // 키워드 변경
   const handleKeywordChange = async (keywords: string[]) => {
     const updated = {
@@ -507,37 +495,13 @@ const MobileNotificationSettings: React.FC = () => {
       {preferences.enabled && permissionGranted && (
         <>
           <Card>
-            <SettingTitle style={{ marginBottom: 12 }}>알림 방식</SettingTitle>
-            <SettingDescription>어떤 뉴스에 대해 알림을 받으시겠습니까?</SettingDescription>
-
-            <ChipGroup style={{ marginTop: 16 }}>
-              <Chip
-                selected={preferences.notificationMode === 'all'}
-                onClick={() => handleNotificationModeChange('all')}
-                disabled={loading}
-              >
-                📰 전체 뉴스
-              </Chip>
-              <Chip
-                selected={preferences.notificationMode === 'keyword'}
-                onClick={() => handleNotificationModeChange('keyword')}
-                disabled={loading}
-              >
-                🔍 키워드 뉴스만
-              </Chip>
-            </ChipGroup>
+            <KeywordManager
+              keywords={preferences.keywords || []}
+              onChange={handleKeywordChange}
+              maxKeywords={10}
+              disabled={loading}
+            />
           </Card>
-
-          {preferences.notificationMode === 'keyword' ? (
-            <Card>
-              <KeywordManager
-                keywords={preferences.keywords || []}
-                onChange={handleKeywordChange}
-                maxKeywords={10}
-                disabled={loading}
-              />
-            </Card>
-          )}
 
           <Card>
             <SettingItem>
