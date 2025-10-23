@@ -1,12 +1,22 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 import { matchKeywords } from '@/utils/keywordMatcher';
 import {
   sendPushNotificationBatch,
-  createKeywordNotificationPayload,
-  createCategoryNotificationPayload,
-  cleanupExpiredSubscription
+  createKeywordNotificationPayload
 } from '@/utils/pushSender';
+
+// Supabase Admin 클라이언트 (서비스 역할 키 사용)
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
 
 interface NewsItem {
   id: number;
@@ -19,7 +29,6 @@ interface NewsItem {
 
 interface SendNotificationRequest {
   news: NewsItem | NewsItem[];
-  mode?: 'keyword' | 'category' | 'both';
   apiKey?: string; // 보안을 위한 API 키 (선택)
 }
 
@@ -36,11 +45,11 @@ interface SendNotificationResponse {
 }
 
 /**
- * 푸시 알림 전송 API
+ * 푸시 알림 전송 API (키워드 전용)
  *
  * POST /api/notifications/send
  *
- * 새로운 뉴스가 추가될 때 키워드 또는 카테고리 기반으로
+ * 새로운 뉴스가 추가될 때 키워드 기반으로
  * 사용자들에게 푸시 알림을 전송합니다.
  */
 export default async function handler(
@@ -58,7 +67,7 @@ export default async function handler(
   }
 
   try {
-    const { news, mode = 'both', apiKey }: SendNotificationRequest = req.body;
+    const { news, apiKey }: SendNotificationRequest = req.body;
 
     // API 키 검증 (선택사항 - 보안 강화)
     const expectedApiKey = process.env.NOTIFICATION_API_KEY;
@@ -92,23 +101,12 @@ export default async function handler(
       error?: string;
     }> = [];
 
-    // 각 뉴스에 대해 알림 전송
+    // 각 뉴스에 대해 키워드 기반 알림 전송
     for (const newsItem of newsList) {
-      // 1. 키워드 기반 알림 전송
-      if (mode === 'keyword' || mode === 'both') {
-        const keywordResult = await sendKeywordNotifications(newsItem);
-        totalSent += keywordResult.sent;
-        totalFailed += keywordResult.failed;
-        allDetails.push(...keywordResult.details);
-      }
-
-      // 2. 카테고리 기반 알림 전송
-      if (mode === 'category' || mode === 'both') {
-        const categoryResult = await sendCategoryNotifications(newsItem);
-        totalSent += categoryResult.sent;
-        totalFailed += categoryResult.failed;
-        allDetails.push(...categoryResult.details);
-      }
+      const result = await sendKeywordNotifications(newsItem);
+      totalSent += result.sent;
+      totalFailed += result.failed;
+      allDetails.push(...result.details);
     }
 
     return res.status(200).json({
@@ -138,33 +136,60 @@ async function sendKeywordNotifications(newsItem: NewsItem) {
   const details: Array<{ device_id: string; success: boolean; error?: string }> = [];
 
   try {
-    // 키워드 알림 모드 사용자 조회
-    const { data: users, error } = await supabase
-      .from('user_notification_settings')
-      .select('device_id, push_subscription, keywords')
-      .eq('enabled', true)
-      .not('keywords', 'is', null)
-      .neq('keywords', '{}'); // 빈 배열이 아닌 경우
+    console.log('[알림 전송] 뉴스:', newsItem.title);
+
+    // 활성화된 구독자 조회 (새 테이블 구조)
+    const { data: subscribers, error } = await supabaseAdmin
+      .from('keyword_push_subscriptions')
+      .select('device_id, endpoint, p256dh_key, auth_key, keywords, schedule_enabled, schedule_start, schedule_end')
+      .eq('enabled', true);
 
     if (error) {
-      console.error('Error fetching keyword users:', error);
+      console.error('구독자 조회 오류:', error);
       return { sent, failed, details };
     }
 
-    if (!users || users.length === 0) {
+    if (!subscribers || subscribers.length === 0) {
+      console.log('[알림 전송] 활성 구독자 없음');
       return { sent, failed, details };
     }
 
-    // 각 사용자의 키워드와 뉴스 매칭
+    console.log(`[알림 전송] 총 ${subscribers.length}명의 활성 구독자 확인`);
+
+    // 현재 시간 확인 (KST)
+    const now = new Date();
+    const kstOffset = 9 * 60; // KST = UTC+9
+    const kstTime = new Date(now.getTime() + kstOffset * 60 * 1000);
+    const currentHour = kstTime.getUTCHours();
+    const currentMinute = kstTime.getUTCMinutes();
+    const currentTimeMinutes = currentHour * 60 + currentMinute;
+
+    // 키워드 매칭 및 시간대 필터링
     const matchedUsers: Array<{
       device_id: string;
       subscription: PushSubscriptionJSON;
       matchedKeywords: string[];
     }> = [];
 
-    for (const user of users) {
-      if (!user.keywords || user.keywords.length === 0) continue;
-      if (!user.push_subscription) continue;
+    for (const user of subscribers) {
+      // 시간대 체크
+      if (user.schedule_enabled) {
+        const [startHour, startMinute] = user.schedule_start.split(':').map(Number);
+        const [endHour, endMinute] = user.schedule_end.split(':').map(Number);
+        const startTimeMinutes = startHour * 60 + startMinute;
+        const endTimeMinutes = endHour * 60 + endMinute;
+
+        if (currentTimeMinutes < startTimeMinutes || currentTimeMinutes > endTimeMinutes) {
+          console.log(`[알림 전송] ${user.device_id}: 시간대 제외 (${currentHour}:${currentMinute})`);
+          continue;
+        }
+      }
+
+      // 키워드 매칭
+      if (!user.keywords || user.keywords.length === 0) {
+        console.log(`[알림 전송] ${user.device_id}: 키워드 없음`);
+        continue;
+      }
 
       const matchResult = matchKeywords(
         {
@@ -175,13 +200,26 @@ async function sendKeywordNotifications(newsItem: NewsItem) {
       );
 
       if (matchResult.matched) {
+        // Subscription 객체 재구성
+        const subscription: PushSubscriptionJSON = {
+          endpoint: user.endpoint,
+          keys: {
+            p256dh: user.p256dh_key,
+            auth: user.auth_key
+          }
+        };
+
         matchedUsers.push({
           device_id: user.device_id,
-          subscription: user.push_subscription,
+          subscription,
           matchedKeywords: matchResult.matchedKeywords
         });
+
+        console.log(`[알림 전송] ${user.device_id}: 매칭됨 (키워드: ${matchResult.matchedKeywords.join(', ')})`);
       }
     }
+
+    console.log(`[알림 전송] 매칭된 사용자: ${matchedUsers.length}명`);
 
     // 매칭된 사용자에게 알림 전송
     if (matchedUsers.length > 0) {
@@ -190,7 +228,7 @@ async function sendKeywordNotifications(newsItem: NewsItem) {
         subscription: user.subscription
       }));
 
-      // 첫 번째 사용자의 매칭 키워드로 페이로드 생성 (모든 사용자에게 동일한 알림)
+      // 각 사용자별로 매칭된 키워드로 페이로드 생성
       const payload = createKeywordNotificationPayload(
         newsItem.title,
         matchedUsers[0].matchedKeywords,
@@ -203,12 +241,18 @@ async function sendKeywordNotifications(newsItem: NewsItem) {
       for (const result of results) {
         if (result.result.success) {
           sent++;
+          console.log(`[알림 전송] ${result.device_id}: 성공`);
         } else {
           failed++;
+          console.error(`[알림 전송] ${result.device_id}: 실패 -`, result.result.error);
 
-          // 만료된 구독 정리
+          // 만료된 구독 정리 (410 Gone)
           if (result.result.statusCode === 410) {
-            await cleanupExpiredSubscription(result.device_id);
+            console.log(`[알림 전송] ${result.device_id}: 만료된 구독 삭제`);
+            await supabaseAdmin
+              .from('keyword_push_subscriptions')
+              .delete()
+              .eq('device_id', result.device_id);
           }
         }
 
@@ -220,108 +264,9 @@ async function sendKeywordNotifications(newsItem: NewsItem) {
       }
     }
   } catch (error) {
-    console.error('Keyword notification error:', error);
+    console.error('키워드 알림 전송 오류:', error);
   }
 
-  return { sent, failed, details };
-}
-
-/**
- * 카테고리 기반 알림 전송
- */
-async function sendCategoryNotifications(newsItem: NewsItem) {
-  let sent = 0;
-  let failed = 0;
-  const details: Array<{ device_id: string; success: boolean; error?: string }> = [];
-
-  try {
-    // 카테고리 알림 모드 사용자 조회
-    const { data: users, error } = await supabase
-      .from('user_notification_settings')
-      .select('device_id, push_subscription, categories, schedule')
-      .eq('enabled', true);
-
-    if (error) {
-      console.error('Error fetching category users:', error);
-      return { sent, failed, details };
-    }
-
-    if (!users || users.length === 0) {
-      return { sent, failed, details };
-    }
-
-    // 현재 시간대 확인 (시간대 필터링)
-    const now = new Date();
-    const hour = now.getHours();
-    const isMorning = hour >= 7 && hour < 9;
-    const isAfternoon = hour >= 12 && hour < 14;
-    const isEvening = hour >= 18 && hour < 20;
-
-    // 카테고리 매칭 및 시간대 필터링
-    const matchedUsers: Array<{
-      device_id: string;
-      subscription: PushSubscriptionJSON;
-    }> = [];
-
-    for (const user of users) {
-      if (!user.push_subscription) continue;
-      if (!user.categories) continue;
-
-      // 시간대 체크
-      const schedule = user.schedule || { morning: true, afternoon: false, evening: true };
-      const isAllowedTime =
-        (isMorning && schedule.morning) ||
-        (isAfternoon && schedule.afternoon) ||
-        (isEvening && schedule.evening);
-
-      if (!isAllowedTime) continue;
-
-      // 카테고리 매칭
-      const categories = user.categories;
-      const hasAllCategory = categories.all === true;
-      const hasCategoryMatch = categories[newsItem.category] === true;
-
-      if (hasAllCategory || hasCategoryMatch) {
-        matchedUsers.push({
-          device_id: user.device_id,
-          subscription: user.push_subscription
-        });
-      }
-    }
-
-    // 매칭된 사용자에게 알림 전송
-    if (matchedUsers.length > 0) {
-      const payload = createCategoryNotificationPayload(
-        newsItem.title,
-        newsItem.category,
-        newsItem.original_link,
-        newsItem.media_name
-      );
-
-      const results = await sendPushNotificationBatch(matchedUsers, payload);
-
-      for (const result of results) {
-        if (result.result.success) {
-          sent++;
-        } else {
-          failed++;
-
-          // 만료된 구독 정리
-          if (result.result.statusCode === 410) {
-            await cleanupExpiredSubscription(result.device_id);
-          }
-        }
-
-        details.push({
-          device_id: result.device_id,
-          success: result.result.success,
-          error: result.result.error
-        });
-      }
-    }
-  } catch (error) {
-    console.error('Category notification error:', error);
-  }
-
+  console.log(`[알림 전송] 완료 - 성공: ${sent}, 실패: ${failed}`);
   return { sent, failed, details };
 }
