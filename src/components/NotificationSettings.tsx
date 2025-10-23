@@ -100,21 +100,32 @@ const NotificationSettings: React.FC = () => {
     checkSupport();
   }, []);
   
-  // 알림 권한 요청
+  // 알림 권한 요청 및 구독 활성화
   const handleRequestPermission = async () => {
+    console.log('🔔 [handleRequestPermission] 호출됨!');
     setLoading(true);
     try {
-      const permission = await requestNotificationPermission();
-      setPermissionGranted(permission === 'granted');
-      
-      if (permission === 'granted') {
-        // 권한이 허용되면 구독 활성화
-        await handleToggleEnabled(true);
+      console.log('🔔 [handleRequestPermission] 권한 요청 시작...');
+      // subscribeToPush()가 내부에서 권한도 요청하고 구독도 처리함
+      const subscription = await subscribeToPush();
+
+      if (subscription) {
+        console.log('🔔 [handleRequestPermission] 구독 성공!');
+        setPermissionGranted(true);
+        setPreferences(prev => {
+          const updated = { ...prev, enabled: true };
+          saveNotificationPreferences(updated);
+          return updated;
+        });
+        // @ts-ignore
+        message.success('알림이 활성화되었습니다');
+      } else {
+        console.log('🔔 [handleRequestPermission] 구독 실패 또는 취소됨');
       }
     } catch (error) {
       // @ts-ignore
       message.error('알림 권한 요청 실패');
-      console.error('알림 권한 요청 실패:', error);
+      console.error('🔔 [handleRequestPermission] 에러:', error);
     } finally {
       setLoading(false);
     }
