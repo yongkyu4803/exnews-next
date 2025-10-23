@@ -1,5 +1,10 @@
 /**
- * 푸시 알림 유틸리티 함수
+ * 푸시 알림 유틸리티 함수 (키워드 전용)
+ *
+ * 변경사항:
+ * - 카테고리 관련 함수 제거
+ * - 키워드 기반 알림만 지원
+ * - 단순화된 설정 구조
  */
 
 import { getOrCreateDeviceId } from './deviceId';
@@ -16,15 +21,15 @@ export const requestNotificationPermission = async (): Promise<NotificationPermi
   if (!('Notification' in window)) {
     throw new Error('이 브라우저는 알림을 지원하지 않습니다.');
   }
-  
+
   if (Notification.permission === 'granted') {
     return 'granted';
   }
-  
+
   if (Notification.permission === 'denied') {
     throw new Error('알림 권한이 거부되었습니다. 브라우저 설정에서 변경해주세요.');
   }
-  
+
   const permission = await Notification.requestPermission();
   return permission;
 };
@@ -36,21 +41,21 @@ export const registerServiceWorker = async (): Promise<ServiceWorkerRegistration
   }
 
   try {
-    // next-pwa가 생성한 sw.js 사용 (개발/프로덕션 모두)
+    // next-pwa가 생성한 sw.js 사용
     const registration = await navigator.serviceWorker.register('/sw.js');
-    console.log('서비스 워커 등록 성공:', registration.scope);
+    console.log('[푸시] 서비스 워커 등록 성공:', registration.scope);
     await navigator.serviceWorker.ready;
-    console.log('서비스 워커 준비 완료');
+    console.log('[푸시] 서비스 워커 준비 완료');
     return registration;
   } catch (error) {
-    console.error('서비스 워커 등록 실패:', error);
+    console.error('[푸시] 서비스 워커 등록 실패:', error);
     throw error;
   }
 };
 
 // 푸시 구독 등록
 export const subscribeToPush = async (): Promise<PushSubscription | null> => {
-  console.log('[subscribeToPush] 🚀 시작...');
+  console.log('[subscribeToPush] 시작...');
 
   try {
     console.log('[subscribeToPush] Step 1: 지원 여부 확인');
@@ -89,10 +94,9 @@ export const subscribeToPush = async (): Promise<PushSubscription | null> => {
     if (!subscription) {
       console.log('[subscribeToPush] Step 6: 새 구독 생성');
 
-      // VAPID 키가 없으면 에러 발생
+      // VAPID 키 검증
       if (!PUBLIC_VAPID_KEY) {
         console.error('[subscribeToPush] ❌ VAPID 키가 설정되지 않았습니다!');
-        console.error('[subscribeToPush] PUBLIC_VAPID_KEY:', PUBLIC_VAPID_KEY);
         throw new Error('VAPID 키가 설정되지 않았습니다.');
       }
       console.log('[subscribeToPush] ✅ VAPID 키 확인:', PUBLIC_VAPID_KEY.substring(0, 20) + '...');
@@ -109,8 +113,7 @@ export const subscribeToPush = async (): Promise<PushSubscription | null> => {
     }
 
     console.log('[subscribeToPush] Step 7: 구독 정보 확인');
-    console.log('[subscribeToPush] Endpoint:', subscription.endpoint);
-    console.log('[subscribeToPush] Keys:', Object.keys(subscription.toJSON().keys || {}));
+    console.log('[subscribeToPush] Endpoint:', subscription.endpoint.substring(0, 50) + '...');
 
     console.log('[subscribeToPush] Step 8: 서버에 구독 정보 전송');
     await sendSubscriptionToServer(subscription);
@@ -119,11 +122,7 @@ export const subscribeToPush = async (): Promise<PushSubscription | null> => {
     console.log('[subscribeToPush] 🎉 전체 프로세스 완료!');
     return subscription;
   } catch (error) {
-    console.error('[subscribeToPush] ❌❌❌ 푸시 구독 실패:', error);
-    console.error('[subscribeToPush] 에러 상세:', {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
-    });
+    console.error('[subscribeToPush] ❌ 푸시 구독 실패:', error);
     throw error;
   }
 };
@@ -133,53 +132,19 @@ export const unsubscribeFromPush = async (): Promise<boolean> => {
   try {
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.getSubscription();
-    
+
     if (!subscription) {
       return true;
     }
-    
+
     // 서버에서 구독 정보 삭제 요청
     await deleteSubscriptionFromServer();
 
     const result = await subscription.unsubscribe();
-    console.log('푸시 구독 취소:', result);
+    console.log('[푸시] 구독 취소:', result);
     return result;
   } catch (error) {
-    console.error('푸시 구독 취소 실패:', error);
-    return false;
-  }
-};
-
-// 카테고리별 푸시 알림 설정
-export const subscribeToPushByCategory = async (category: string): Promise<boolean> => {
-  try {
-    const subscription = await subscribeToPush();
-    if (!subscription) {
-      return false;
-    }
-    
-    // 로컬 스토리지에 카테고리 선호도 저장
-    const preferences = getNotificationPreferences();
-    preferences.categories[category] = true;
-    saveNotificationPreferences(preferences);
-    
-    return true;
-  } catch (error) {
-    console.error(`${category} 카테고리 구독 실패:`, error);
-    return false;
-  }
-};
-
-// 카테고리별 푸시 알림 취소
-export const unsubscribeFromPushByCategory = async (category: string): Promise<boolean> => {
-  try {
-    const preferences = getNotificationPreferences();
-    preferences.categories[category] = false;
-    saveNotificationPreferences(preferences);
-    
-    return true;
-  } catch (error) {
-    console.error(`${category} 카테고리 구독 취소 실패:`, error);
+    console.error('[푸시] 구독 취소 실패:', error);
     return false;
   }
 };
@@ -190,100 +155,95 @@ const urlBase64ToUint8Array = (base64String: string): Uint8Array => {
   const base64 = (base64String + padding)
     .replace(/-/g, '+')
     .replace(/_/g, '/');
-  
+
   const rawData = window.atob(base64);
   const outputArray = new Uint8Array(rawData.length);
-  
+
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
-  
+
   return outputArray;
 };
 
-// 사용자 알림 설정 인터페이스
-interface NotificationPreferences {
+/**
+ * 키워드 알림 설정 인터페이스 (단순화)
+ */
+interface KeywordNotificationPreferences {
   enabled: boolean;
-  notificationMode?: 'all' | 'keyword'; // 알림 모드: 전체 뉴스 or 키워드만
-  categories: {
-    [key: string]: boolean;
-  };
+  keywords: string[];
   schedule: {
-    enabled: boolean; // 시간 제한 활성화 여부
-    startTime: string; // 시작 시간 (HH:mm 형식, 한국 시간 KST)
-    endTime: string;   // 종료 시간 (HH:mm 형식, 한국 시간 KST)
+    enabled: boolean;
+    startTime: string; // HH:mm 형식 (KST)
+    endTime: string;   // HH:mm 형식 (KST)
   };
-  keywords?: string[]; // 관심 키워드 목록
 }
 
-// 기본 알림 설정
-const DEFAULT_PREFERENCES: NotificationPreferences = {
+/**
+ * 기본 알림 설정
+ */
+const DEFAULT_PREFERENCES: KeywordNotificationPreferences = {
   enabled: false,
-  notificationMode: 'all',
-  categories: {
-    all: true,
-    정치: false,
-    경제: false,
-    사회: false,
-    국제: false,
-    문화: false,
-    '연예/스포츠': false,
-    기타: false
-  },
+  keywords: [],
   schedule: {
-    enabled: false,     // 기본적으로 시간 제한 비활성화 (24시간 알림)
-    startTime: '09:00', // 기본 시작 시간: 오전 9시 (KST)
-    endTime: '22:00'    // 기본 종료 시간: 오후 10시 (KST)
-  },
-  keywords: []
+    enabled: false,
+    startTime: '09:00',
+    endTime: '22:00'
+  }
 };
 
-// 알림 설정 가져오기
-export const getNotificationPreferences = (): NotificationPreferences => {
+/**
+ * 알림 설정 가져오기 (LocalStorage)
+ */
+export const getNotificationPreferences = (): KeywordNotificationPreferences => {
   if (typeof window === 'undefined') {
     return DEFAULT_PREFERENCES;
   }
-  
+
   const storedPrefs = localStorage.getItem('notification_preferences');
   if (!storedPrefs) {
     return DEFAULT_PREFERENCES;
   }
-  
+
   try {
     return JSON.parse(storedPrefs);
   } catch (error) {
-    console.error('알림 설정 가져오기 실패:', error);
+    console.error('[푸시] 설정 가져오기 실패:', error);
     return DEFAULT_PREFERENCES;
   }
 };
 
-// 알림 설정 저장하기
-export const saveNotificationPreferences = (preferences: NotificationPreferences): void => {
+/**
+ * 알림 설정 저장하기 (LocalStorage)
+ */
+export const saveNotificationPreferences = (preferences: KeywordNotificationPreferences): void => {
   if (typeof window === 'undefined') {
     return;
   }
-  
+
   try {
     localStorage.setItem('notification_preferences', JSON.stringify(preferences));
   } catch (error) {
-    console.error('알림 설정 저장 실패:', error);
+    console.error('[푸시] 설정 저장 실패:', error);
   }
 };
 
-// 테스트 알림 보내기
+/**
+ * 테스트 알림 보내기
+ */
 export const sendTestNotification = async (): Promise<boolean> => {
   if (!('Notification' in window)) {
-    console.error('이 브라우저는 알림을 지원하지 않습니다.');
+    console.error('[푸시] 이 브라우저는 알림을 지원하지 않습니다.');
     return false;
   }
 
   if (Notification.permission !== 'granted') {
-    console.log('알림 권한이 없습니다.');
+    console.log('[푸시] 알림 권한이 없습니다.');
     return false;
   }
 
   try {
-    // Service Worker를 통한 알림 (actions 지원)
+    // Service Worker를 통한 알림
     const registration = await navigator.serviceWorker.ready;
 
     await registration.showNotification('단독 뉴스 테스트 알림', {
@@ -307,10 +267,10 @@ export const sendTestNotification = async (): Promise<boolean> => {
       ]
     });
 
-    console.log('테스트 알림 전송 성공');
+    console.log('[푸시] 테스트 알림 전송 성공');
     return true;
   } catch (error) {
-    console.error('테스트 알림 전송 실패:', error);
+    console.error('[푸시] 테스트 알림 전송 실패:', error);
     return false;
   }
 };
@@ -319,7 +279,7 @@ export const sendTestNotification = async (): Promise<boolean> => {
  * 서버에 푸시 구독 정보 전송
  */
 async function sendSubscriptionToServer(subscription: PushSubscription): Promise<void> {
-  console.log('[sendSubscriptionToServer] 🚀 시작...');
+  console.log('[sendSubscriptionToServer] 시작...');
 
   try {
     const deviceId = getOrCreateDeviceId();
@@ -328,8 +288,7 @@ async function sendSubscriptionToServer(subscription: PushSubscription): Promise
     const subscriptionJSON = subscription.toJSON();
     console.log('[sendSubscriptionToServer] Subscription JSON:', {
       endpoint: subscriptionJSON.endpoint?.substring(0, 50) + '...',
-      hasKeys: !!subscriptionJSON.keys,
-      keysCount: Object.keys(subscriptionJSON.keys || {}).length
+      hasKeys: !!subscriptionJSON.keys
     });
 
     console.log('[sendSubscriptionToServer] API 호출 중...');
@@ -346,24 +305,19 @@ async function sendSubscriptionToServer(subscription: PushSubscription): Promise
 
     console.log('[sendSubscriptionToServer] API 응답:', {
       status: response.status,
-      statusText: response.statusText,
       ok: response.ok
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[sendSubscriptionToServer] ❌ 서버 응답 오류:', errorText);
-      throw new Error(`서버 응답 오류: ${response.status} - ${errorText}`);
+      throw new Error(`서버 응답 오류: ${response.status}`);
     }
 
     const data = await response.json();
     console.log('[sendSubscriptionToServer] ✅ 서버 구독 등록 성공:', data);
   } catch (error) {
-    console.error('[sendSubscriptionToServer] ❌❌❌ 서버 구독 전송 실패:', error);
-    console.error('[sendSubscriptionToServer] 에러 상세:', {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined
-    });
+    console.error('[sendSubscriptionToServer] ❌ 서버 구독 전송 실패:', error);
     throw error;
   }
 }
@@ -383,9 +337,9 @@ async function deleteSubscriptionFromServer(): Promise<void> {
       throw new Error(`서버 응답 오류: ${response.status}`);
     }
 
-    console.log('서버 구독 삭제 성공');
+    console.log('[푸시] 서버 구독 삭제 성공');
   } catch (error) {
-    console.error('서버 구독 삭제 실패:', error);
+    console.error('[푸시] 서버 구독 삭제 실패:', error);
     // 삭제 실패해도 로컬 구독 취소는 진행
   }
 }
@@ -393,7 +347,7 @@ async function deleteSubscriptionFromServer(): Promise<void> {
 /**
  * 서버에서 알림 설정 가져오기
  */
-export async function fetchNotificationSettings(): Promise<NotificationPreferences | null> {
+export async function fetchNotificationSettings(): Promise<KeywordNotificationPreferences | null> {
   try {
     const deviceId = getOrCreateDeviceId();
 
@@ -410,25 +364,27 @@ export async function fetchNotificationSettings(): Promise<NotificationPreferenc
 
     const data = await response.json();
 
-    // 서버 데이터를 NotificationPreferences 형식으로 변환
+    // 서버 데이터를 KeywordNotificationPreferences 형식으로 변환
     return {
       enabled: data.enabled,
-      notificationMode: data.notificationMode || 'all',
-      categories: data.categories,
-      schedule: data.schedule,
-      keywords: data.keywords || []
+      keywords: data.keywords || [],
+      schedule: {
+        enabled: data.schedule_enabled || false,
+        startTime: data.schedule_start || '09:00',
+        endTime: data.schedule_end || '22:00'
+      }
     };
   } catch (error) {
-    console.error('서버 설정 가져오기 실패:', error);
+    console.error('[푸시] 서버 설정 가져오기 실패:', error);
     return null;
   }
 }
 
 /**
- * 서버에 알림 설정 저장
+ * 서버에 알림 설정 저장 (키워드만)
  */
 export async function saveNotificationSettingsToServer(
-  preferences: NotificationPreferences
+  preferences: KeywordNotificationPreferences
 ): Promise<boolean> {
   try {
     const deviceId = getOrCreateDeviceId();
@@ -441,9 +397,10 @@ export async function saveNotificationSettingsToServer(
       body: JSON.stringify({
         device_id: deviceId,
         enabled: preferences.enabled,
-        categories: preferences.categories,
-        schedule: preferences.schedule,
-        keywords: preferences.keywords || []
+        keywords: preferences.keywords,
+        schedule_enabled: preferences.schedule.enabled,
+        schedule_start: preferences.schedule.startTime,
+        schedule_end: preferences.schedule.endTime
       })
     });
 
@@ -451,10 +408,10 @@ export async function saveNotificationSettingsToServer(
       throw new Error(`서버 응답 오류: ${response.status}`);
     }
 
-    console.log('서버 설정 저장 성공');
+    console.log('[푸시] 서버 설정 저장 성공');
     return true;
   } catch (error) {
-    console.error('서버 설정 저장 실패:', error);
+    console.error('[푸시] 서버 설정 저장 실패:', error);
     return false;
   }
-} 
+}

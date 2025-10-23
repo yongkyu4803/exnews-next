@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import styled from '@emotion/styled';
-import { 
+import {
   isPushNotificationSupported,
-  requestNotificationPermission, 
   subscribeToPush,
   unsubscribeFromPush,
-  subscribeToPushByCategory,
-  unsubscribeFromPushByCategory,
   getNotificationPreferences,
   saveNotificationPreferences,
+  saveNotificationSettingsToServer,
   sendTestNotification
 } from '@/utils/pushNotification';
-import { Categories } from '@/types';
 
 // 동적 임포트
 const Card = dynamic(() => import('antd/lib/card'), { ssr: false }) as any;
@@ -20,10 +17,11 @@ const Switch = dynamic(() => import('antd/lib/switch'), { ssr: false }) as any;
 const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
 const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as any;
 const Divider = dynamic(() => import('antd/lib/divider'), { ssr: false }) as any;
-const Checkbox = dynamic(() => import('antd/lib/checkbox'), { ssr: false }) as any;
 const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as any;
 const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as any;
 const Tag = dynamic(() => import('antd/lib/tag'), { ssr: false }) as any;
+const Input = dynamic(() => import('antd/lib/input'), { ssr: false }) as any;
+const TimePicker = dynamic(() => import('antd/lib/time-picker'), { ssr: false }) as any;
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -40,36 +38,16 @@ const SettingItem = styled.div`
   margin-bottom: 16px;
 `;
 
-const CategoryList = styled.div`
+const KeywordContainer = styled.div`
   margin-top: 16px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 12px;
-  
-  @media (max-width: 600px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
 `;
 
-const ScheduleGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 16px;
-  
-  @media (max-width: 600px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const ScheduleItem = styled.div`
-  padding: 16px;
-  border: 1px solid #eee;
-  border-radius: 8px;
+const KeywordList = styled.div`
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  margin-bottom: 12px;
 `;
 
 const NotificationCard = styled(Card)`
@@ -79,334 +57,282 @@ const NotificationCard = styled(Card)`
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 `;
 
+const TimePickerContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+`;
+
 const NotificationSettings: React.FC = () => {
   const [supported, setSupported] = useState(false);
   const [permissionGranted, setPermissionGranted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [preferences, setPreferences] = useState(getNotificationPreferences());
   const [isTestingNotification, setIsTestingNotification] = useState(false);
-  
+  const [newKeyword, setNewKeyword] = useState('');
+
   useEffect(() => {
     // 브라우저 지원 확인
     const checkSupport = async () => {
       const isSupported = isPushNotificationSupported();
       setSupported(isSupported);
-      
+
       if (isSupported && Notification.permission === 'granted') {
         setPermissionGranted(true);
       }
     };
-    
+
     checkSupport();
   }, []);
-  
-  // 알림 권한 요청 및 구독 활성화
-  const handleRequestPermission = async () => {
-    console.log('🔔 [handleRequestPermission] 호출됨!');
-    setLoading(true);
-    try {
-      console.log('🔔 [handleRequestPermission] 권한 요청 시작...');
-      // subscribeToPush()가 내부에서 권한도 요청하고 구독도 처리함
-      const subscription = await subscribeToPush();
 
-      if (subscription) {
-        console.log('🔔 [handleRequestPermission] 구독 성공!');
-        setPermissionGranted(true);
-        setPreferences(prev => {
-          const updated = { ...prev, enabled: true };
-          saveNotificationPreferences(updated);
-          return updated;
-        });
-        // @ts-ignore
-        message.success('알림이 활성화되었습니다');
-      } else {
-        console.log('🔔 [handleRequestPermission] 구독 실패 또는 취소됨');
-      }
-    } catch (error) {
-      // @ts-ignore
-      message.error('알림 권한 요청 실패');
-      console.error('🔔 [handleRequestPermission] 에러:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
   // 알림 활성화 변경
   const handleToggleEnabled = async (enabled: boolean) => {
-    console.log('🔔🔔🔔 [NotificationSettings] handleToggleEnabled 호출! enabled:', enabled);
     setLoading(true);
     try {
       if (enabled) {
         // 알림 구독
-        console.log('🔔🔔🔔 [NotificationSettings] subscribeToPush 호출 시작...');
         const subscription = await subscribeToPush();
         if (subscription) {
-          setPreferences(prev => {
-            const updated = { ...prev, enabled: true };
-            saveNotificationPreferences(updated);
-            return updated;
-          });
-          // @ts-ignore
-          message.success('알림이 활성화되었습니다');
-        } else {
-          return;
+          const updated = { ...preferences, enabled: true };
+          setPreferences(updated);
+          saveNotificationPreferences(updated);
+          await saveNotificationSettingsToServer(updated);
         }
       } else {
         // 알림 구독 취소
         const result = await unsubscribeFromPush();
         if (result) {
-          setPreferences(prev => {
-            const updated = { ...prev, enabled: false };
-            saveNotificationPreferences(updated);
-            return updated;
-          });
-          // @ts-ignore
-          message.info('알림이 비활성화되었습니다');
+          const updated = { ...preferences, enabled: false };
+          setPreferences(updated);
+          saveNotificationPreferences(updated);
         }
       }
     } catch (error) {
-      console.error('알림 설정 변경 실패:', error);
-      // @ts-ignore
-      message.error('알림 설정 변경에 실패했습니다');
+      console.error('[Settings] 알림 설정 변경 실패:', error);
     } finally {
       setLoading(false);
     }
   };
-  
-  // 카테고리 알림 변경
-  const handleCategoryChange = async (category: string, checked: boolean) => {
-    try {
-      if (checked) {
-        await subscribeToPushByCategory(category);
-      } else {
-        await unsubscribeFromPushByCategory(category);
-      }
-      
-      setPreferences(prev => {
-        const updated = {
-          ...prev,
-          categories: {
-            ...prev.categories,
-            [category]: checked
-          }
-        };
-        saveNotificationPreferences(updated);
-        return updated;
-      });
-    } catch (error) {
-      console.error('카테고리 설정 변경 실패:', error);
-      // @ts-ignore
-      message.error('카테고리 설정 변경에 실패했습니다');
+
+  // 키워드 추가
+  const handleAddKeyword = () => {
+    if (!newKeyword.trim()) return;
+
+    if (preferences.keywords.includes(newKeyword.trim())) {
+      alert('이미 추가된 키워드입니다.');
+      return;
     }
-  };
-  
-  // 시간 제한 활성화/비활성화
-  const handleScheduleToggle = (checked: boolean) => {
-    setPreferences(prev => {
-      const updated = {
-        ...prev,
-        schedule: {
-          ...prev.schedule,
-          enabled: checked
-        }
-      };
-      saveNotificationPreferences(updated);
-      return updated;
-    });
+
+    const updated = {
+      ...preferences,
+      keywords: [...preferences.keywords, newKeyword.trim()]
+    };
+    setPreferences(updated);
+    saveNotificationPreferences(updated);
+    saveNotificationSettingsToServer(updated);
+    setNewKeyword('');
   };
 
-  // 시작 시간 변경
-  const handleStartTimeChange = (startTime: string) => {
-    setPreferences(prev => {
-      const updated = {
-        ...prev,
-        schedule: {
-          ...prev.schedule,
-          startTime
-        }
-      };
-      saveNotificationPreferences(updated);
-      return updated;
-    });
+  // 키워드 제거
+  const handleRemoveKeyword = (keyword: string) => {
+    const updated = {
+      ...preferences,
+      keywords: preferences.keywords.filter(k => k !== keyword)
+    };
+    setPreferences(updated);
+    saveNotificationPreferences(updated);
+    saveNotificationSettingsToServer(updated);
   };
 
-  // 종료 시간 변경
-  const handleEndTimeChange = (endTime: string) => {
-    setPreferences(prev => {
-      const updated = {
-        ...prev,
-        schedule: {
-          ...prev.schedule,
-          endTime
-        }
-      };
-      saveNotificationPreferences(updated);
-      return updated;
-    });
+  // 시간 제한 활성화 변경
+  const handleToggleSchedule = (enabled: boolean) => {
+    const updated = {
+      ...preferences,
+      schedule: { ...preferences.schedule, enabled }
+    };
+    setPreferences(updated);
+    saveNotificationPreferences(updated);
+    saveNotificationSettingsToServer(updated);
   };
-  
-  // 테스트 알림 전송
-  const handleSendTest = async () => {
-    setLoading(true);
+
+  // 시간 변경
+  const handleTimeChange = (type: 'startTime' | 'endTime', value: string) => {
+    const updated = {
+      ...preferences,
+      schedule: { ...preferences.schedule, [type]: value }
+    };
+    setPreferences(updated);
+    saveNotificationPreferences(updated);
+    saveNotificationSettingsToServer(updated);
+  };
+
+  // 테스트 알림
+  const handleTestNotification = async () => {
+    setIsTestingNotification(true);
     try {
       const result = await sendTestNotification();
       if (result) {
-        // @ts-ignore
-        message.success('테스트 알림이 전송되었습니다');
+        alert('테스트 알림이 전송되었습니다!');
       } else {
-        // @ts-ignore
-        message.error('테스트 알림 전송에 실패했습니다');
+        alert('알림 권한이 없거나 전송에 실패했습니다.');
       }
     } catch (error) {
-      console.error('테스트 알림 전송 실패:', error);
-      // @ts-ignore
-      message.error('테스트 알림 전송에 실패했습니다');
+      console.error('[Settings] 테스트 알림 전송 실패:', error);
+      alert('테스트 알림 전송에 실패했습니다.');
     } finally {
-      setLoading(false);
+      setIsTestingNotification(false);
     }
   };
-  
+
   if (!supported) {
     return (
       <SettingsContainer>
         <Alert
+          message="알림 기능 미지원"
+          description="이 브라우저는 푸시 알림을 지원하지 않습니다."
           type="warning"
-          message="알림 지원되지 않음"
-          description="이 브라우저는 웹 푸시 알림을 지원하지 않습니다. 최신 버전의 Chrome, Firefox, Edge 또는 Safari 브라우저를 사용해주세요."
           showIcon
         />
       </SettingsContainer>
     );
   }
-  
+
   return (
     <SettingsContainer>
-      <Title level={2}>알림 설정</Title>
-      <Paragraph>
-        중요한 뉴스가 발행되면 알림을 받아보세요. 관심 있는 카테고리만 선택하여 맞춤형 알림을 설정할 수 있습니다.
-      </Paragraph>
-      
-      <NotificationCard>
+      <Title level={2}>푸시 알림 설정</Title>
+
+      {/* 기본 설정 */}
+      <NotificationCard title="기본 설정">
         <SettingItem>
-          <Text strong>알림 활성화</Text>
-          {permissionGranted ? (
-            <Switch
-              checked={preferences.enabled}
-              onChange={handleToggleEnabled}
-              loading={loading}
-              disabled={loading}
-            />
-          ) : (
-            <Button 
-              type="primary" 
-              onClick={handleRequestPermission}
-              loading={loading}
-              disabled={loading}
-            >
-              알림 허용
-            </Button>
-          )}
-        </SettingItem>
-        
-        {!permissionGranted && (
-          <Alert
-            type="info"
-            message="알림 권한 필요"
-            description="알림을 받으려면 브라우저에서 알림 권한을 허용해야 합니다."
-            showIcon
-            style={{ marginBottom: 16 }}
+          <div>
+            <Text strong>푸시 알림 활성화</Text>
+            <br />
+            <Text type="secondary">새로운 뉴스가 등록되면 알림을 받습니다</Text>
+          </div>
+          <Switch
+            checked={preferences.enabled && permissionGranted}
+            onChange={handleToggleEnabled}
+            loading={loading}
           />
-        )}
-        
-        {preferences.enabled && permissionGranted && (
+        </SettingItem>
+
+        {preferences.enabled && (
           <>
-            <Divider>카테고리 설정</Divider>
-            <Text>관심 있는 뉴스 카테고리를 선택하세요:</Text>
-            
-            <CategoryList>
-              {Object.entries(preferences.categories).map(([category, enabled]) => (
-                <Checkbox
-                  key={category}
-                  checked={enabled}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleCategoryChange(category, e.target.checked)}
-                  disabled={loading}
-                >
-                  {category === 'all' ? '전체 카테고리' : category}
-                </Checkbox>
-              ))}
-            </CategoryList>
-            
-            <Divider>알림 시간 설정</Divider>
-
-            <div style={{ marginBottom: 16 }}>
-              <Checkbox
-                checked={preferences.schedule.enabled}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleScheduleToggle(e.target.checked)}
-              >
-                <Text strong>알림 시간 제한 설정</Text>
-              </Checkbox>
-              <Text type="secondary" style={{ display: 'block', marginLeft: 24, marginTop: 4 }}>
-                {preferences.schedule.enabled
-                  ? '설정한 시간대에만 알림을 받습니다'
-                  : '24시간 알림을 받습니다'}
-              </Text>
-            </div>
-
-            {preferences.schedule.enabled && (
-              <div style={{ marginLeft: 24, marginTop: 16 }}>
-                <div style={{ marginBottom: 12 }}>
-                  <Text strong style={{ display: 'block', marginBottom: 8 }}>시작 시간</Text>
-                  <input
-                    type="time"
-                    value={preferences.schedule.startTime}
-                    onChange={(e) => handleStartTimeChange(e.target.value)}
-                    style={{
-                      padding: '8px 12px',
-                      border: '1px solid #d9d9d9',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      width: '150px'
-                    }}
-                  />
-                </div>
-
-                <div style={{ marginBottom: 12 }}>
-                  <Text strong style={{ display: 'block', marginBottom: 8 }}>종료 시간</Text>
-                  <input
-                    type="time"
-                    value={preferences.schedule.endTime}
-                    onChange={(e) => handleEndTimeChange(e.target.value)}
-                    style={{
-                      padding: '8px 12px',
-                      border: '1px solid #d9d9d9',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      width: '150px'
-                    }}
-                  />
-                </div>
-
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  ⏰ 한국 시간(KST, UTC+9) 기준으로 설정됩니다
-                </Text>
-              </div>
-            )}
-            
             <Divider />
-            
-            <Button 
-              onClick={handleSendTest}
-              loading={loading}
-              disabled={loading}
-              style={{ marginRight: 10 }}
-            >
-              테스트 알림 보내기
-            </Button>
+            <Space>
+              <Button
+                onClick={handleTestNotification}
+                loading={isTestingNotification}
+              >
+                테스트 알림 보내기
+              </Button>
+            </Space>
           </>
         )}
       </NotificationCard>
+
+      {/* 키워드 설정 */}
+      {preferences.enabled && (
+        <NotificationCard title="키워드 알림">
+          <Paragraph type="secondary">
+            관심 키워드를 추가하면 해당 키워드가 포함된 뉴스만 알림을 받습니다.
+            키워드를 추가하지 않으면 모든 뉴스에 대해 알림을 받습니다.
+          </Paragraph>
+
+          <KeywordContainer>
+            <Space.Compact style={{ width: '100%' }}>
+              <Input
+                placeholder="키워드 입력 (예: 검찰, 대통령)"
+                value={newKeyword}
+                onChange={(e: any) => setNewKeyword(e.target.value)}
+                onPressEnter={handleAddKeyword}
+              />
+              <Button type="primary" onClick={handleAddKeyword}>
+                추가
+              </Button>
+            </Space.Compact>
+
+            {preferences.keywords.length > 0 && (
+              <KeywordList>
+                {preferences.keywords.map((keyword) => (
+                  <Tag
+                    key={keyword}
+                    closable
+                    onClose={() => handleRemoveKeyword(keyword)}
+                    color="blue"
+                  >
+                    {keyword}
+                  </Tag>
+                ))}
+              </KeywordList>
+            )}
+
+            {preferences.keywords.length === 0 && (
+              <Alert
+                message="모든 뉴스 알림"
+                description="키워드가 없으면 모든 새 뉴스에 대해 알림을 받습니다."
+                type="info"
+                showIcon
+                style={{ marginTop: 12 }}
+              />
+            )}
+          </KeywordContainer>
+        </NotificationCard>
+      )}
+
+      {/* 시간대 설정 */}
+      {preferences.enabled && (
+        <NotificationCard title="알림 시간 설정">
+          <SettingItem>
+            <div>
+              <Text strong>시간 제한 활성화</Text>
+              <br />
+              <Text type="secondary">특정 시간대에만 알림을 받습니다</Text>
+            </div>
+            <Switch
+              checked={preferences.schedule.enabled}
+              onChange={handleToggleSchedule}
+            />
+          </SettingItem>
+
+          {preferences.schedule.enabled && (
+            <TimePickerContainer>
+              <div>
+                <Text>시작 시간</Text>
+                <Input
+                  type="time"
+                  value={preferences.schedule.startTime}
+                  onChange={(e: any) => handleTimeChange('startTime', e.target.value)}
+                  style={{ marginTop: 8, width: 150 }}
+                />
+              </div>
+              <Text>~</Text>
+              <div>
+                <Text>종료 시간</Text>
+                <Input
+                  type="time"
+                  value={preferences.schedule.endTime}
+                  onChange={(e: any) => handleTimeChange('endTime', e.target.value)}
+                  style={{ marginTop: 8, width: 150 }}
+                />
+              </div>
+            </TimePickerContainer>
+          )}
+        </NotificationCard>
+      )}
+
+      {/* 안내 메시지 */}
+      {!permissionGranted && (
+        <Alert
+          message="알림 권한이 필요합니다"
+          description="푸시 알림을 받으려면 브라우저 권한이 필요합니다. 위의 '푸시 알림 활성화'를 켜주세요."
+          type="info"
+          showIcon
+        />
+      )}
     </SettingsContainer>
   );
 };
 
-export default NotificationSettings; 
+export default NotificationSettings;

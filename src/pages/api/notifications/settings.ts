@@ -1,31 +1,26 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 
-export interface NotificationSettings {
+/**
+ * 키워드 푸시 알림 설정 인터페이스 (단순화)
+ */
+export interface KeywordNotificationSettings {
   id?: string;
   device_id: string;
-  subscription_data?: PushSubscriptionJSON | null;
   enabled: boolean;
-  categories: {
-    [key: string]: boolean;
-  };
-  schedule: {
-    enabled: boolean;    // 시간 제한 활성화 여부
-    startTime: string;   // 시작 시간 (HH:mm 형식, 한국 시간 KST)
-    endTime: string;     // 종료 시간 (HH:mm 형식, 한국 시간 KST)
-  };
-  keywords?: string[];
-  media_names?: string[];
+  keywords: string[];
+  schedule_enabled: boolean;
+  schedule_start: string;  // HH:mm 형식 (KST)
+  schedule_end: string;    // HH:mm 형식 (KST)
   created_at?: string;
   updated_at?: string;
 }
 
 /**
- * 알림 설정 API
+ * 알림 설정 API (키워드 전용)
  *
  * GET: device_id로 설정 조회
- * POST: 새로운 설정 생성
- * PUT: 기존 설정 업데이트
+ * PUT: 설정 업데이트 (키워드, 활성화, 시간대)
  * DELETE: 설정 삭제 (구독 취소)
  */
 export default async function handler(
@@ -38,18 +33,16 @@ export default async function handler(
     switch (method) {
       case 'GET':
         return await handleGet(req, res);
-      case 'POST':
-        return await handlePost(req, res);
       case 'PUT':
         return await handlePut(req, res);
       case 'DELETE':
         return await handleDelete(req, res);
       default:
-        res.setHeader('Allow', ['GET', 'POST', 'PUT', 'DELETE']);
+        res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
         return res.status(405).json({ error: `Method ${method} Not Allowed` });
     }
   } catch (error) {
-    console.error('Notification settings API error:', error);
+    console.error('[Settings API] 오류:', error);
     return res.status(500).json({
       error: '서버 오류가 발생했습니다.',
       details: error instanceof Error ? error.message : String(error)
@@ -70,9 +63,21 @@ async function handleGet(
     return res.status(400).json({ error: 'device_id가 필요합니다.' });
   }
 
-  const { data, error } = await supabase
-    .from('user_notification_settings')
-    .select('*')
+  // Service Role 클라이언트
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  );
+
+  const { data, error } = await supabaseAdmin
+    .from('keyword_push_subscriptions')
+    .select('id, device_id, enabled, keywords, schedule_enabled, schedule_start, schedule_end, created_at, updated_at')
     .eq('device_id', device_id)
     .single();
 
@@ -88,96 +93,87 @@ async function handleGet(
 }
 
 /**
- * POST: 새로운 설정 생성
- */
-async function handlePost(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const settings: NotificationSettings = req.body;
-
-  if (!settings.device_id) {
-    return res.status(400).json({ error: 'device_id가 필요합니다.' });
-  }
-
-  // 기존 설정이 있는지 확인
-  const { data: existing } = await supabase
-    .from('user_notification_settings')
-    .select('id')
-    .eq('device_id', settings.device_id)
-    .single();
-
-  if (existing) {
-    return res.status(409).json({
-      error: '이미 설정이 존재합니다. PUT 메서드를 사용하세요.'
-    });
-  }
-
-  // 새로운 설정 생성
-  const { data, error } = await supabase
-    .from('user_notification_settings')
-    .insert({
-      device_id: settings.device_id,
-      subscription_data: settings.subscription_data || null,
-      enabled: settings.enabled,
-      categories: settings.categories,
-      schedule: settings.schedule,
-      keywords: settings.keywords || [],
-      media_names: settings.media_names || [],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    })
-    .select()
-    .single();
-
-  if (error) {
-    throw error;
-  }
-
-  return res.status(201).json(data);
-}
-
-/**
- * PUT: 기존 설정 업데이트
+ * PUT: 설정 업데이트 (키워드, 활성화, 시간대만)
  */
 async function handlePut(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const settings: NotificationSettings = req.body;
+  const { device_id, enabled, keywords, schedule_enabled, schedule_start, schedule_end } = req.body;
 
-  if (!settings.device_id) {
+  if (!device_id) {
     return res.status(400).json({ error: 'device_id가 필요합니다.' });
   }
 
-  const { data, error } = await supabase
-    .from('user_notification_settings')
-    .update({
-      subscription_data: settings.subscription_data || null,
-      enabled: settings.enabled,
-      categories: settings.categories,
-      schedule: settings.schedule,
-      keywords: settings.keywords || [],
-      media_names: settings.media_names || [],
-      updated_at: new Date().toISOString()
-    })
-    .eq('device_id', settings.device_id)
-    .select()
+  // Service Role 클라이언트
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  );
+
+  // 업데이트할 필드만 포함
+  const updateData: Record<string, unknown> = {
+    updated_at: new Date().toISOString()
+  };
+
+  if (typeof enabled === 'boolean') {
+    updateData.enabled = enabled;
+  }
+
+  if (Array.isArray(keywords)) {
+    updateData.keywords = keywords;
+  }
+
+  if (typeof schedule_enabled === 'boolean') {
+    updateData.schedule_enabled = schedule_enabled;
+  }
+
+  if (schedule_start) {
+    updateData.schedule_start = schedule_start;
+  }
+
+  if (schedule_end) {
+    updateData.schedule_end = schedule_end;
+  }
+
+  console.log('[Settings API] 업데이트 데이터:', {
+    device_id,
+    fields: Object.keys(updateData)
+  });
+
+  const { data, error } = await supabaseAdmin
+    .from('keyword_push_subscriptions')
+    .update(updateData)
+    .eq('device_id', device_id)
+    .select('id, device_id, enabled, keywords, schedule_enabled, schedule_start, schedule_end, updated_at')
     .single();
 
   if (error) {
     if (error.code === 'PGRST116') {
-      // 설정이 없으면 새로 생성
-      return handlePost(req, res);
+      return res.status(404).json({
+        error: '설정을 찾을 수 없습니다. 먼저 푸시 알림을 구독해주세요.'
+      });
     }
     throw error;
   }
+
+  console.log('[Settings API] ✅ 업데이트 성공:', {
+    device_id: data.device_id,
+    enabled: data.enabled,
+    keywords_count: data.keywords?.length || 0
+  });
 
   return res.status(200).json(data);
 }
 
 /**
- * DELETE: 설정 삭제
+ * DELETE: 설정 삭제 (구독 취소)
  */
 async function handleDelete(
   req: NextApiRequest,
@@ -189,14 +185,28 @@ async function handleDelete(
     return res.status(400).json({ error: 'device_id가 필요합니다.' });
   }
 
-  const { error } = await supabase
-    .from('user_notification_settings')
+  // Service Role 클라이언트
+  const supabaseAdmin = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  );
+
+  const { error } = await supabaseAdmin
+    .from('keyword_push_subscriptions')
     .delete()
     .eq('device_id', device_id);
 
   if (error) {
     throw error;
   }
+
+  console.log('[Settings API] ✅ 구독 삭제 성공:', device_id);
 
   return res.status(204).end();
 }
