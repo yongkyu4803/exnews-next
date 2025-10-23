@@ -41,11 +41,20 @@ export default async function handler(
       return res.status(400).json({ error: 'device_id가 필요합니다.' });
     }
 
-    if (!subscription) {
-      return res.status(400).json({ error: 'subscription이 필요합니다.' });
-    }
+    // 🧪 테스트: 클라이언트 데이터 무시하고 단순한 하드코딩 데이터 사용
+    const testSubscriptionData = '{"test":"simple"}';
 
-    const subscriptionString = JSON.stringify(subscription);
+    console.log('[Subscribe API] 🧪 테스트 모드: 단순한 하드코딩 데이터 사용');
+    console.log('[Subscribe API] 원본 subscription:', subscription);
+    console.log('[Subscribe API] 테스트 데이터:', testSubscriptionData);
+
+    // 원래 코드 주석 처리
+    // if (!subscription) {
+    //   return res.status(400).json({ error: 'subscription이 필요합니다.' });
+    // }
+    // const subscriptionString = JSON.stringify(subscription);
+
+    const subscriptionString = testSubscriptionData;
 
     console.log('[Subscribe API] 🔥 RPC 함수로 트랜잭션 보장:', {
       device_id,
