@@ -45,12 +45,69 @@ export default async function handler(
       return res.status(400).json({ error: 'subscription이 필요합니다.' });
     }
 
-    // 기존 설정이 있는지 확인
-    const { data: existing } = await supabaseAdmin
-      .from('user_notification_settings')
-      .select('id, enabled, categories, schedule, keywords, media_names')
-      .eq('device_id', device_id)
-      .single();
+    const subscriptionString = JSON.stringify(subscription);
+
+    console.log('[Subscribe API] 🔥 RPC 함수로 트랜잭션 보장:', {
+      device_id,
+      data_length: subscriptionString.length
+    });
+
+    // 🔥 RPC 함수 호출로 트랜잭션 보장
+    const { data, error } = await supabaseAdmin
+      .rpc('upsert_push_subscription', {
+        p_device_id: device_id,
+        p_subscription_data: subscriptionString
+      });
+
+    if (error) {
+      console.error('[Subscribe API] ❌ RPC 실패:', error);
+      throw error;
+    }
+
+    // RPC는 배열을 반환하므로 첫 번째 요소 추출
+    const result = Array.isArray(data) ? data[0] : data;
+
+    // 🔍 상세 검증 로그
+    const hasData = !!result?.subscription_data;
+    const dataLength = result?.subscription_data?.length || 0;
+    const isExpectedLength = dataLength === subscriptionString.length;
+
+    console.log('[Subscribe API] 🔍 RPC 결과 검증:', {
+      has_subscription_data: hasData,
+      subscription_data_length: dataLength,
+      expected_length: subscriptionString.length,
+      length_match: isExpectedLength,
+      subscription_preview: result?.subscription_data?.substring(0, 100) || 'NULL',
+      device_id: result?.device_id,
+      id: result?.id
+    });
+
+    if (!hasData) {
+      console.error('[Subscribe API] 🚨 경고: RPC 성공했으나 subscription_data가 NULL!');
+      console.error('[Subscribe API] 🚨 원본 데이터:', subscriptionString.substring(0, 200));
+      console.error('[Subscribe API] 🚨 RPC 반환값:', JSON.stringify(result));
+    }
+
+    return res.status(200).json({
+      message: 'Push subscription이 저장되었습니다.',
+      data: result,
+      has_subscription: hasData,
+      verification: {
+        data_persisted: hasData,
+        length_match: isExpectedLength
+      }
+    });
+
+    /*
+    // ========================================================================
+    // 이전 방식 (JavaScript Client - 트랜잭션 미지원으로 인해 커밋 안됨)
+    // ========================================================================
+    // Supabase JavaScript Client는 네이티브 트랜잭션을 지원하지 않습니다.
+    // INSERT/UPDATE는 성공하고 .select()도 데이터를 반환하지만,
+    // 실제 DB 커밋이 되지 않아 새로고침 시 NULL로 돌아가는 문제 발생.
+    //
+    // 해결책: RPC 함수로 명시적 트랜잭션 보장
+    // ========================================================================
 
     if (existing) {
       // 기존 설정 업데이트 - Service Role로 직접 UPDATE
@@ -207,6 +264,7 @@ export default async function handler(
         }
       });
     }
+    */
   } catch (error) {
     console.error('Push subscription API error:', error);
     return res.status(500).json({
