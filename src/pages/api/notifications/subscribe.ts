@@ -1,10 +1,23 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+
+// Service Role 클라이언트 생성 (모든 권한, 서버 전용)
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
+);
 
 /**
  * Push Subscription 등록/업데이트 API
  *
  * POST: PushSubscription 객체를 등록하거나 업데이트합니다.
+ * Service Role Key를 사용하여 권한 문제 없이 직접 DB 업데이트
  */
 export default async function handler(
   req: NextApiRequest,
@@ -16,14 +29,7 @@ export default async function handler(
   }
 
   try {
-    // 환경변수 검증 로깅
-    console.log('[Subscribe API] 🔍 환경변수 확인:', {
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      hasAnonKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-      anonKeyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 30) + '...',
-      anonKeyLength: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length,
-      expectedLength: 208 // 로컬 .env.local의 키 길이
-    });
+    console.log('[Subscribe API] 🔍 Service Role 사용');
 
     const { device_id, subscription } = req.body;
 
@@ -36,97 +42,95 @@ export default async function handler(
     }
 
     // 기존 설정이 있는지 확인
-    const { data: existing } = await supabase
+    const { data: existing } = await supabaseAdmin
       .from('user_notification_settings')
       .select('id, enabled, categories, schedule, keywords, media_names')
       .eq('device_id', device_id)
       .single();
 
     if (existing) {
-      // 기존 설정 업데이트 (push_subscription만)
-      console.log('[Subscribe API] 기존 설정 발견, 업데이트 시작:', {
+      // 기존 설정 업데이트 - Service Role로 직접 UPDATE
+      console.log('[Subscribe API] 기존 설정 발견, Service Role로 직접 업데이트:', {
         device_id,
-        existing_id: existing.id,
-        subscription_type: typeof subscription,
-        subscription_preview: JSON.stringify(subscription).substring(0, 100)
+        existing_id: existing.id
       });
 
-      // Supabase RPC 함수를 사용하여 업데이트 (JavaScript Client의 update() 버그 우회)
       const subscriptionString = JSON.stringify(subscription);
 
-      console.log('[Subscribe API] ⚠️ RPC 함수 호출 직전:', {
-        device_id,
-        subscription_type: typeof subscriptionString,
-        subscription_length: subscriptionString.length,
-        subscription_preview: subscriptionString.substring(0, 100)
-      });
-
-      const { data, error } = await supabase
-        .rpc('update_push_subscription', {
-          p_device_id: device_id,
-          p_subscription: subscriptionString
-        });
-
-      console.log('[Subscribe API] RPC 함수 결과:', {
-        success: !error,
-        error: error?.message,
-        error_full: error,
-        data_length: Array.isArray(data) ? data.length : 0,
-        data_first: Array.isArray(data) && data.length > 0 ? data[0] : null
-      });
+      const { data, error } = await supabaseAdmin
+        .from('user_notification_settings')
+        .update({
+          subscription_data: subscriptionString,
+          updated_at: new Date().toISOString()
+        })
+        .eq('device_id', device_id)
+        .select()
+        .single();
 
       if (error) {
-        console.error('[Subscribe API] ❌ RPC 함수 실패:', error);
+        console.error('[Subscribe API] ❌ 업데이트 실패:', error);
         throw error;
       }
 
-      // RPC 함수는 배열을 반환함
-      const updatedRow = Array.isArray(data) && data.length > 0 ? data[0] : null;
-
-      console.log('[Subscribe API] ✅ 업데이트 완료:', {
-        has_subscription_data: !!updatedRow?.subscription_data,
-        subscription_data_preview: updatedRow?.subscription_data ?
-          (typeof updatedRow.subscription_data === 'string' ?
-            updatedRow.subscription_data.substring(0, 100) :
-            JSON.stringify(updatedRow.subscription_data).substring(0, 100)
-          ) : 'NULL'
+      console.log('[Subscribe API] ✅ 업데이트 성공:', {
+        has_subscription_data: !!data?.subscription_data,
+        subscription_data_length: data?.subscription_data?.length || 0
       });
-
-      if (!updatedRow?.subscription_data) {
-        console.error('[Subscribe API] ⚠️ RPC는 성공했지만 subscription_data가 NULL!');
-      }
 
       return res.status(200).json({
         message: 'Push subscription이 업데이트되었습니다.',
-        data: updatedRow,
-        has_subscription: !!updatedRow?.subscription_data
+        data,
+        has_subscription: !!data?.subscription_data
       });
     } else {
-      // 새로운 설정 생성 - RPC 함수 사용
-      const subscriptionString = JSON.stringify(subscription);
-
-      console.log('[Subscribe API] 새 레코드 생성 (RPC):', {
-        device_id,
-        subscription_type: typeof subscriptionString,
-        subscription_length: subscriptionString.length
+      // 새로운 설정 생성 - Service Role로 직접 INSERT
+      console.log('[Subscribe API] 새 레코드 생성, Service Role로 직접 INSERT:', {
+        device_id
       });
 
-      const { data, error } = await supabase
-        .rpc('insert_push_subscription', {
-          p_device_id: device_id,
-          p_subscription: subscriptionString
-        });
+      const subscriptionString = JSON.stringify(subscription);
+
+      const { data, error } = await supabaseAdmin
+        .from('user_notification_settings')
+        .insert({
+          device_id,
+          subscription_data: subscriptionString,
+          enabled: true,
+          categories: {
+            all: true,
+            정치: false,
+            경제: false,
+            사회: false,
+            국제: false,
+            문화: false,
+            '연예/스포츠': false,
+            기타: false
+          },
+          schedule: {
+            enabled: false,
+            startTime: '09:00',
+            endTime: '22:00'
+          },
+          keywords: [],
+          media_names: []
+        })
+        .select()
+        .single();
 
       if (error) {
-        console.error('[Subscribe API] ❌ INSERT RPC 실패:', error);
+        console.error('[Subscribe API] ❌ INSERT 실패:', error);
         throw error;
       }
 
-      const insertedRow = Array.isArray(data) && data.length > 0 ? data[0] : null;
+      console.log('[Subscribe API] ✅ INSERT 성공:', {
+        has_subscription_data: !!data?.subscription_data,
+        subscription_data_length: data?.subscription_data?.length || 0
+      });
 
       return res.status(201).json({
         message: 'Push subscription이 등록되었습니다.',
-        data: insertedRow
+        data,
+        has_subscription: !!data?.subscription_data
       });
     }
   } catch (error) {
