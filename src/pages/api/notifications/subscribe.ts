@@ -83,13 +83,23 @@ export default async function handler(
       // RPC 함수는 배열을 반환함
       const updatedRow = Array.isArray(data) && data.length > 0 ? data[0] : null;
 
-      if (!updatedRow?.push_subscription) {
-        console.error('[Subscribe API] ⚠️ RPC는 성공했지만 push_subscription이 NULL!');
+      console.log('[Subscribe API] ✅ 업데이트 완료:', {
+        has_subscription_data: !!updatedRow?.subscription_data,
+        subscription_data_preview: updatedRow?.subscription_data ?
+          (typeof updatedRow.subscription_data === 'string' ?
+            updatedRow.subscription_data.substring(0, 100) :
+            JSON.stringify(updatedRow.subscription_data).substring(0, 100)
+          ) : 'NULL'
+      });
+
+      if (!updatedRow?.subscription_data) {
+        console.error('[Subscribe API] ⚠️ RPC는 성공했지만 subscription_data가 NULL!');
       }
 
       return res.status(200).json({
         message: 'Push subscription이 업데이트되었습니다.',
-        data: updatedRow
+        data: updatedRow,
+        has_subscription: !!updatedRow?.subscription_data
       });
     } else {
       // 새로운 설정 생성 - RPC 함수 사용
