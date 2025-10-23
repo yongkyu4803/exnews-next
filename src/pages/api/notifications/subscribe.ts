@@ -68,22 +68,23 @@ export default async function handler(
     const result = Array.isArray(data) ? data[0] : data;
 
     // 🔍 상세 검증 로그
-    const hasData = !!result?.subscription_data;
-    const dataLength = result?.subscription_data?.length || 0;
+    // 🔥 subscription_data_test 컬럼 사용 (subscription_data 컬럼에 문제 있음!)
+    const hasData = !!result?.subscription_data_test;
+    const dataLength = result?.subscription_data_test?.length || 0;
     const isExpectedLength = dataLength === subscriptionString.length;
 
-    console.log('[Subscribe API] 🔍 RPC 결과 검증:', {
+    console.log('[Subscribe API] 🔍 RPC 결과 검증 (subscription_data_test 컬럼 사용):', {
       has_subscription_data: hasData,
       subscription_data_length: dataLength,
       expected_length: subscriptionString.length,
       length_match: isExpectedLength,
-      subscription_preview: result?.subscription_data?.substring(0, 100) || 'NULL',
+      subscription_preview: result?.subscription_data_test?.substring(0, 100) || 'NULL',
       device_id: result?.device_id,
       id: result?.id
     });
 
     if (!hasData) {
-      console.error('[Subscribe API] 🚨 경고: RPC 성공했으나 subscription_data가 NULL!');
+      console.error('[Subscribe API] 🚨 경고: RPC 성공했으나 subscription_data_test가 NULL!');
       console.error('[Subscribe API] 🚨 원본 데이터:', subscriptionString.substring(0, 200));
       console.error('[Subscribe API] 🚨 RPC 반환값:', JSON.stringify(result));
     }
