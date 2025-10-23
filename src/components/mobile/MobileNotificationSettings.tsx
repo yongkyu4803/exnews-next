@@ -359,21 +359,7 @@ const MobileNotificationSettings: React.FC = () => {
     }
   };
 
-  // 카테고리 변경
-  const handleCategoryChange = async (category: string) => {
-    const isEnabled = !preferences.categories[category];
-    const updated = {
-      ...preferences,
-      categories: {
-        ...preferences.categories,
-        [category]: isEnabled
-      }
-    };
-
-    setPreferences(updated);
-    saveNotificationPreferences(updated);
-    await saveNotificationSettingsToServer(updated);
-  };
+  // 카테고리 기능 제거됨 (키워드만 사용)
 
   // 알림 시간 제한 활성화/비활성화
   const handleScheduleToggle = async (enabled: boolean) => {
@@ -550,24 +536,6 @@ const MobileNotificationSettings: React.FC = () => {
                 maxKeywords={10}
                 disabled={loading}
               />
-            </Card>
-          ) : (
-            <Card>
-              <SettingTitle style={{ marginBottom: 12 }}>관심 카테고리</SettingTitle>
-              <SettingDescription>관심 있는 뉴스 카테고리를 선택하세요</SettingDescription>
-
-              <ChipGroup>
-                {Object.entries(preferences.categories).map(([category, enabled]) => (
-                  <Chip
-                    key={category}
-                    selected={enabled}
-                    onClick={() => handleCategoryChange(category)}
-                    disabled={loading}
-                  >
-                    {category === 'all' ? '전체' : category}
-                  </Chip>
-                ))}
-              </ChipGroup>
             </Card>
           )}
 
