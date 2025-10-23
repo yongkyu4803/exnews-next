@@ -232,20 +232,35 @@ export const saveNotificationPreferences = (preferences: KeywordNotificationPref
  * 테스트 알림 보내기
  */
 export const sendTestNotification = async (): Promise<boolean> => {
-  if (!('Notification' in window)) {
-    console.error('[푸시] 이 브라우저는 알림을 지원하지 않습니다.');
-    return false;
-  }
+  console.log('[테스트 알림] 시작...');
 
-  if (Notification.permission !== 'granted') {
-    console.log('[푸시] 알림 권한이 없습니다.');
+  if (!('Notification' in window)) {
+    console.error('[테스트 알림] ❌ 이 브라우저는 알림을 지원하지 않습니다.');
     return false;
   }
+  console.log('[테스트 알림] ✅ 브라우저가 알림을 지원합니다.');
+
+  const permission = Notification.permission;
+  console.log('[테스트 알림] 현재 알림 권한:', permission);
+
+  if (permission !== 'granted') {
+    console.error('[테스트 알림] ❌ 알림 권한이 없습니다. 권한:', permission);
+    return false;
+  }
+  console.log('[테스트 알림] ✅ 알림 권한이 허용되었습니다.');
 
   try {
-    // Service Worker를 통한 알림
-    const registration = await navigator.serviceWorker.ready;
+    console.log('[테스트 알림] Service Worker 확인 중...');
 
+    if (!('serviceWorker' in navigator)) {
+      console.error('[테스트 알림] ❌ Service Worker를 지원하지 않습니다.');
+      return false;
+    }
+
+    const registration = await navigator.serviceWorker.ready;
+    console.log('[테스트 알림] ✅ Service Worker 준비 완료:', registration);
+
+    console.log('[테스트 알림] 알림 표시 시도...');
     await registration.showNotification('단독 뉴스 테스트 알림', {
       body: '알림 기능이 정상 작동하고 있습니다.',
       icon: '/icons/icon-192x192.png',
@@ -267,10 +282,14 @@ export const sendTestNotification = async (): Promise<boolean> => {
       ]
     });
 
-    console.log('[푸시] 테스트 알림 전송 성공');
+    console.log('[테스트 알림] ✅ 테스트 알림 전송 성공!');
     return true;
   } catch (error) {
-    console.error('[푸시] 테스트 알림 전송 실패:', error);
+    console.error('[테스트 알림] ❌ 테스트 알림 전송 실패:', error);
+    if (error instanceof Error) {
+      console.error('[테스트 알림] 에러 메시지:', error.message);
+      console.error('[테스트 알림] 스택 트레이스:', error.stack);
+    }
     return false;
   }
 };
