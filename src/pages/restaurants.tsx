@@ -17,12 +17,9 @@ const SimpleBuildingView = dynamic(() => import('@/components/SimpleBuildingView
 import { message } from 'antd';
 import Alert from 'antd/lib/alert';
 import Button from 'antd/lib/button';
-import Card from 'antd/lib/card';
 import Collapse from 'antd/lib/collapse';
-import List from 'antd/lib/list';
-import Radio from 'antd/lib/radio';
+import Pagination from 'antd/lib/pagination';
 import Spin from 'antd/lib/spin';
-import Tag from 'antd/lib/tag';
 import Typography from 'antd/lib/typography';
 import Tabs from 'antd/lib/tabs';
 
@@ -767,129 +764,168 @@ function RestaurantContent(props: RestaurantContentProps) {
               padding: window.innerWidth <= 768 ? '0 4px' : '0 16px',
               width: '100%',
               overflow: 'visible',
-              height: 'auto',
-              minHeight: 0,
-              maxHeight: 'none',
-              contain: 'none'
+              height: 'auto'
             }}>
-              {List && (
-                <List
-              grid={{
-                gutter: window.innerWidth <= 768 ? 8 : 24,
-                xs: 1,
-                sm: 2,
-                md: 3,
-                lg: 3,
-                xl: 4,
-                xxl: 5,
-              }}
-              dataSource={restaurants}
-              style={{
-                overflow: 'visible',
-                height: 'auto',
-                minHeight: 0,
-                maxHeight: 'none',
-                contain: 'none'
-              }}
-              pagination={{
-                position: 'bottom',
-                align: 'center',
-                current: currentPage,
-                pageSize: pageSize,
-                total: totalCount,
-                showSizeChanger: true,
-                showTotal: (total: number, range: [number, number]) => `총 ${total}개 중 ${range[0]}-${range[1]}`,
-                pageSizeOptions: ['10', '20', '30', '50'],
-                onChange: (page: number, size: number) => {
-                  setCurrentPage(page);
-                  if (size !== pageSize) {
-                    setPageSize(size);
-                  }
-                  fetchData(selectedCategory, page, size);
-                },
-                onShowSizeChange: (current: number, size: number) => {
-                  setPageSize(size);
-                  setCurrentPage(1);
-                  fetchData(selectedCategory, 1, size);
-                }
-              }}
-              renderItem={(item: RestaurantItem) => (
-                <List.Item>
-                  {Card && (
-                    <Card
-                      title={
-                        <div className="text-xl font-semibold flex items-center justify-between">
-                          {item.link ? (
-                            <a 
-                              href={item.link} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              style={{ color: '#1a73e8' }}
-                            >
-                              {item.name}
-                            </a>
-                          ) : (
-                            item.name
-                          )}
-                          {item.category && Tag && (
-                            <Tag 
-                              color={getCategoryTextColor(item.category)} 
-                              className="ml-2 text-sm border-transparent bg-transparent"
-                            >
-                              {item.category}
-                            </Tag>
-                          )}
-                        </div>
-                      }
-                      hoverable
-                      className="h-full"
-                      style={{
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
-                        transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
-                        backgroundColor: 'white',
-                        fontSize: window.innerWidth <= 768 ? '13px' : '14px'
-                      }}
-                      bordered={false}
-                      bodyStyle={{
-                        padding: window.innerWidth <= 768 ? '8px 12px' : '12px 16px',
+              {/* 식당 카드 그리드 */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: window.innerWidth <= 768
+                  ? '1fr'
+                  : window.innerWidth <= 1024
+                    ? 'repeat(2, 1fr)'
+                    : window.innerWidth <= 1440
+                      ? 'repeat(3, 1fr)'
+                      : 'repeat(4, 1fr)',
+                gap: window.innerWidth <= 768 ? '12px' : '16px',
+                marginBottom: '24px'
+              }}>
+                {restaurants.map((item: RestaurantItem) => (
+                  <div
+                    key={item.id || item.name}
+                    style={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e8e8e8',
+                      borderRadius: '12px',
+                      padding: window.innerWidth <= 768 ? '12px' : '16px',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                      transition: 'all 0.3s ease',
+                      cursor: 'pointer',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    }}
+                  >
+                    {/* 식당 이름 및 카테고리 */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '12px',
+                      paddingBottom: '12px',
+                      borderBottom: '1px solid #f0f0f0'
+                    }}>
+                      <h4 style={{
+                        margin: '0',
+                        fontSize: window.innerWidth <= 768 ? '15px' : '16px',
+                        fontWeight: 'bold',
+                        color: '#333',
+                        flex: 1,
                         lineHeight: '1.4'
-                      }}
-                      headStyle={{
-                        padding: window.innerWidth <= 768 ? '8px 12px' : '12px 16px'
-                      }}
-                    >
-                      <div style={{ lineHeight: '1.4' }}>
-                        <div style={{ marginBottom: '4px' }}>
-                          <span role="img" aria-label="location" style={{ marginRight: 8 }}>📍</span>
-                          {item.location}
-                        </div>
-                        
-                        {item.pnum && (
-                          <div style={{ marginBottom: '4px' }}>
-                            <span role="img" aria-label="phone" style={{ marginRight: 8 }}>📞</span>
-                            {item.pnum}
-                          </div>
+                      }}>
+                        {item.link ? (
+                          <a
+                            href={item.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              color: '#1677ff',
+                              textDecoration: 'none'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.textDecoration = 'underline';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.textDecoration = 'none';
+                            }}
+                          >
+                            {item.name}
+                          </a>
+                        ) : (
+                          item.name
                         )}
-                        
-                        {item.price && (
-                          <div style={{ marginBottom: '4px' }}>
-                            <span role="img" aria-label="price" style={{ marginRight: 8 }}>💰</span>
-                            {item.price}
-                          </div>
-                        )}
-                        
-                        {item.remark && (
-                          <div style={{ marginBottom: '4px', color: '#666' }}>
-                            <span role="img" aria-label="note" style={{ marginRight: 8 }}>💬</span>
-                            {item.remark}
-                          </div>
-                        )}
+                      </h4>
+                      {item.category && (
+                        <span style={{
+                          backgroundColor: getCategoryTextColor(item.category),
+                          color: 'white',
+                          padding: '4px 8px',
+                          borderRadius: '16px',
+                          fontSize: window.innerWidth <= 768 ? '11px' : '12px',
+                          fontWeight: 'bold',
+                          marginLeft: '8px',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0
+                        }}>
+                          {item.category}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* 식당 정보 */}
+                    <div style={{
+                      lineHeight: '1.6',
+                      fontSize: window.innerWidth <= 768 ? '13px' : '14px',
+                      color: '#666',
+                      flex: 1
+                    }}>
+                      <div style={{ marginBottom: '6px' }}>
+                        <span style={{ fontWeight: '500' }}>📍</span> {item.location}
                       </div>
-                    </Card>
-                  )}
-                </List.Item>
-              )}
-                />
+                      {item.pnum && (
+                        <div style={{ marginBottom: '6px' }}>
+                          <span style={{ fontWeight: '500' }}>📞</span> {item.pnum}
+                        </div>
+                      )}
+                      {item.price && (
+                        <div style={{ marginBottom: '6px' }}>
+                          <span style={{ fontWeight: '500' }}>💰</span> {item.price}
+                        </div>
+                      )}
+                      {item.remark && (
+                        <div style={{
+                          marginTop: '8px',
+                          padding: '8px',
+                          backgroundColor: '#f8f9fa',
+                          borderRadius: '6px',
+                          fontSize: window.innerWidth <= 768 ? '12px' : '13px',
+                          fontStyle: 'italic'
+                        }}>
+                          💬 {item.remark}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* 페이지네이션 */}
+              {totalCount > pageSize && (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginTop: '24px',
+                  marginBottom: '24px'
+                }}>
+                  <Pagination
+                    current={currentPage}
+                    total={totalCount}
+                    pageSize={pageSize}
+                    onChange={(page: number) => {
+                      setCurrentPage(page);
+                      fetchData(selectedCategory, page, pageSize);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    showSizeChanger
+                    showTotal={(total: number, range: [number, number]) =>
+                      `총 ${total}개 중 ${range[0]}-${range[1]}`
+                    }
+                    pageSizeOptions={['10', '20', '30', '50']}
+                    onShowSizeChange={(current: number, size: number) => {
+                      setPageSize(size);
+                      setCurrentPage(1);
+                      fetchData(selectedCategory, 1, size);
+                    }}
+                  />
+                </div>
               )}
             </div>
           )}
