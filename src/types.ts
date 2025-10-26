@@ -75,4 +75,40 @@ export enum Categories {
   Culture = '문화',
   Entertainment = '연예/스포츠',
   Others = '기타'
+}
+
+// 사설 분석 관련 타입
+export interface EditorialArticle {
+  id: string;
+  topic_id: string;
+  article_number: number;
+  title: string;
+  media: string;
+  pubdate: string | null;
+  link: string;
+  content?: string | null;
+}
+
+export interface EditorialTopic {
+  id: string;
+  analysis_id: string;
+  topic_number: number;
+  topic_title: string;
+  topic_summary: string;
+  articles?: EditorialArticle[];
+}
+
+export interface EditorialAnalysis {
+  id: string;
+  query: string;
+  analysis_type: 'news' | 'editorial';
+  analyzed_at: string;
+  llm_model: string;
+  raw_response?: string | null;
+  topics?: EditorialTopic[];
+}
+
+export interface EditorialResponse {
+  items: EditorialAnalysis[];
+  totalCount: number;
 } 

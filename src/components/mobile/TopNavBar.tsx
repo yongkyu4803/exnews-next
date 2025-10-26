@@ -124,6 +124,17 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
             },
           },
           {
+            key: 'editorial',
+            label: '오늘의 사설',
+            onClick: () => {
+              if (currentPath === '/') {
+                if (onTabChange) onTabChange('editorial');
+              } else {
+                router.push('/?tab=editorial');
+              }
+            },
+          },
+          {
             key: 'restaurants',
             label: '국회앞 식당',
             onClick: () => router.push('/restaurants'),

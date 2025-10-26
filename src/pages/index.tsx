@@ -6,7 +6,7 @@ import VirtualNewsList from '@/components/mobile/VirtualNewsList';
 import VirtualRankingNewsList from '@/components/mobile/VirtualRankingNewsList';
 import { CopyOutlined, ShopOutlined } from '@ant-design/icons';
 import PwaInstallPrompt from '@/components/PwaInstallPrompt';
-import { NewsItem, NewsResponse, RankingNewsItem, RankingNewsResponse } from '@/types';
+import { NewsItem, NewsResponse, RankingNewsItem, RankingNewsResponse, EditorialResponse } from '@/types';
 import { Pagination } from 'antd';
 import BottomNav from '@/components/mobile/BottomNav';
 import TopNavBar from '@/components/mobile/TopNavBar';
@@ -41,9 +41,21 @@ const NewsTable = dynamic(() => import('@/components/NewsTable'), {
 });
 
 // 랭킹 뉴스 테이블 컴포넌트를 동적으로 불러옴
-const RankingNewsTable = dynamic(() => import('@/components/RankingNewsTable'), { 
+const RankingNewsTable = dynamic(() => import('@/components/RankingNewsTable'), {
   ssr: false,
   loading: () => <div style={{ height: '600px', width: '100%' }}>테이블 로딩 중...</div>
+});
+
+// 사설 분석 테이블 컴포넌트를 동적으로 불러옴
+const EditorialTable = dynamic(() => import('@/components/EditorialTable'), {
+  ssr: false,
+  loading: () => <div style={{ height: '600px', width: '100%' }}>테이블 로딩 중...</div>
+});
+
+// 사설 분석 모바일 컴포넌트를 동적으로 불러옴
+const VirtualEditorialList = dynamic(() => import('@/components/mobile/VirtualEditorialList'), {
+  ssr: false,
+  loading: () => <div style={{ padding: '20px', textAlign: 'center' }}>로딩 중...</div>
 });
 
 // 전체 컴포넌트를 클라이언트 사이드에서만 렌더링
@@ -67,6 +79,8 @@ const HomePage = () => {
       const tabParam = urlParams.get('tab');
       if (tabParam === 'ranking') {
         setActiveTab('ranking');
+      } else if (tabParam === 'editorial') {
+        setActiveTab('editorial');
       }
     }
   }, []);
@@ -158,6 +172,31 @@ const HomePage = () => {
       retry: 2,
       onError: (error) => {
         console.error('랭킹 뉴스 쿼리 오류:', error);
+      }
+    }
+  );
+
+  // Editorial analysis items query
+  const { data: editorialData, isLoading: editorialIsLoading, error: editorialError } = useQuery<EditorialResponse, Error>(
+    'editorialItems',
+    async () => {
+      logger.debug('사설 분석 데이터 요청 시작');
+      const response = await fetch('/api/editorials');
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error('사설 분석 API 응답 오류', { status: response.status, errorText });
+        throw new Error(`Failed to fetch editorial items: ${response.status} ${errorText}`);
+      }
+      const result = await response.json();
+      logger.info('사설 분석 API 응답', { itemCount: result?.items?.length || 0 });
+      return result;
+    },
+    {
+      keepPreviousData: true,
+      enabled: isMounted,
+      retry: 2,
+      onError: (error) => {
+        logger.error('사설 분석 쿼리 오류', error);
       }
     }
   );
@@ -315,6 +354,16 @@ const HomePage = () => {
       return Promise.resolve();
     } catch (error) {
       console.error('랭킹 새로고침 중 오류 발생:', error);
+      return Promise.reject(error);
+    }
+  };
+
+  const handleEditorialRefresh = async () => {
+    try {
+      await queryClient.invalidateQueries('editorialItems');
+      return Promise.resolve();
+    } catch (error) {
+      logger.error('사설 분석 새로고침 중 오류 발생', error);
       return Promise.reject(error);
     }
   };
@@ -600,7 +649,7 @@ const HomePage = () => {
                     {/* 데스크탑 새로고침 버튼 - 랭킹 뉴스 */}
                     {!isMobile && activeTab === 'ranking' && (
                       <FloatingButtonWrapper position="primary" bottom={100}>
-                        <MicroButton 
+                        <MicroButton
                           onClick={handleRankingRefresh}
                           icon={<RefreshIcon />}
                           label="랭킹 뉴스 새로고침"
@@ -609,6 +658,63 @@ const HomePage = () => {
                             animation: rankingIsLoading ? 'rotate 1s linear infinite' : 'none'
                           }}
                           disabled={rankingIsLoading}
+                        />
+                      </FloatingButtonWrapper>
+                    )}
+                  </>
+                )}
+
+                {activeTab === 'editorial' && (
+                  <>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: isMobile ? 'wrap' : 'nowrap',
+                      gap: '12px'
+                    }}>
+                      <Title level={isMobile ? 4 : 3}>📰 오늘의 사설</Title>
+                    </div>
+
+                    {editorialError && (
+                      <Alert
+                        message="데이터 로딩 오류"
+                        description={editorialError.message}
+                        type="error"
+                        showIcon
+                        style={{ marginBottom: '16px' }}
+                      />
+                    )}
+
+                    {isMobile ? (
+                      <VirtualEditorialList
+                        items={editorialData?.items || []}
+                        isLoading={editorialIsLoading}
+                      />
+                    ) : (
+                      <div>
+                        {editorialIsLoading ? (
+                          <div style={{ padding: '20px', textAlign: 'center' }}>
+                            <div>데이터를 불러오는 중입니다...</div>
+                          </div>
+                        ) : (
+                          <EditorialTable items={editorialData?.items || []} />
+                        )}
+                      </div>
+                    )}
+
+                    {/* 데스크탑 새로고침 버튼 - 사설 분석 */}
+                    {!isMobile && activeTab === 'editorial' && (
+                      <FloatingButtonWrapper position="primary" bottom={100}>
+                        <MicroButton
+                          onClick={handleEditorialRefresh}
+                          icon={<RefreshIcon />}
+                          label="사설 분석 새로고침"
+                          color="#4CAF50"
+                          style={{
+                            animation: editorialIsLoading ? 'rotate 1s linear infinite' : 'none'
+                          }}
+                          disabled={editorialIsLoading}
                         />
                       </FloatingButtonWrapper>
                     )}
