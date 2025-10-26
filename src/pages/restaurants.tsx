@@ -347,13 +347,23 @@ export default function RestaurantsPage() {
         <meta name="description" content="국회 주변 맛집 정보를 제공합니다." />
       </Head>
 
-      <main className="flex min-h-screen flex-col items-center justify-between">
+      <main className="flex flex-col items-center">
         <TopNavBar />
-        
-        <div className="container mx-auto px-4 py-8 mt-4">
-          <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white py-8 px-6 rounded-lg shadow-md mb-8">
-            <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: "'Cafe24Anemone', sans-serif" }}>국회앞 식당정보</h1>
-            <p className="text-blue-100">국회앞 식당 정보를 카테고리별로 확인해보세요.</p>
+
+        <div className="container mx-auto px-2 py-4 mt-2" style={{ width: '100%' }}>
+          <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white rounded-lg shadow-md mb-4" style={{
+            padding: window.innerWidth <= 768 ? '12px' : '32px 24px'
+          }}>
+            <h1 style={{
+              fontFamily: "'Cafe24Anemone', sans-serif",
+              fontSize: window.innerWidth <= 768 ? '20px' : '30px',
+              fontWeight: 'bold',
+              marginBottom: window.innerWidth <= 768 ? '4px' : '8px'
+            }}>국회앞 식당정보</h1>
+            <p style={{
+              color: '#dbeafe',
+              fontSize: window.innerWidth <= 768 ? '12px' : '14px'
+            }}>국회앞 식당 정보를 카테고리별로 확인해보세요.</p>
           </div>
 
           <ClientOnly>
@@ -463,43 +473,44 @@ function RestaurantContent(props: RestaurantContentProps) {
       {/* 상단 헤더 섹션 */}
       <div style={{
         backgroundColor: '#f9fafb',
-        padding: '24px',
-        marginBottom: '32px',
+        padding: window.innerWidth <= 768 ? '12px 8px' : '24px',
+        marginBottom: window.innerWidth <= 768 ? '12px' : '32px',
         borderRadius: '8px',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
       }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 16px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: window.innerWidth <= 768 ? '0 4px' : '0 16px' }}>
           {/* 뷰 모드 선택 및 새로고침 버튼 */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '24px',
-            gap: '20px',
+            marginBottom: window.innerWidth <= 768 ? '12px' : '24px',
+            gap: window.innerWidth <= 768 ? '8px' : '20px',
             flexWrap: 'wrap'
           }}>
             {/* 뷰 모드 선택 - 커스텀 스타일 */}
             <div style={{
               display: 'flex',
               backgroundColor: 'white',
-              borderRadius: '8px',
-              padding: '4px',
+              borderRadius: window.innerWidth <= 768 ? '6px' : '8px',
+              padding: window.innerWidth <= 768 ? '2px' : '4px',
               border: '1px solid #e5e7eb',
               boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
             }}>
               <button
                 onClick={() => setViewMode('category')}
                 style={{
-                  padding: '12px 20px',
-                  borderRadius: '6px',
+                  padding: window.innerWidth <= 768 ? '8px 12px' : '12px 20px',
+                  borderRadius: window.innerWidth <= 768 ? '4px' : '6px',
                   border: 'none',
                   backgroundColor: viewMode === 'category' ? '#3b82f6' : 'transparent',
                   color: viewMode === 'category' ? 'white' : '#6b7280',
                   fontWeight: '500',
-                  fontSize: '14px',
+                  fontSize: window.innerWidth <= 768 ? '12px' : '14px',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
-                  marginRight: '2px'
+                  marginRight: '2px',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseEnter={(e) => {
                   if (viewMode !== 'category') {
@@ -517,15 +528,16 @@ function RestaurantContent(props: RestaurantContentProps) {
               <button
                 onClick={() => setViewMode('building')}
                 style={{
-                  padding: '12px 20px',
-                  borderRadius: '6px',
+                  padding: window.innerWidth <= 768 ? '8px 12px' : '12px 20px',
+                  borderRadius: window.innerWidth <= 768 ? '4px' : '6px',
                   border: 'none',
                   backgroundColor: viewMode === 'building' ? '#3b82f6' : 'transparent',
                   color: viewMode === 'building' ? 'white' : '#6b7280',
                   fontWeight: '500',
-                  fontSize: '14px',
+                  fontSize: window.innerWidth <= 768 ? '12px' : '14px',
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease'
+                  transition: 'all 0.2s ease',
+                  whiteSpace: 'nowrap'
                 }}
                 onMouseEnter={(e) => {
                   if (viewMode !== 'building') {
@@ -547,20 +559,21 @@ function RestaurantContent(props: RestaurantContentProps) {
               onClick={() => viewMode === 'category' ? fetchData(selectedCategory) : fetchAllRestaurants()}
               disabled={viewMode === 'category' ? loading : buildingLoading}
               style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
+                padding: window.innerWidth <= 768 ? '8px 12px' : '12px 24px',
+                borderRadius: window.innerWidth <= 768 ? '6px' : '8px',
                 border: 'none',
                 backgroundColor: '#10b981',
                 color: 'white',
                 fontWeight: '500',
-                fontSize: '14px',
+                fontSize: window.innerWidth <= 768 ? '12px' : '14px',
                 cursor: (viewMode === 'category' ? loading : buildingLoading) ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s ease',
                 boxShadow: '0 2px 4px 0 rgba(16, 185, 129, 0.2)',
                 opacity: (viewMode === 'category' ? loading : buildingLoading) ? 0.6 : 1,
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: window.innerWidth <= 768 ? '4px' : '8px',
+                whiteSpace: 'nowrap'
               }}
               onMouseEnter={(e) => {
                 if (!(viewMode === 'category' ? loading : buildingLoading)) {
@@ -728,11 +741,11 @@ function RestaurantContent(props: RestaurantContentProps) {
         <>
           {/* 카테고리별 보기 */}
           {viewMode === 'category' && (
-            <div className="overflow-x-auto px-4">
+            <div className="overflow-x-auto" style={{ padding: window.innerWidth <= 768 ? '0 4px' : '0 16px' }}>
               {List && (
                 <List
               grid={{
-                gutter: 24,
+                gutter: window.innerWidth <= 768 ? 8 : 24,
                 xs: 1,
                 sm: 2,
                 md: 3,
@@ -793,13 +806,20 @@ function RestaurantContent(props: RestaurantContentProps) {
                       }
                       hoverable
                       className="h-full"
-                      style={{ 
+                      style={{
                         boxShadow: '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
                         transition: 'all 0.3s cubic-bezier(.25,.8,.25,1)',
-                        backgroundColor: 'white'
+                        backgroundColor: 'white',
+                        fontSize: window.innerWidth <= 768 ? '13px' : '14px'
                       }}
                       bordered={false}
-                      bodyStyle={{ padding: '12px 16px', lineHeight: '1.4' }}
+                      bodyStyle={{
+                        padding: window.innerWidth <= 768 ? '8px 12px' : '12px 16px',
+                        lineHeight: '1.4'
+                      }}
+                      headStyle={{
+                        padding: window.innerWidth <= 768 ? '8px 12px' : '12px 16px'
+                      }}
                     >
                       <div style={{ lineHeight: '1.4' }}>
                         <div style={{ marginBottom: '4px' }}>
@@ -855,13 +875,26 @@ function RestaurantContent(props: RestaurantContentProps) {
         padding: '16px',
         textAlign: 'center',
         borderTop: '1px solid #eaeaea',
-        marginTop: '32px',
+        marginTop: window.innerWidth <= 768 ? '24px' : '32px',
         color: '#666',
-        fontSize: '14px',
-        backgroundColor: '#f9f9f9'
+        fontSize: window.innerWidth <= 768 ? '12px' : '16px',
+        backgroundColor: '#f9f9f9',
+        fontFamily: "'Inter', 'Roboto', 'Helvetica Neue', sans-serif"
       }}>
         <div style={{ marginBottom: '8px' }}>
-          © {new Date().getFullYear()} 단독뉴스 - 모든 권리 보유
+          <a
+            href="https://gqai.kr"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: '#1a4b8c',
+              textDecoration: 'none',
+              fontWeight: '600',
+              letterSpacing: '0.5px'
+            }}
+          >
+            GQAI.kr
+          </a>
         </div>
         <div>
           <a href="mailto:gq.newslens@gmail.com" style={{
@@ -869,7 +902,7 @@ function RestaurantContent(props: RestaurantContentProps) {
             textDecoration: 'none',
             fontWeight: '500'
           }}>
-            문의: gq.newslens@gmail.com
+            gq.newslens@gmail.com
           </a>
         </div>
       </footer>
