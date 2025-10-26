@@ -345,6 +345,7 @@ export default function RestaurantsPage() {
       <Head>
         <title>국회앞 식당정보 - ExNews</title>
         <meta name="description" content="국회 주변 맛집 정보를 제공합니다." />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
       </Head>
 
       <main style={{
@@ -765,8 +766,11 @@ function RestaurantContent(props: RestaurantContentProps) {
             <div style={{
               padding: window.innerWidth <= 768 ? '0 4px' : '0 16px',
               width: '100%',
-              overflowY: 'visible',
-              minHeight: 'auto'
+              overflow: 'visible',
+              height: 'auto',
+              minHeight: 0,
+              maxHeight: 'none',
+              contain: 'none'
             }}>
               {List && (
                 <List
@@ -781,8 +785,11 @@ function RestaurantContent(props: RestaurantContentProps) {
               }}
               dataSource={restaurants}
               style={{
-                minHeight: 'auto',
-                overflowY: 'visible'
+                overflow: 'visible',
+                height: 'auto',
+                minHeight: 0,
+                maxHeight: 'none',
+                contain: 'none'
               }}
               pagination={{
                 position: 'bottom',

@@ -813,3 +813,117 @@ header.w-full {
     margin-bottom: 12px !important;
   }
 }
+
+/* 실제 모바일 디바이스용 스크롤 수정 - contain 속성 제거 */
+@media (max-width: 768px) {
+  .ant-list,
+  .ant-list-grid,
+  .ant-list-items,
+  .ant-row,
+  .ant-col {
+    contain: none !important;
+    content-visibility: visible !important;
+  }
+
+  /* Ant Design List의 내부 높이 계산 무시 */
+  .ant-list-split .ant-list-item {
+    contain: none !important;
+  }
+
+  /* 그리드 시스템의 flex 제약 제거 */
+  .ant-list-grid .ant-row {
+    min-height: 0 !important;
+    max-height: none !important;
+    height: auto !important;
+  }
+
+  /* 실제 디바이스의 viewport 처리 */
+  @supports (-webkit-touch-callout: none) {
+    /* iOS Safari */
+    body {
+      min-height: -webkit-fill-available !important;
+    }
+
+    .ant-list,
+    .ant-list-grid {
+      height: auto !important;
+      min-height: 0 !important;
+    }
+  }
+}
+
+/* 한 줄 레이아웃 전용 스크롤 보장 (실제 디바이스) */
+@media (max-width: 480px) {
+  .ant-list-grid {
+    overflow: visible !important;
+    height: auto !important;
+    contain: none !important;
+  }
+
+  .ant-list-grid .ant-row {
+    overflow: visible !important;
+    height: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .ant-list-grid .ant-col {
+    overflow: visible !important;
+    height: auto !important;
+    flex: none !important;
+  }
+
+  /* 페이지네이션 영역도 보이도록 */
+  .ant-pagination {
+    overflow: visible !important;
+    margin-top: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* 한 줄 레이아웃일 때 강제로 높이 자동 설정 */
+  .ant-list-grid .ant-col-xs-24 {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* 카드 아이템 높이도 자동으로 */
+  .ant-list-item {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+}
+
+/* 실제 모바일 디바이스 터치 스크롤 강제 활성화 */
+@media (hover: none) and (pointer: coarse) {
+  /* 터치 디바이스 전용 */
+  body {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-y: contain !important;
+  }
+
+  main {
+    overflow-y: visible !important;
+    height: auto !important;
+  }
+
+  .ant-list,
+  .ant-list-grid {
+    overflow: visible !important;
+    height: auto !important;
+    touch-action: pan-y !important;
+  }
+
+  .ant-list-grid .ant-row {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .ant-list-grid .ant-col {
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
