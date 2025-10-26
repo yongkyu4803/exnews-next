@@ -381,7 +381,7 @@ export default function RestaurantsPage() {
           </div>
 
           <ClientOnly>
-            <div className="w-full">
+            <div style={{ width: '100%', overflow: 'visible', height: 'auto' }}>
               {typeof window !== 'undefined' && (
                 <RestaurantContent 
                   restaurants={restaurants}
@@ -659,7 +659,7 @@ function RestaurantContent(props: RestaurantContentProps) {
       </div>
       
       {/* 상태 표시 */}
-      <div style={{ marginTop: '24px' }}>
+      <div style={{ marginTop: window.innerWidth <= 768 ? '12px' : '24px', overflow: 'visible', height: 'auto' }}>
         {!isRealData && !loading && (
         <Alert
           message="샘플 데이터 표시 중"
@@ -748,7 +748,14 @@ function RestaurantContent(props: RestaurantContentProps) {
       
       {/* 로딩 상태 */}
       {(viewMode === 'category' ? loading : buildingLoading) ? (
-        <div className="flex justify-center items-center py-20">
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: window.innerWidth <= 768 ? '40px 0' : '80px 0',
+          overflow: 'visible',
+          height: 'auto'
+        }}>
           {Spin && <Spin size="large" tip={viewMode === 'category' ? "데이터를 불러오는 중..." : "빌딩별 데이터를 불러오는 중..."} />}
         </div>
       ) : (

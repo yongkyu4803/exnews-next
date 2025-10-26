@@ -720,10 +720,18 @@ header.w-full {
     -webkit-overflow-scrolling: touch !important;
     height: auto !important;
     min-height: 100vh !important;
+    position: relative !important;
+  }
+
+  #__next {
+    overflow-y: visible !important;
+    height: auto !important;
+    min-height: 100vh !important;
   }
 
   main {
     overflow-y: visible !important;
+    overflow-x: hidden !important;
     height: auto !important;
     min-height: 100vh !important;
   }
@@ -731,13 +739,77 @@ header.w-full {
   .ant-list {
     overflow: visible !important;
     height: auto !important;
+    max-height: none !important;
+  }
+
+  .ant-list-grid {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  .ant-list-items {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
   }
 
   .ant-list-item {
     overflow: visible !important;
+    height: auto !important;
   }
 
   .ant-card {
     overflow: visible !important;
+  }
+
+  .ant-row {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .ant-col {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  /* 매우 작은 화면에서 한 줄 레이아웃 스크롤 보장 */
+  .ant-list-grid .ant-row {
+    display: block !important;
+    height: auto !important;
+  }
+
+  .ant-list-grid .ant-col {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: none !important;
+  }
+}
+
+/* 극소형 화면 (360px 이하) - 한 줄 레이아웃 강제 */
+@media (max-width: 360px) {
+  body, html {
+    overflow-y: scroll !important;
+    height: auto !important;
+  }
+
+  .ant-list {
+    min-height: auto !important;
+    height: auto !important;
+  }
+
+  .ant-list-grid {
+    display: block !important;
+  }
+
+  .ant-list-grid .ant-row {
+    display: block !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .ant-list-grid .ant-col {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 12px !important;
   }
 }
