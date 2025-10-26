@@ -72,31 +72,6 @@ export default function SimpleBuildingView({ items }: SimpleBuildingViewProps) {
 
   return (
     <div style={{ marginTop: '16px' }}>
-      {/* 제목 */}
-      <div style={{ 
-        textAlign: 'center', 
-        marginBottom: '24px',
-        padding: '16px',
-        backgroundColor: '#f0f8ff',
-        borderRadius: '8px'
-      }}>
-        <h2 style={{ 
-          margin: '0 0 8px 0', 
-          color: '#1677ff',
-          fontSize: '20px',
-          fontWeight: 'bold'
-        }}>
-          🏢 빌딩별 식당 보기
-        </h2>
-        <p style={{ 
-          margin: '0', 
-          color: '#666',
-          fontSize: '14px'
-        }}>
-          총 {items.length}개 식당 중 3개 이상인 {buildingGroups.length}개 빌딩 표시
-        </p>
-      </div>
-
       {/* 탭 헤더 */}
       <div style={{ 
         display: 'flex', 
