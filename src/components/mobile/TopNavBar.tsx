@@ -50,8 +50,8 @@ const NavMenu = styled(Menu)`
     min-width: 65px;
     height: 40px !important;
     line-height: 40px !important;
-    margin: 6px 8px !important;
-    font-size: 18px;
+    margin: 6px 4px !important;
+    font-size: 14px;
     font-family: 'Cafe24Anemone', sans-serif;
     font-weight: normal;
     cursor: pointer !important;
@@ -61,7 +61,7 @@ const NavMenu = styled(Menu)`
     border-bottom: none !important;
     border-radius: 8px !important;
     transition: all 0.3s ease;
-    padding: 0 16px !important;
+    padding: 0 8px !important;
   }
 
   .ant-menu-item:hover {
@@ -83,6 +83,30 @@ const NavMenu = styled(Menu)`
     background-color: rgba(255, 255, 255, 0.3) !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  }
+
+  /* 모바일 최적화 */
+  @media (max-width: 768px) {
+    .ant-menu-item {
+      min-width: 50px;
+      height: 36px !important;
+      line-height: 36px !important;
+      margin: 4px 2px !important;
+      font-size: 13px;
+      padding: 0 6px !important;
+    }
+  }
+
+  /* 작은 모바일 화면 */
+  @media (max-width: 360px) {
+    .ant-menu-item {
+      min-width: 45px;
+      height: 32px !important;
+      line-height: 32px !important;
+      margin: 4px 1px !important;
+      font-size: 12px;
+      padding: 0 4px !important;
+    }
   }
 `;
 
