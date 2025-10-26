@@ -63,13 +63,17 @@ const HomePage = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(7); // 모바일에서 한 페이지당 7개 아이템
+  const pageSize = isMobile ? 7 : 12; // 모바일 7개, 웹 12개
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>(undefined);
   const [selectedRows, setSelectedRows] = useState<NewsItem[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [activeTab, setActiveTab] = useState<string>('exclusive');
   const [rankingSelectedRows, setRankingSelectedRows] = useState<RankingNewsItem[]>([]);
   const [rankingSelectedKeys, setRankingSelectedKeys] = useState<React.Key[]>([]);
+  const [rankingCurrentPage, setRankingCurrentPage] = useState(1);
+  const rankingPageSize = isMobile ? 7 : 12; // 모바일 7개, 웹 12개
+  const [editorialCurrentPage, setEditorialCurrentPage] = useState(1);
+  const [editorialPageSize] = useState(6); // 한 페이지에 6개 (2열 그리드 x 3행)
   const queryClient = useQueryClient();
 
   // URL에서 tab 파라미터 체크
@@ -241,6 +245,54 @@ const HomePage = () => {
       });
       console.log('스크롤 초기화 완료');
     }, 10); // 최소 지연으로 상태 업데이트 후 스크롤 실행
+  };
+
+  // 랭킹 뉴스 페이지네이션된 아이템
+  const paginatedRankingItems = React.useMemo(() => {
+    if (!rankingData?.items) return [];
+    const validItems = rankingData.items.filter(item => item && item.id && item.title && item.link);
+    const startIndex = (rankingCurrentPage - 1) * rankingPageSize;
+    const endIndex = startIndex + rankingPageSize;
+    return validItems.slice(startIndex, endIndex);
+  }, [rankingData?.items, rankingCurrentPage, rankingPageSize]);
+
+  // 랭킹 뉴스 전체 페이지 수
+  const rankingTotalPages = React.useMemo(() => {
+    if (!rankingData?.items) return 0;
+    const validItems = rankingData.items.filter(item => item && item.id && item.title && item.link);
+    return Math.ceil(validItems.length / rankingPageSize);
+  }, [rankingData?.items, rankingPageSize]);
+
+  // 랭킹 뉴스 페이지 변경 핸들러
+  const handleRankingPageChange = (page: number) => {
+    if (page < 1 || page > rankingTotalPages) return;
+    setRankingCurrentPage(page);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 10);
+  };
+
+  // 사설 페이지네이션된 아이템
+  const paginatedEditorialItems = React.useMemo(() => {
+    if (!editorialData?.items) return [];
+    const startIndex = (editorialCurrentPage - 1) * editorialPageSize;
+    const endIndex = startIndex + editorialPageSize;
+    return editorialData.items.slice(startIndex, endIndex);
+  }, [editorialData?.items, editorialCurrentPage, editorialPageSize]);
+
+  // 사설 전체 페이지 수
+  const editorialTotalPages = React.useMemo(() => {
+    if (!editorialData?.items) return 0;
+    return Math.ceil(editorialData.items.length / editorialPageSize);
+  }, [editorialData?.items, editorialPageSize]);
+
+  // 사설 페이지 변경 핸들러
+  const handleEditorialPageChange = (page: number) => {
+    if (page < 1 || page > editorialTotalPages) return;
+    setEditorialCurrentPage(page);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 10);
   };
 
   // 카테고리 변경 시 페이지 초기화
@@ -458,7 +510,7 @@ const HomePage = () => {
                       flexWrap: isMobile ? 'wrap' : 'nowrap',
                       gap: '12px'
                     }}>
-                      <Title level={isMobile ? 4 : 3}>🚨 단독 뉴스</Title>
+                      <Title level={isMobile ? 4 : 3} style={{ fontFamily: "'Cafe24Anemone', sans-serif" }}>🚨 단독 뉴스</Title>
                       <Button 
                         icon={<CopyOutlined />} 
                         onClick={handleCopyToClipboard}
@@ -517,53 +569,95 @@ const HomePage = () => {
                           }}
                         />
                         
-                        {/* 페이지네이션 UI */}
+                        {/* 모바일 페이지네이션 */}
                         {totalPages > 1 && (
-                          <>
-                            <div style={{ 
-                              display: 'flex', 
-                              justifyContent: 'center', 
-                              marginTop: '16px',
-                              padding: '8px',
-                              backgroundColor: '#fff',
-                              borderRadius: '8px',
-                              boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                            }}>
-                              <Pagination
-                                current={currentPage}
-                                total={data?.items?.length || 0}
-                                pageSize={pageSize}
-                                onChange={handlePageChange}
-                                size="small"
-                                showSizeChanger={false}
-                                simple
-                              />
-                            </div>
-                            
-                            {/* 페이지 정보 표시 */}
-                            <div style={{
-                              textAlign: 'center',
-                              fontSize: '12px',
+                          <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '12px',
+                            marginTop: '12px',
+                            padding: '16px',
+                            backgroundColor: '#ffffff',
+                            borderRadius: '12px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                          }}>
+                            {/* <div style={{
+                              fontSize: '13px',
                               color: '#666',
-                              marginTop: '4px'
+                              fontWeight: '600',
+                              fontFamily: "'Cafe24Anemone', sans-serif"
                             }}>
                               {currentPage} / {totalPages} 페이지
-                            </div>
-                            
-                            {/* 하단 메뉴바 공간 - 현재 기능 없음 */}
-                            {/* <div style={{ height: '60px' }}></div> */}
-                          </>
+                            </div> */}
+                            <Pagination
+                              current={currentPage}
+                              total={data?.items?.length || 0}
+                              pageSize={pageSize}
+                              onChange={handlePageChange}
+                              size="small"
+                              showSizeChanger={false}
+                              simple
+                            />
+                            {/* <div style={{
+                              fontSize: '12px',
+                              color: '#999'
+                            }}>
+                              총 {data?.items?.length || 0}개
+                            </div> */}
+                          </div>
                         )}
                       </>
                     ) : (
-                      <NewsTable 
-                        items={data?.items || []}
-                        selectedKeys={selectedKeys}
-                        onSelectChange={(keys, rows) => {
-                          setSelectedKeys(keys);
-                          setSelectedRows(rows);
-                        }}
-                      />
+                      <>
+                        <NewsTable
+                          items={paginatedItems}
+                          selectedKeys={selectedKeys}
+                          onSelectChange={(keys, rows) => {
+                            setSelectedKeys(keys);
+                            setSelectedRows(rows);
+                          }}
+                        />
+
+                        {/* 데스크톱 페이지네이션 */}
+                        {totalPages > 1 && (
+                          <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '12px',
+                            marginTop: '12px',
+                            padding: '16px',
+                            backgroundColor: '#ffffff',
+                            borderRadius: '12px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                          }}>
+                            {/* <div style={{
+                              fontSize: '13px',
+                              color: '#666',
+                              fontWeight: '600',
+                              fontFamily: "'Cafe24Anemone', sans-serif"
+                            }}>
+                              {currentPage} / {totalPages} 페이지
+                            </div> */}
+                            <Pagination
+                              current={currentPage}
+                              total={data?.items?.length || 0}
+                              pageSize={pageSize}
+                              onChange={handlePageChange}
+                              size="small"
+                              showSizeChanger={false}
+                              simple
+                            />
+                            {/* <div style={{
+                              fontSize: '12px',
+                              color: '#999'
+                            }}>
+                              총 {data?.items?.length || 0}개
+                            </div> */}
+                          </div>
+                        )}
+                      </>
                     )}
                     
                     {/* 데스크탑 새로고침 버튼 - 단독 뉴스 */}
@@ -593,7 +687,7 @@ const HomePage = () => {
                       flexWrap: isMobile ? 'wrap' : 'nowrap',
                       gap: '12px'
                     }}>
-                      <Title level={isMobile ? 4 : 3}>📊 랭킹 뉴스</Title>
+                      <Title level={isMobile ? 4 : 3} style={{ fontFamily: "'Cafe24Anemone', sans-serif" }}>🔥 랭킹 뉴스</Title>
                       <Button 
                         icon={<CopyOutlined />} 
                         onClick={handleCopyRankingToClipboard}
@@ -615,46 +709,115 @@ const HomePage = () => {
                     )}
                     
                     {isMobile ? (
-                      <VirtualRankingNewsList 
-                        items={(rankingData && rankingData.items) ? 
-                          // 유효하지 않은 아이템 필터링 (필터링 결과 로깅 추가)
-                          rankingData.items.filter(item => {
-                            const isValid = item && item.id && item.title && item.link;
-                            if (!isValid) {
-                              console.warn('유효하지 않은 랭킹 뉴스 아이템 필터링:', item);
-                            }
-                            return isValid;
-                          }) : 
-                          []
-                        }
-                        isLoading={rankingIsLoading}
-                        onRefresh={handleRankingRefresh}
-                        selectedKeys={rankingSelectedKeys}
-                        onSelectChange={(keys, rows) => {
-                          setRankingSelectedKeys(keys);
-                          setRankingSelectedRows(rows);
-                        }}
-                      />
+                      <>
+                        <VirtualRankingNewsList
+                          items={paginatedRankingItems}
+                          isLoading={rankingIsLoading}
+                          onRefresh={handleRankingRefresh}
+                          selectedKeys={rankingSelectedKeys}
+                          onSelectChange={(keys, rows) => {
+                            setRankingSelectedKeys(keys);
+                            setRankingSelectedRows(rows);
+                          }}
+                        />
+
+                        {/* 모바일 페이지네이션 */}
+                        {rankingTotalPages > 1 && (
+                          <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '12px',
+                            marginTop: '12px',
+                            padding: '16px',
+                            backgroundColor: '#ffffff',
+                            borderRadius: '12px',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                          }}>
+                            {/* <div style={{
+                              fontSize: '13px',
+                              color: '#666',
+                              fontWeight: '600',
+                              fontFamily: "'Cafe24Anemone', sans-serif"
+                            }}>
+                              {rankingCurrentPage} / {rankingTotalPages} 페이지
+                            </div> */}
+                            <Pagination
+                              current={rankingCurrentPage}
+                              total={rankingData?.items?.filter(item => item && item.id && item.title && item.link).length || 0}
+                              pageSize={rankingPageSize}
+                              onChange={handleRankingPageChange}
+                              size="small"
+                              showSizeChanger={false}
+                              simple
+                            />
+                            {/* <div style={{
+                              fontSize: '12px',
+                              color: '#999'
+                            }}>
+                              총 {rankingData?.items?.filter(item => item && item.id && item.title && item.link).length || 0}개
+                            </div> */}
+                          </div>
+                        )}
+                      </>
                     ) : (
-                      <div>
+                      <>
                         {rankingIsLoading ? (
                           <div style={{ padding: '20px', textAlign: 'center' }}>
                             <div>데이터를 불러오는 중입니다...</div>
                           </div>
                         ) : (
-                          <RankingNewsTable 
-                            items={(rankingData && rankingData.items) ? 
-                              rankingData.items.filter(item => item && item.id && item.title && item.link) : 
-                              []
-                            }
-                            selectedKeys={rankingSelectedKeys}
-                            onSelectChange={(keys, rows) => {
-                              setRankingSelectedKeys(keys);
-                              setRankingSelectedRows(rows);
-                            }}
-                          />
+                          <>
+                            <RankingNewsTable
+                              items={paginatedRankingItems}
+                              selectedKeys={rankingSelectedKeys}
+                              onSelectChange={(keys, rows) => {
+                                setRankingSelectedKeys(keys);
+                                setRankingSelectedRows(rows);
+                              }}
+                            />
+
+                            {/* 데스크톱 페이지네이션 */}
+                            {rankingTotalPages > 1 && (
+                              <div style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                gap: '12px',
+                                marginTop: '12px',
+                                padding: '16px',
+                                backgroundColor: '#ffffff',
+                                borderRadius: '12px',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                              }}>
+                                {/* <div style={{
+                                  fontSize: '13px',
+                                  color: '#666',
+                                  fontWeight: '600',
+                                  fontFamily: "'Cafe24Anemone', sans-serif"
+                                }}>
+                                  {rankingCurrentPage} / {rankingTotalPages} 페이지
+                                </div> */}
+                                <Pagination
+                                  current={rankingCurrentPage}
+                                  total={rankingData?.items?.filter(item => item && item.id && item.title && item.link).length || 0}
+                                  pageSize={rankingPageSize}
+                                  onChange={handleRankingPageChange}
+                                  size="small"
+                                  showSizeChanger={false}
+                                  simple
+                                />
+                                {/* <div style={{
+                                  fontSize: '12px',
+                                  color: '#999'
+                                }}>
+                                  총 {rankingData?.items?.filter(item => item && item.id && item.title && item.link).length || 0}개
+                                </div> */}
+                              </div>
+                            )}
+                          </>
                         )}
-                      </div>
+                      </>
                     )}
                     
                     {/* 데스크탑 새로고침 버튼 - 랭킹 뉴스 */}
@@ -684,7 +847,7 @@ const HomePage = () => {
                       flexWrap: isMobile ? 'wrap' : 'nowrap',
                       gap: '12px'
                     }}>
-                      <Title level={isMobile ? 4 : 3}>📰 오늘의 사설</Title>
+                      <Title level={isMobile ? 4 : 3} style={{ fontFamily: "'Cafe24Anemone', sans-serif" }}>📰 오늘의 사설</Title>
                     </div>
 
                     {editorialError && (
@@ -698,9 +861,48 @@ const HomePage = () => {
                     )}
 
                     <VirtualEditorialList
-                      items={editorialData?.items || []}
+                      items={paginatedEditorialItems}
                       isLoading={editorialIsLoading}
                     />
+
+                    {/* 페이지네이션 */}
+                    {editorialTotalPages > 1 && (
+                      <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '12px',
+                        marginTop: '12px',
+                        padding: '16px',
+                        backgroundColor: '#ffffff',
+                        borderRadius: '12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                      }}>
+                        {/* <div style={{
+                          fontSize: '13px',
+                          color: '#666',
+                          fontWeight: '600',
+                          fontFamily: "'Cafe24Anemone', sans-serif"
+                        }}>
+                          {editorialCurrentPage} / {editorialTotalPages} 페이지
+                        </div> */}
+                        <Pagination
+                          current={editorialCurrentPage}
+                          total={editorialData?.items?.length || 0}
+                          pageSize={editorialPageSize}
+                          onChange={handleEditorialPageChange}
+                          size="small"
+                          showSizeChanger={false}
+                          simple
+                        />
+                        {/* <div style={{
+                          fontSize: '12px',
+                          color: '#999'
+                        }}>
+                          총 {editorialData?.items?.length || 0}개
+                        </div> */}
+                      </div>
+                    )}
 
                     {/* 데스크탑 새로고침 버튼 - 사설 분석 */}
                     {!isMobile && activeTab === 'editorial' && (
@@ -751,19 +953,32 @@ const HomePage = () => {
         borderTop: '1px solid #eaeaea',
         marginTop: '32px',
         color: '#666',
-        fontSize: isMobile ? '12px' : '14px',
-        backgroundColor: '#f9f9f9'
+        fontSize: isMobile ? '12px' : '16px',
+        backgroundColor: '#f9f9f9',
+        fontFamily: "'Inter', 'Roboto', 'Helvetica Neue', sans-serif"
       }}>
         <div style={{ marginBottom: '8px' }}>
-          © {new Date().getFullYear()} 단독뉴스 - 모든 권리 보유
+          <a
+            href="https://gqai.kr"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: '#1a4b8c',
+              textDecoration: 'none',
+              fontWeight: '600',
+              letterSpacing: '0.5px'
+            }}
+          >
+            GQAI.kr
+          </a>
         </div>
         <div>
-          <a href="mailto:gq.newslens@gmail.com" style={{ 
-            color: '#1a4b8c', 
+          <a href="mailto:gq.newslens@gmail.com" style={{
+            color: '#1a4b8c',
             textDecoration: 'none',
             fontWeight: '500'
           }}>
-            문의: gq.newslens@gmail.com
+            gq.newslens@gmail.com
           </a>
         </div>
       </footer>

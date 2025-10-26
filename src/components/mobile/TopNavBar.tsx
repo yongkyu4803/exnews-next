@@ -11,10 +11,11 @@ const NavBarContainer = styled.div`
   top: 0;
   z-index: 100;
   width: 100%;
-  background-color: #ffffff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
+  align-items: center;
 `;
 
 const NavHeader = styled.div`
@@ -39,24 +40,49 @@ const Logo = styled.div`
 
 const NavMenu = styled(Menu)`
   border-bottom: none !important;
-  
+  display: flex;
+  justify-content: center;
+  max-width: 1000px;
+  width: 100%;
+  background: transparent !important;
+
   .ant-menu-item {
-    min-width: 50px;
+    min-width: 65px;
     height: 40px !important;
     line-height: 40px !important;
-    margin: 0 8px !important;
-    font-size: 14px;
+    margin: 6px 8px !important;
+    font-size: 18px;
+    font-family: 'Cafe24Anemone', sans-serif;
+    font-weight: normal;
     cursor: pointer !important;
     user-select: none;
     touch-action: manipulation;
+    color: rgba(255, 255, 255, 0.95) !important;
+    border-bottom: none !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease;
+    padding: 0 16px !important;
   }
-  
+
+  .ant-menu-item:hover {
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.2) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+
   .ant-menu-item:active {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: rgba(255, 255, 255, 0.3) !important;
+    transform: translateY(0);
   }
-  
+
   .ant-menu-item-selected {
-    font-weight: bold;
+    font-family: 'Cafe24Anemone', sans-serif;
+    font-weight: normal;
+    color: #ffffff !important;
+    background-color: rgba(255, 255, 255, 0.3) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   }
 `;
 

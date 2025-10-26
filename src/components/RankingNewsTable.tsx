@@ -54,12 +54,7 @@ export default function RankingNewsTable({ items, selectedKeys, onSelectChange }
         },
         selectedRowKeys: selectedKeys,
       }}
-      pagination={{
-        pageSize: 15,
-        showSizeChanger: true,
-        pageSizeOptions: ['10', '15', '30', '50'],
-        showTotal: (total: number, range: [number, number]) => `${range[0]}-${range[1]} / ${total}개 항목`
-      }}
+      pagination={false}
     />
   );
 } 

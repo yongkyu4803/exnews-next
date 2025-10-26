@@ -1,3 +1,12 @@
+/* 카페24 아네모네 폰트 */
+@font-face {
+  font-family: 'Cafe24Anemone';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/Cafe24Ohsquare.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* 전역 스타일 */
 :root {
   --primary-color: #1a73e8;

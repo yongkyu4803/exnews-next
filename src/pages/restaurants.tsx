@@ -352,7 +352,7 @@ export default function RestaurantsPage() {
         
         <div className="container mx-auto px-4 py-8 mt-4">
           <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white py-8 px-6 rounded-lg shadow-md mb-8">
-            <h1 className="text-3xl font-bold mb-2">국회앞 식당정보</h1>
+            <h1 className="text-3xl font-bold mb-2" style={{ fontFamily: "'Cafe24Anemone', sans-serif" }}>국회앞 식당정보</h1>
             <p className="text-blue-100">국회앞 식당 정보를 카테고리별로 확인해보세요.</p>
           </div>
 
@@ -620,7 +620,7 @@ function RestaurantContent(props: RestaurantContentProps) {
           {/* 빌딩별 뷰 설명 */}
           {viewMode === 'building' && (
             <div className="text-center py-4">
-              <Typography.Title level={4} style={{ marginBottom: '8px' }}>
+              <Typography.Title level={4} style={{ marginBottom: '8px', fontFamily: "'Cafe24Anemone', sans-serif" }}>
                 🏢 빌딩별 식당 보기
               </Typography.Title>
               <Typography.Text type="secondary">
@@ -848,6 +848,31 @@ function RestaurantContent(props: RestaurantContentProps) {
         </>
       )}
       </div>
+
+      {/* Footer */}
+      <footer style={{
+        width: '100%',
+        padding: '16px',
+        textAlign: 'center',
+        borderTop: '1px solid #eaeaea',
+        marginTop: '32px',
+        color: '#666',
+        fontSize: '14px',
+        backgroundColor: '#f9f9f9'
+      }}>
+        <div style={{ marginBottom: '8px' }}>
+          © {new Date().getFullYear()} 단독뉴스 - 모든 권리 보유
+        </div>
+        <div>
+          <a href="mailto:gq.newslens@gmail.com" style={{
+            color: '#1a4b8c',
+            textDecoration: 'none',
+            fontWeight: '500'
+          }}>
+            문의: gq.newslens@gmail.com
+          </a>
+        </div>
+      </footer>
     </>
   );
 }

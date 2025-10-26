@@ -4,10 +4,10 @@ import { EditorialAnalysis } from '@/types';
 
 const Container = styled.div`
   width: 100%;
-  padding: 8px;
+  padding: 4px;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-  gap: 16px;
+  gap: 12px;
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -16,62 +16,64 @@ const Container = styled.div`
 
 const AnalysisCard = styled.div`
   background: #ffffff;
-  border-radius: 12px;
-  padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   height: fit-content;
 `;
 
 const CardHeader = styled.div`
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 `;
 
 const QueryText = styled.h3`
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   color: #1a1a1a;
-  margin: 0 0 8px 0;
+  margin: 0 0 4px 0;
 `;
 
 const DateText = styled.div`
-  font-size: 13px;
-  color: #666;
-  margin-bottom: 16px;
+  font-size: 12px;
+  color: #999;
+  margin-bottom: 12px;
 `;
 
 const TopicSection = styled.div`
-  margin-top: 12px;
+  margin-top: 8px;
 `;
 
 const TopicHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 8px;
+  margin-bottom: 6px;
   cursor: pointer;
   user-select: none;
+  padding: 4px 0;
 `;
 
 const TopicNumber = styled.div`
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #1a73e8;
-  color: white;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: #e8f0fe;
+  color: #1a73e8;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  font-size: 14px;
+  font-weight: 600;
+  font-size: 11px;
   flex-shrink: 0;
 `;
 
 const TopicTitle = styled.h4`
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: #1a1a1a;
   margin: 0;
   flex: 1;
+  line-height: 1.4;
 `;
 
 const ExpandIcon = styled.span<{ expanded: boolean }>`
@@ -83,27 +85,27 @@ const ExpandIcon = styled.span<{ expanded: boolean }>`
 `;
 
 const TopicSummary = styled.p`
-  font-size: 14px;
-  line-height: 1.6;
-  color: #4a4a4a;
-  margin: 8px 0 12px 44px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #555;
+  margin: 6px 0 8px 28px;
   white-space: pre-wrap;
   background: #f8f9fa;
-  padding: 12px;
-  border-radius: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
 `;
 
 const ArticlesList = styled.div`
-  margin-left: 44px;
+  margin-left: 28px;
 `;
 
 const ArticleItem = styled.a`
   display: block;
-  padding: 12px;
-  margin-bottom: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
   background: #fff;
   border: 1px solid #e8e8e8;
-  border-radius: 8px;
+  border-radius: 6px;
   text-decoration: none;
   color: inherit;
   transition: all 0.2s ease;
@@ -118,30 +120,31 @@ const ArticleNumber = styled.span`
   display: inline-flex;
   align-items: center;
   justify-center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 3px;
   background: #e8e8e8;
   color: #666;
-  font-size: 11px;
-  font-weight: bold;
-  margin-right: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  margin-right: 6px;
+  padding: 0 4px;
 `;
 
 const ArticleTitle = styled.div`
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #1a1a1a;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   line-height: 1.4;
 `;
 
 const ArticleMeta = styled.div`
-  font-size: 12px;
-  color: #888;
+  font-size: 11px;
+  color: #999;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 `;
 
 const EmptyState = styled.div`

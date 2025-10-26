@@ -92,7 +92,7 @@ export default function NewsTable({ items, selectedKeys, onSelectChange }: NewsT
           },
           selectedRowKeys: selectedKeys,
         }}
-        pagination={{ position: ['bottomCenter'] }}
+        pagination={false}
         scroll={{ x: 'max-content' }}
       />
     </div>
