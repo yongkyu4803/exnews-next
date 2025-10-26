@@ -11,6 +11,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    // 환경변수 체크
+    if (!process.env.NEXT_PUBLIC_EDITORIAL_SUPABASE_URL || !process.env.NEXT_PUBLIC_EDITORIAL_SUPABASE_ANON_KEY) {
+      logger.error('사설 Supabase 환경변수 누락');
+      return res.status(503).json({
+        error: 'Editorial database not configured',
+        message: '사설 데이터베이스 환경변수가 설정되지 않았습니다. Vercel 환경변수를 확인해주세요.'
+      });
+    }
+
     logger.info('사설 분석 데이터 요청 시작');
 
     // 1. news_analysis 테이블에서 사설 분석 목록 조회

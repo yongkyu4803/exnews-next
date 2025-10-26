@@ -8,16 +8,25 @@ import { createClient } from '@supabase/supabase-js';
 function getRequiredEnvVar(key: string): string {
   const value = process.env[key];
   if (!value) {
-    throw new Error(
-      `Missing required environment variable: ${key}\n` +
-      `Please add ${key} to your .env.local file.`
-    );
+    const errorMsg = `Missing required environment variable: ${key}`;
+    console.error(`[Editorial Supabase Client] ${errorMsg}`);
+    throw new Error(errorMsg);
   }
   return value;
 }
 
-const editorialSupabaseUrl = getRequiredEnvVar('NEXT_PUBLIC_EDITORIAL_SUPABASE_URL');
-const editorialSupabaseAnonKey = getRequiredEnvVar('NEXT_PUBLIC_EDITORIAL_SUPABASE_ANON_KEY');
+let editorialSupabaseUrl: string;
+let editorialSupabaseAnonKey: string;
+
+try {
+  editorialSupabaseUrl = getRequiredEnvVar('NEXT_PUBLIC_EDITORIAL_SUPABASE_URL');
+  editorialSupabaseAnonKey = getRequiredEnvVar('NEXT_PUBLIC_EDITORIAL_SUPABASE_ANON_KEY');
+} catch (error) {
+  console.error('[Editorial Supabase Client] 초기화 실패:', error);
+  // Fallback to empty strings to prevent app crash
+  editorialSupabaseUrl = '';
+  editorialSupabaseAnonKey = '';
+}
 
 // 개발 모드에서 환경변수 로깅
 if (process.env.NODE_ENV !== 'production') {

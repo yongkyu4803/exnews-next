@@ -183,9 +183,16 @@ const HomePage = () => {
       logger.debug('사설 분석 데이터 요청 시작');
       const response = await fetch('/api/editorials');
       if (!response.ok) {
-        const errorText = await response.text();
-        logger.error('사설 분석 API 응답 오류', { status: response.status, errorText });
-        throw new Error(`Failed to fetch editorial items: ${response.status} ${errorText}`);
+        let errorMessage = `Failed to fetch editorial items: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch {
+          const errorText = await response.text();
+          errorMessage = errorText || errorMessage;
+        }
+        logger.error('사설 분석 API 응답 오류', { status: response.status, message: errorMessage });
+        throw new Error(errorMessage);
       }
       const result = await response.json();
       logger.info('사설 분석 API 응답', { itemCount: result?.items?.length || 0 });
@@ -434,7 +441,11 @@ const HomePage = () => {
               }
             `}</style>
             
-            <div style={{ padding: isMobile ? '16px' : '20px' }}>
+            <div style={{
+              padding: isMobile ? '16px' : '20px',
+              maxWidth: isMobile ? '100%' : '1000px',
+              margin: '0 auto'
+            }}>
               <Space direction="vertical" style={{ width: '100%' }}>
                 <PwaInstallPrompt />
                 
@@ -686,22 +697,10 @@ const HomePage = () => {
                       />
                     )}
 
-                    {isMobile ? (
-                      <VirtualEditorialList
-                        items={editorialData?.items || []}
-                        isLoading={editorialIsLoading}
-                      />
-                    ) : (
-                      <div>
-                        {editorialIsLoading ? (
-                          <div style={{ padding: '20px', textAlign: 'center' }}>
-                            <div>데이터를 불러오는 중입니다...</div>
-                          </div>
-                        ) : (
-                          <EditorialTable items={editorialData?.items || []} />
-                        )}
-                      </div>
-                    )}
+                    <VirtualEditorialList
+                      items={editorialData?.items || []}
+                      isLoading={editorialIsLoading}
+                    />
 
                     {/* 데스크탑 새로고침 버튼 - 사설 분석 */}
                     {!isMobile && activeTab === 'editorial' && (

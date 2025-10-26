@@ -5,14 +5,21 @@ import { EditorialAnalysis } from '@/types';
 const Container = styled.div`
   width: 100%;
   padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+  gap: 16px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const AnalysisCard = styled.div`
   background: #ffffff;
   border-radius: 12px;
   padding: 16px;
-  margin-bottom: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  height: fit-content;
 `;
 
 const CardHeader = styled.div`
