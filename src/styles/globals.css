@@ -712,3 +712,32 @@ header.w-full {
     transition: all 0.2s ease;
   }
 }
+
+/* 식당 페이지 모바일 스크롤 보장 */
+@media (max-width: 768px) {
+  body {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    height: auto !important;
+    min-height: 100vh !important;
+  }
+
+  main {
+    overflow-y: visible !important;
+    height: auto !important;
+    min-height: 100vh !important;
+  }
+
+  .ant-list {
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .ant-list-item {
+    overflow: visible !important;
+  }
+
+  .ant-card {
+    overflow: visible !important;
+  }
+}

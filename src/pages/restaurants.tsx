@@ -347,10 +347,24 @@ export default function RestaurantsPage() {
         <meta name="description" content="국회 주변 맛집 정보를 제공합니다." />
       </Head>
 
-      <main className="flex flex-col items-center">
+      <main style={{
+        display: 'flex',
+        flexDirection: 'column',
+        minHeight: '100vh',
+        width: '100%',
+        overflowY: 'auto',
+        overflowX: 'hidden'
+      }}>
         <TopNavBar />
 
-        <div className="container mx-auto px-2 py-4 mt-2" style={{ width: '100%' }}>
+        <div style={{
+          width: '100%',
+          maxWidth: '1200px',
+          margin: '0 auto',
+          padding: window.innerWidth <= 768 ? '8px 4px' : '32px 16px',
+          flex: 1,
+          overflowY: 'visible'
+        }}>
           <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white rounded-lg shadow-md mb-4" style={{
             padding: window.innerWidth <= 768 ? '12px' : '32px 24px'
           }}>
@@ -741,7 +755,12 @@ function RestaurantContent(props: RestaurantContentProps) {
         <>
           {/* 카테고리별 보기 */}
           {viewMode === 'category' && (
-            <div className="overflow-x-auto" style={{ padding: window.innerWidth <= 768 ? '0 4px' : '0 16px' }}>
+            <div style={{
+              padding: window.innerWidth <= 768 ? '0 4px' : '0 16px',
+              width: '100%',
+              overflowY: 'visible',
+              minHeight: 'auto'
+            }}>
               {List && (
                 <List
               grid={{
@@ -754,6 +773,10 @@ function RestaurantContent(props: RestaurantContentProps) {
                 xxl: 5,
               }}
               dataSource={restaurants}
+              style={{
+                minHeight: 'auto',
+                overflowY: 'visible'
+              }}
               pagination={{
                 position: 'bottom',
                 align: 'center',
@@ -859,7 +882,12 @@ function RestaurantContent(props: RestaurantContentProps) {
           
           {/* 빌딩별 보기 */}
           {viewMode === 'building' && (
-            <div className="px-4">
+            <div style={{
+              padding: window.innerWidth <= 768 ? '0 4px' : '0 16px',
+              width: '100%',
+              overflowY: 'visible',
+              minHeight: 'auto'
+            }}>
               <SimpleBuildingView
                 items={allRestaurants}
               />
