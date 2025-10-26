@@ -16,6 +16,7 @@ const NavBarContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
+  flex-shrink: 0;
 `;
 
 const NavHeader = styled.div`

@@ -345,23 +345,23 @@ export default function RestaurantsPage() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
       </Head>
 
-      <main style={{
-        display: 'flex',
-        flexDirection: 'column',
+      <div style={{
         minHeight: '100vh',
         width: '100%',
-        overflowY: 'auto',
-        overflowX: 'hidden'
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative'
       }}>
         <TopNavBar />
 
-        <div style={{
+        <main style={{
           width: '100%',
           maxWidth: '1200px',
           margin: '0 auto',
           padding: window.innerWidth <= 768 ? '8px 4px' : '32px 16px',
           flex: 1,
-          overflowY: 'visible'
+          overflow: 'visible',
+          paddingBottom: window.innerWidth <= 768 ? '60px' : '40px'
         }}>
           <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white rounded-lg shadow-md mb-4" style={{
             padding: window.innerWidth <= 768 ? '12px' : '32px 24px'
@@ -411,8 +411,8 @@ export default function RestaurantsPage() {
               )}
             </div>
           </ClientOnly>
-        </div>
-      </main>
+        </main>
+      </div>
     </>
   );
 }
