@@ -14,6 +14,8 @@ import FloatingButtonWrapper from '@/components/common/FloatingButtonWrapper';
 import MicroButton from '@/components/common/MicroButton';
 import RefreshIcon from '@/components/common/RefreshIcon';
 import { createLogger } from '@/utils/logger';
+import { trackPageView, trackTabChange } from '@/utils/analytics';
+import { TabName } from '@/types';
 
 const logger = createLogger('Pages:Home');
 
@@ -89,9 +91,21 @@ const HomePage = () => {
     }
   }, []);
 
-  // 클라이언트 사이드 마운트 체크
+  // 클라이언트 사이드 마운트 체크 및 초기 페이지뷰 트래킹
   useEffect(() => {
     setIsMounted(true);
+
+    // 페이지 마운트 시 페이지뷰 트래킹
+    if (typeof window !== 'undefined') {
+      const tabMap: Record<string, TabName> = {
+        'exclusive': 'exclusive',
+        'ranking': 'ranking',
+        'editorial': 'editorial',
+        'restaurant': 'restaurant'
+      };
+      const currentTab = tabMap[activeTab] || 'exclusive';
+      trackPageView(currentTab);
+    }
   }, []);
 
   // 미디어 쿼리 처리를 위한 useEffect
@@ -309,6 +323,17 @@ const HomePage = () => {
     setSelectedRows([]);
     setRankingSelectedKeys([]);
     setRankingSelectedRows([]);
+
+    // 탭 변경 트래킹
+    const tabMap: Record<string, TabName> = {
+      'exclusive': 'exclusive',
+      'ranking': 'ranking',
+      'editorial': 'editorial',
+      'restaurant': 'restaurant'
+    };
+    if (tabMap[key]) {
+      trackTabChange(tabMap[key]);
+    }
   };
 
   const handleCopyToClipboard = () => {

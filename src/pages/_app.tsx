@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import type { AppProps } from 'next/app';
+import { useRouter } from 'next/router';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { trackPageView } from '@/utils/analytics';
 import '@/styles/globals.css';
 
 // Create a client
@@ -15,6 +17,8 @@ const queryClient = new QueryClient({
 });
 
 export default function App({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+
   // 개발 모드에서 모바일 디버깅용 Eruda 콘솔 추가
   useEffect(() => {
     // 프로덕션에서도 임시로 활성화 (디버깅용)
@@ -32,6 +36,20 @@ export default function App({ Component, pageProps }: AppProps) {
       };
     }
   }, []);
+
+  // 글로벌 라우트 변경 트래킹
+  useEffect(() => {
+    const handleRouteChange = (url: string) => {
+      // 페이지 라우트 변경 시 페이지뷰 트래킹
+      trackPageView();
+    };
+
+    router.events.on('routeChangeComplete', handleRouteChange);
+
+    return () => {
+      router.events.off('routeChangeComplete', handleRouteChange);
+    };
+  }, [router.events]);
 
   return (
     <ErrorBoundary>

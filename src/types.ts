@@ -111,4 +111,59 @@ export interface EditorialAnalysis {
 export interface EditorialResponse {
   items: EditorialAnalysis[];
   totalCount: number;
+}
+
+// Visit Analytics 관련 타입
+export type TabName = 'exclusive' | 'ranking' | 'editorial' | 'restaurant';
+export type EventType = 'page_view' | 'tab_change' | 'interaction';
+export type DeviceType = 'mobile' | 'desktop';
+
+export interface VisitAnalytics {
+  id?: string;
+  session_id: string;
+  visitor_id: string;
+  page_path: string;
+  tab_name?: TabName;
+  event_type: EventType;
+  referrer?: string;
+  user_agent?: string;
+  device_type: DeviceType;
+  // Phase 2 fields
+  duration_seconds?: number;
+  scroll_depth?: number;
+  interaction_count?: number;
+  exit_page?: boolean;
+  created_at?: string;
+}
+
+export interface TabStats {
+  tab_name: TabName;
+  count: number;
+  percentage: number;
+}
+
+export interface DeviceStats {
+  mobile: number;
+  desktop: number;
+}
+
+export interface AnalyticsStats {
+  total_visitors: number;
+  total_pageviews: number;
+  total_sessions: number;
+  tab_stats: TabStats[];
+  device_stats: DeviceStats;
+  // Phase 2 fields
+  avg_duration?: number;
+  avg_scroll_depth?: number;
+  bounce_rate?: number;
+}
+
+export interface DateRangeStats extends AnalyticsStats {
+  date: string;
+}
+
+export interface AnalyticsResponse {
+  stats: AnalyticsStats;
+  trend?: DateRangeStats[];
 } 
