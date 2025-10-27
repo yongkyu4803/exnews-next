@@ -274,13 +274,26 @@ async function sendKeywordNotifications(newsItem: NewsItem, supabaseAdmin: any):
       newsItem.media_name
     );
 
+    // ✅ 상세 로깅: 전송될 알림 내용
+    console.log(`[Cron][Keyword] ✉️  Sending notifications to ${subscriptions.length} users:`, {
+      newsTitle: newsItem.title,
+      payloadTitle: payload.title,
+      payloadBody: payload.body,
+      payloadUrl: payload.url,
+      matchedKeywords: matchedUsers[0].matchedKeywords,
+      recipients: subscriptions.length
+    });
+
     const results = await sendPushNotificationBatch(subscriptions, payload);
 
+    // ✅ 전송 결과 로깅
     for (const result of results) {
       if (result.result.success) {
         sent++;
+        console.log(`[Cron][Keyword] ✅ Sent to device ${result.device_id}`);
       } else {
         failed++;
+        console.error(`[Cron][Keyword] ❌ Failed to send to device ${result.device_id}:`, result.result.error);
 
         // 만료된 구독 정리
         if (result.result.statusCode === 410) {

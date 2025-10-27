@@ -64,6 +64,42 @@ export async function sendPushNotification(
       };
     }
 
+    // ✅ 페이로드 검증: 필수 필드 확인
+    if (!payload.title || !payload.body) {
+      console.error('[PushSender] Invalid payload: title and body are required', payload);
+      return {
+        success: false,
+        error: 'Invalid payload: missing title or body'
+      };
+    }
+
+    // ✅ 페이로드 검증: "백그라운드" 키워드 차단
+    const lowerTitle = payload.title.toLowerCase();
+    const lowerBody = payload.body.toLowerCase();
+    if (
+      lowerTitle.includes('백그라운드') ||
+      lowerTitle.includes('background') ||
+      lowerBody.includes('백그라운드') ||
+      lowerBody.includes('background') ||
+      lowerTitle.includes('실행') && lowerBody.includes('실행') ||
+      lowerTitle.includes('running')
+    ) {
+      console.log('[PushSender] Blocked system/background notification:', {
+        title: payload.title,
+        body: payload.body
+      });
+      return {
+        success: false,
+        error: 'System notification blocked'
+      };
+    }
+
+    console.log('[PushSender] Sending notification:', {
+      title: payload.title,
+      body: payload.body,
+      url: payload.url
+    });
+
     // 알림 페이로드 생성
     const notificationPayload = JSON.stringify({
       title: payload.title,
