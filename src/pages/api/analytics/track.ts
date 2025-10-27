@@ -98,7 +98,7 @@ export default async function handler(
       page_path: trackData.page_path,
       tab_name: trackData.tab_name as any,
       event_type: trackData.event_type as any,
-      referrer: trackData.referrer || null,
+      referrer: trackData.referrer || undefined,
       user_agent: trackData.user_agent || req.headers['user-agent'],
       device_type: trackData.device_type as any,
       duration_seconds: trackData.duration_seconds,
