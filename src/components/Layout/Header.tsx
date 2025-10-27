@@ -7,7 +7,7 @@ const Header = () => {
   const currentPath = router.pathname;
 
   return (
-    <header className="w-full bg-gradient-to-r from-blue-800 to-indigo-900 text-white py-3 shadow-md fixed top-0 left-0 right-0 z-[999]">
+    <header className="w-full text-white py-3 shadow-md fixed top-0 left-0 right-0 z-[999]" style={{ background: 'linear-gradient(to right, #1e40af, #3b82f6, #1e40af)' }}>
       <div className="container max-w-7xl mx-auto px-4 md:px-8 flex justify-between items-center">
         <Link href="/" className="text-2xl font-bold flex items-center">
           <span className="text-blue-300 mr-1">Ex</span>
