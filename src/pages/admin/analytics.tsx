@@ -295,6 +295,72 @@ const AdminAnalyticsPage = () => {
             </Col>
           </Row>
 
+          {/* Phase 2: 고급 지표 (체류시간, 스크롤, 이탈률) */}
+          {(stats.avg_duration !== undefined || stats.avg_scroll_depth !== undefined || stats.bounce_rate !== undefined) && (
+            <div style={{ marginBottom: '24px' }}>
+              <Alert
+                message="📊 Phase 2: 고급 분석 지표"
+                description="페이지 체류 시간, 스크롤 깊이, 상호작용 횟수를 통해 사용자 참여도를 심층 분석합니다."
+                type="info"
+                showIcon
+                style={{ marginBottom: '16px' }}
+              />
+              <Row gutter={[16, 16]}>
+                {stats.avg_duration !== undefined && (
+                  <Col xs={24} sm={12} md={8}>
+                    <Card>
+                      <Statistic
+                        title="평균 체류 시간"
+                        value={stats.avg_duration}
+                        suffix="초"
+                        valueStyle={{ color: '#52c41a', fontSize: isMobile ? '24px' : '32px' }}
+                        prefix="⏱️"
+                      />
+                      <div style={{ marginTop: '8px', fontSize: '12px', color: '#999', lineHeight: '1.5' }}>
+                        페이지 진입부터 이탈까지<br/>
+                        시간 (beforeunload 이벤트 기준)
+                      </div>
+                    </Card>
+                  </Col>
+                )}
+                {stats.avg_scroll_depth !== undefined && (
+                  <Col xs={24} sm={12} md={8}>
+                    <Card>
+                      <Statistic
+                        title="평균 스크롤 깊이"
+                        value={stats.avg_scroll_depth}
+                        suffix="%"
+                        valueStyle={{ color: '#1890ff', fontSize: isMobile ? '24px' : '32px' }}
+                        prefix="📜"
+                      />
+                      <div style={{ marginTop: '8px', fontSize: '12px', color: '#999', lineHeight: '1.5' }}>
+                        페이지에서 스크롤한 최대 깊이<br/>
+                        (0-100%, throttle 500ms)
+                      </div>
+                    </Card>
+                  </Col>
+                )}
+                {stats.bounce_rate !== undefined && (
+                  <Col xs={24} sm={12} md={8}>
+                    <Card>
+                      <Statistic
+                        title="이탈률"
+                        value={stats.bounce_rate}
+                        suffix="%"
+                        valueStyle={{ color: stats.bounce_rate > 70 ? '#cf1322' : '#faad14', fontSize: isMobile ? '24px' : '32px' }}
+                        prefix="🚪"
+                      />
+                      <div style={{ marginTop: '8px', fontSize: '12px', color: '#999', lineHeight: '1.5' }}>
+                        exit_page=true 비율<br/>
+                        (70% 이상 시 빨간색 경고)
+                      </div>
+                    </Card>
+                  </Col>
+                )}
+              </Row>
+            </div>
+          )}
+
           {/* 탭별 통계 */}
           <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
             <Col xs={24}>

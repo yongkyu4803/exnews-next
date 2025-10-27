@@ -16,6 +16,7 @@ import RefreshIcon from '@/components/common/RefreshIcon';
 import { createLogger } from '@/utils/logger';
 import { trackPageView, trackTabChange } from '@/utils/analytics';
 import { TabName } from '@/types';
+import { usePageTracking } from '@/hooks/usePageTracking';
 
 const logger = createLogger('Pages:Home');
 
@@ -77,6 +78,25 @@ const HomePage = () => {
   const [editorialCurrentPage, setEditorialCurrentPage] = useState(1);
   const [editorialPageSize] = useState(6); // 한 페이지에 6개 (2열 그리드 x 3행)
   const queryClient = useQueryClient();
+
+  // activeTab을 TabName 타입으로 변환
+  const currentTabName: TabName = React.useMemo(() => {
+    const tabMap: Record<string, TabName> = {
+      'exclusive': 'exclusive',
+      'ranking': 'ranking',
+      'editorial': 'editorial',
+      'restaurant': 'restaurant'
+    };
+    return tabMap[activeTab] || 'exclusive';
+  }, [activeTab]);
+
+  // Phase 2: 페이지 추적 (체류시간, 스크롤 깊이, 상호작용)
+  usePageTracking({
+    tabName: currentTabName,
+    enableScrollTracking: true,
+    enableInteractionTracking: true,
+    scrollThrottleMs: 500
+  });
 
   // URL에서 tab 파라미터 체크
   useEffect(() => {
@@ -324,7 +344,7 @@ const HomePage = () => {
     setRankingSelectedKeys([]);
     setRankingSelectedRows([]);
 
-    // 탭 변경 트래킹
+    // Phase 2: 탭 변경 추적
     const tabMap: Record<string, TabName> = {
       'exclusive': 'exclusive',
       'ranking': 'ranking',
