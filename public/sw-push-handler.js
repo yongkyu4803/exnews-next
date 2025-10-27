@@ -38,17 +38,26 @@ self.addEventListener('push', function(event) {
       return;
     }
 
-    // 알림 옵션 구성
+    // ✅ Android 최적화 알림 옵션 구성
     const options = {
       body: data.body,
       icon: data.icon || '/icons/icon-192x192.png',
       badge: data.badge || '/icons/badge-72x72.png',
       tag: data.tag || 'news-notification',
-      requireInteraction: data.requireInteraction || false,
+
+      // ✅ Android 알림 우선순위: 실제 뉴스만 표시
+      priority: 'high',
+      requireInteraction: false,
+      renotify: false,
+
+      // ✅ Android O+ 포그라운드 서비스 알림 회피
       data: {
         url: data.url || data.data?.url || '/',
+        serviceWorkerType: 'push-only',  // 백그라운드 동기화 아님을 명시
+        noForegroundService: true,        // 포그라운드 서비스 불필요
         ...data.data
       },
+
       actions: data.actions || [
         {
           action: 'open',
@@ -59,9 +68,11 @@ self.addEventListener('push', function(event) {
           title: '닫기'
         }
       ],
+
       // 진동 패턴 (모바일)
       vibrate: [200, 100, 200],
-      // 사운드
+
+      // ✅ 사운드: 실제 뉴스만 소리 있음
       silent: false
     };
 

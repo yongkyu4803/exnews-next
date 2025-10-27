@@ -9,6 +9,11 @@ const withPWA = nextPWA({
   register: true,
   skipWaiting: true,
   buildExcludes: [/dynamic-css-manifest\.json$/],
+
+  // ✅ Android 백그라운드 알림 최적화
+  disableDevLogs: true,
+  scope: '/',
+
   runtimeCaching: [
     {
       urlPattern: /^https?.*/,
