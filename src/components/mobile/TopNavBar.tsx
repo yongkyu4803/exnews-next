@@ -11,7 +11,7 @@ const NavBarContainer = styled.div`
   top: 0;
   z-index: 100;
   width: 100%;
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e8ba3 100%);
+  background: linear-gradient(to right, #1e40af, #3b82f6, #1e40af);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
