@@ -286,7 +286,6 @@ const PoliticalReportsList: React.FC<PoliticalReportsListProps> = ({ onReportCli
                 )}
               </CardMeta>
             </CardHeader>
-            <Badge variant="primary">📤 Supabase</Badge>
           </ReportCard>
         ))}
       </ReportGrid>
