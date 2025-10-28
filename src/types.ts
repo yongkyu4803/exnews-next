@@ -114,7 +114,7 @@ export interface EditorialResponse {
 }
 
 // Visit Analytics 관련 타입
-export type TabName = 'exclusive' | 'ranking' | 'editorial' | 'restaurant';
+export type TabName = 'exclusive' | 'ranking' | 'editorial' | 'political' | 'restaurant';
 export type EventType = 'page_view' | 'tab_change' | 'interaction';
 export type DeviceType = 'mobile' | 'desktop';
 

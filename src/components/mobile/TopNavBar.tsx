@@ -186,6 +186,17 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
             },
           },
           {
+            key: 'political',
+            label: '정치 리포트',
+            onClick: () => {
+              if (currentPath === '/') {
+                if (onTabChange) onTabChange('political');
+              } else {
+                router.push('/?tab=political');
+              }
+            },
+          },
+          {
             key: 'restaurants',
             label: '국회앞 식당',
             onClick: () => router.push('/restaurants'),
