@@ -61,6 +61,12 @@ const VirtualEditorialList = dynamic(() => import('@/components/mobile/VirtualEd
   loading: () => <div style={{ padding: '20px', textAlign: 'center' }}>로딩 중...</div>
 });
 
+// 정치 리포트 컴포넌트를 동적으로 불러옴
+const PoliticalReportsList = dynamic(() => import('@/components/mobile/PoliticalReportsList'), {
+  ssr: false,
+  loading: () => <div style={{ padding: '20px', textAlign: 'center' }}>로딩 중...</div>
+});
+
 // 전체 컴포넌트를 클라이언트 사이드에서만 렌더링
 const HomePage = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -85,6 +91,7 @@ const HomePage = () => {
       'exclusive': 'exclusive',
       'ranking': 'ranking',
       'editorial': 'editorial',
+      'political': 'political',
       'restaurant': 'restaurant'
     };
     return tabMap[activeTab] || 'exclusive';
@@ -923,14 +930,6 @@ const HomePage = () => {
                         borderRadius: '12px',
                         boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
                       }}>
-                        {/* <div style={{
-                          fontSize: '13px',
-                          color: '#666',
-                          fontWeight: '600',
-                          fontFamily: "'Cafe24Anemone', sans-serif"
-                        }}>
-                          {editorialCurrentPage} / {editorialTotalPages} 페이지
-                        </div> */}
                         <Pagination
                           current={editorialCurrentPage}
                           total={editorialData?.items?.length || 0}
@@ -940,12 +939,6 @@ const HomePage = () => {
                           showSizeChanger={false}
                           simple
                         />
-                        {/* <div style={{
-                          fontSize: '12px',
-                          color: '#999'
-                        }}>
-                          총 {editorialData?.items?.length || 0}개
-                        </div> */}
                       </div>
                     )}
 
@@ -964,6 +957,12 @@ const HomePage = () => {
                         />
                       </FloatingButtonWrapper>
                     )}
+                  </>
+                )}
+
+                {activeTab === 'political' && (
+                  <>
+                    <PoliticalReportsList />
                   </>
                 )}
               </Space>
