@@ -67,6 +67,11 @@ const PoliticalReportsList = dynamic(() => import('@/components/mobile/Political
   loading: () => <div style={{ padding: '20px', textAlign: 'center' }}>로딩 중...</div>
 });
 
+const PoliticalReportDetail = dynamic(() => import('@/components/mobile/PoliticalReportDetail'), {
+  ssr: false,
+  loading: () => <div style={{ padding: '20px', textAlign: 'center' }}>로딩 중...</div>
+});
+
 // 전체 컴포넌트를 클라이언트 사이드에서만 렌더링
 const HomePage = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -83,6 +88,7 @@ const HomePage = () => {
   const rankingPageSize = isMobile ? 7 : 12; // 모바일 7개, 웹 12개
   const [editorialCurrentPage, setEditorialCurrentPage] = useState(1);
   const [editorialPageSize] = useState(6); // 한 페이지에 6개 (2열 그리드 x 3행)
+  const [selectedPoliticalReport, setSelectedPoliticalReport] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // activeTab을 TabName 타입으로 변환
@@ -962,7 +968,16 @@ const HomePage = () => {
 
                 {activeTab === 'political' && (
                   <>
-                    <PoliticalReportsList />
+                    {selectedPoliticalReport ? (
+                      <PoliticalReportDetail
+                        slug={selectedPoliticalReport}
+                        onBack={() => setSelectedPoliticalReport(null)}
+                      />
+                    ) : (
+                      <PoliticalReportsList
+                        onReportClick={(slug) => setSelectedPoliticalReport(slug)}
+                      />
+                    )}
                   </>
                 )}
               </Space>
