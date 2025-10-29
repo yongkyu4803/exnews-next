@@ -278,7 +278,8 @@ const PoliticalReportsList: React.FC<PoliticalReportsListProps> = ({ onReportCli
   return (
     <Container>
       <Header>
-        <h1>정치 뉴스 리포트</h1>
+        <h1>📰 정치 뉴스 리포트</h1>
+        <p>최신 정치 이슈를 분석한 {reports.length}개의 리포트</p>
       </Header>
 
       <ReportGrid>
