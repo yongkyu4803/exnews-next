@@ -4,7 +4,7 @@
  * Supabase에서 정치 리포트 목록을 가져와 표시합니다.
  */
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import styled from '@emotion/styled';
 import { useQuery } from 'react-query';
 import type { ReportListItem } from '@/types/political-report';
@@ -26,6 +26,7 @@ const Header = styled.div`
   margin-bottom: 24px;
 
   h1 {
+    font-family: 'Anemone', sans-serif;
     font-size: 28px;
     font-weight: bold;
     color: #1a1a1a;
@@ -49,23 +50,30 @@ const ReportGrid = styled.div`
   }
 `;
 
-const ReportCard = styled.div`
-  background: white;
-  border: 1px solid #e5e7eb;
+const ReportCard = styled.div<{ isLatest?: boolean }>`
+  position: relative;
+  background: ${props => props.isLatest
+    ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)'
+    : 'white'};
+  border: ${props => props.isLatest ? '2px solid #3b82f6' : '1px solid #e5e7eb'};
   border-radius: 12px;
-  padding: 20px;
+  padding: 6px 20px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: ${props => props.isLatest
+    ? '0 4px 12px rgba(59, 130, 246, 0.15)'
+    : '0 1px 3px rgba(0, 0, 0, 0.05)'};
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    box-shadow: ${props => props.isLatest
+      ? '0 8px 20px rgba(59, 130, 246, 0.25)'
+      : '0 8px 16px rgba(0, 0, 0, 0.1)'};
     border-color: #3b82f6;
   }
 
   @media (max-width: 768px) {
-    padding: 16px;
+    padding: 5px 16px;
   }
 `;
 
@@ -79,6 +87,8 @@ const CardTitle = styled.h2`
   color: #1a1a1a;
   margin-bottom: 8px;
   line-height: 1.4;
+  display: flex;
+  align-items: center;
 
   @media (max-width: 768px) {
     font-size: 16px;
@@ -100,14 +110,24 @@ const MetaItem = styled.span`
   gap: 4px;
 `;
 
-const Badge = styled.span<{ variant?: 'primary' | 'secondary' }>`
+const NewBadge = styled.span`
   display: inline-block;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  background: ${props => props.variant === 'primary' ? '#10B981' : '#3b82f6'};
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #3b82f6;
   color: white;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  letter-spacing: 0.5px;
+  margin-right: 8px;
+  vertical-align: middle;
+
+  @media (max-width: 768px) {
+    font-size: 10px;
+    padding: 2px 6px;
+    margin-right: 6px;
+  }
 `;
 
 const LoadingContainer = styled.div`
@@ -258,15 +278,21 @@ const PoliticalReportsList: React.FC<PoliticalReportsListProps> = ({ onReportCli
   return (
     <Container>
       <Header>
-        <h1>📰 정치 뉴스 리포트</h1>
-        <p>최신 정치 이슈를 분석한 {reports.length}개의 리포트</p>
+        <h1>정치 뉴스 리포트</h1>
       </Header>
 
       <ReportGrid>
-        {reports.map((report) => (
-          <ReportCard key={report.id} onClick={() => handleCardClick(report.slug)}>
+        {reports.map((report, index) => (
+          <ReportCard
+            key={report.id}
+            onClick={() => handleCardClick(report.slug)}
+            isLatest={index === 0}
+          >
             <CardHeader>
-              <CardTitle>{report.topic}</CardTitle>
+              <CardTitle>
+                {index === 0 && <NewBadge>NEW</NewBadge>}
+                {report.topic}
+              </CardTitle>
               <CardMeta>
                 <MetaItem>
                   <span>📅</span>
