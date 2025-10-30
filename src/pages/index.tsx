@@ -10,6 +10,7 @@ import { NewsItem, NewsResponse, RankingNewsItem, RankingNewsResponse, Editorial
 import { Pagination } from 'antd';
 import BottomNav from '@/components/mobile/BottomNav';
 import TopNavBar from '@/components/mobile/TopNavBar';
+import CanvaBanner from '@/components/common/CanvaBanner';
 import FloatingButtonWrapper from '@/components/common/FloatingButtonWrapper';
 import MicroButton from '@/components/common/MicroButton';
 import RefreshIcon from '@/components/common/RefreshIcon';
@@ -509,7 +510,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen" style={{ backgroundColor: '#ffffff' }}>
       <Head>
         <title>EXNEWS</title>
         <meta name="description" content="EXNEWS - 뉴스 플랫폼" />
@@ -523,7 +524,10 @@ const HomePage = () => {
             activeTab={activeTab}
             onTabChange={handleTabChange}
           />
-          
+
+          {/* Canva 배너 */}
+          <CanvaBanner />
+
           <div style={{ paddingBottom: isMobile ? '76px' : '20px' }}>
             <style jsx global>{`
               /* 작은 버튼 스타일 오버라이드 */
