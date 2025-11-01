@@ -274,6 +274,33 @@ const BillExplanation = styled.div`
   }
 `;
 
+const AffectedGroups = styled.div`
+  margin-top: 8px;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.6;
+
+  @media (max-width: 768px) {
+    font-size: 11px;
+  }
+`;
+
+const AffectedGroupLabel = styled.span`
+  color: #9ca3af;
+  font-weight: 400;
+  margin-right: 4px;
+`;
+
+const AffectedGroupTag = styled.span`
+  color: #6b7280;
+  font-weight: 400;
+  margin-right: 6px;
+
+  &:not(:last-child)::after {
+    content: ',';
+  }
+`;
+
 const LoadingMessage = styled.div`
   text-align: center;
   padding: 40px;
@@ -341,6 +368,11 @@ const BillsReportDetail: React.FC<BillsReportDetailProps> = ({ slug, onBack }) =
   };
 
   report.bills.forEach(bill => {
+    // regulation_affected_groups 데이터 확인
+    if (bill.regulation_affected_groups) {
+      console.log('영향 대상 데이터:', bill.bill_name, bill.regulation_affected_groups);
+    }
+
     // regulation_type이 null이면 비규제로 처리
     const type = bill.regulation_type || '비규제';
     billsByType[type].push(bill);
@@ -441,6 +473,18 @@ const BillsReportDetail: React.FC<BillsReportDetailProps> = ({ slug, onBack }) =
                     )}
                     {bill.summary_easy_explanation && (
                       <BillExplanation>{bill.summary_easy_explanation}</BillExplanation>
+                    )}
+                    {bill.regulation_affected_groups && (
+                      <AffectedGroups>
+                        <AffectedGroupLabel>영향 대상:</AffectedGroupLabel>
+                        {Array.isArray(bill.regulation_affected_groups) ? (
+                          bill.regulation_affected_groups.map((group: string, idx: number) => (
+                            <AffectedGroupTag key={idx}>#{group.replace(/\s+/g, '')}</AffectedGroupTag>
+                          ))
+                        ) : (
+                          <AffectedGroupTag>#{String(bill.regulation_affected_groups).replace(/\s+/g, '')}</AffectedGroupTag>
+                        )}
+                      </AffectedGroups>
                     )}
                   </BillCard>
                 ))}

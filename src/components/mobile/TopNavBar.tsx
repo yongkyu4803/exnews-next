@@ -55,7 +55,7 @@ const NavMenu = styled(Menu)`
   .ant-menu-item {
     min-width: 65px;
     height: 40px !important;
-    line-height: 40px !important;
+    line-height: 1.2 !important;
     margin: 6px 4px !important;
     font-size: 14px;
     font-family: 'Cafe24Anemone', sans-serif;
@@ -67,13 +67,17 @@ const NavMenu = styled(Menu)`
     border-bottom: none !important;
     border-radius: 8px !important;
     transition: all 0.3s ease;
-    padding: 0 8px !important;
+    padding: 8px 8px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .ant-menu-item:hover {
     color: #ffffff !important;
     background-color: rgba(255, 255, 255, 0.2) !important;
-    transform: translateY(-4px);
+    padding-top: 16px !important;
+    padding-bottom: 0px !important;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 
@@ -95,11 +99,16 @@ const NavMenu = styled(Menu)`
   @media (max-width: 768px) {
     .ant-menu-item {
       min-width: 50px;
-      height: 36px !important;
-      line-height: 36px !important;
+      height: 40px !important;
+      line-height: 1.2 !important;
       margin: 4px 2px !important;
       font-size: 13px;
-      padding: 0 6px !important;
+      padding: 6px 6px !important;
+    }
+
+    .ant-menu-item:hover {
+      padding-top: 12px !important;
+      padding-bottom: 0px !important;
     }
   }
 
@@ -107,11 +116,16 @@ const NavMenu = styled(Menu)`
   @media (max-width: 360px) {
     .ant-menu-item {
       min-width: 45px;
-      height: 32px !important;
-      line-height: 32px !important;
+      height: 36px !important;
+      line-height: 1.2 !important;
       margin: 4px 1px !important;
       font-size: 12px;
-      padding: 0 4px !important;
+      padding: 6px 4px !important;
+    }
+
+    .ant-menu-item:hover {
+      padding-top: 12px !important;
+      padding-bottom: 0px !important;
     }
   }
 `;
@@ -203,7 +217,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
           },
           {
             key: 'bills',
-            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>국회<br/>법안</div>,
+            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>오늘의<br/>법안</div>,
             onClick: () => {
               if (currentPath === '/') {
                 if (onTabChange) onTabChange('bills');

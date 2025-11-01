@@ -53,6 +53,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       bills: billsData as BillItem[],
     };
 
+    // 영향 대상 데이터 확인
+    if (billsData && billsData.length > 0) {
+      console.log('=== 첫 번째 법안 전체 데이터 ===');
+      console.log(JSON.stringify(billsData[0], null, 2));
+      console.log('=== regulation_affected_groups 필드 ===');
+      billsData.slice(0, 3).forEach((bill: any) => {
+        console.log(`법안명: ${bill.bill_name}`);
+        console.log(`regulation_affected_groups:`, bill.regulation_affected_groups);
+        console.log(`summary_who_affected:`, bill.summary_who_affected);
+        console.log('---');
+      });
+    }
+
     logger.info('Bills report detail fetched successfully', {
       slug,
       billsCount: billsData?.length || 0
