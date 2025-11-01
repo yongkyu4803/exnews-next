@@ -73,7 +73,7 @@ const NavMenu = styled(Menu)`
   .ant-menu-item:hover {
     color: #ffffff !important;
     background-color: rgba(255, 255, 255, 0.2) !important;
-    transform: translateY(-2px);
+    transform: translateY(-4px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 
