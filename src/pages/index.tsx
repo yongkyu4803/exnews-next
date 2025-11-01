@@ -73,6 +73,12 @@ const PoliticalReportDetail = dynamic(() => import('@/components/mobile/Politica
   loading: () => <div style={{ padding: '20px', textAlign: 'center' }}>로딩 중...</div>
 });
 
+// 법안 모니터링 컴포넌트를 동적으로 불러옴
+const BillsReportsList = dynamic(() => import('@/components/mobile/BillsReportsList'), {
+  ssr: false,
+  loading: () => <div style={{ padding: '20px', textAlign: 'center' }}>로딩 중...</div>
+});
+
 // 전체 컴포넌트를 클라이언트 사이드에서만 렌더링
 const HomePage = () => {
   const [isMounted, setIsMounted] = useState(false);
@@ -983,6 +989,10 @@ const HomePage = () => {
                       />
                     )}
                   </>
+                )}
+
+                {activeTab === 'bills' && (
+                  <BillsReportsList />
                 )}
               </Space>
             </div>
