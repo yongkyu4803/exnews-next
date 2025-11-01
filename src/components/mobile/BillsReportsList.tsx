@@ -211,6 +211,13 @@ const BillsReportsList: React.FC = () => {
 
   const reports = data?.data || [];
 
+  // 날짜 기준으로 최신순 정렬 (클라이언트 사이드에서 보장)
+  const sortedReports = [...reports].sort((a, b) => {
+    const dateA = new Date(a.report_date).getTime();
+    const dateB = new Date(b.report_date).getTime();
+    return dateB - dateA; // 내림차순 (최신이 먼저)
+  });
+
   if (selectedSlug) {
     return (
       <BillsReportDetail
@@ -224,13 +231,13 @@ const BillsReportsList: React.FC = () => {
     <Container>
       <Header>
         <h1>📜 국회 법안 모니터링</h1>
-        <p>발행된 법안 분석 리포트 {reports.length}개 · 상세 내용은 카드를 클릭하세요</p>
+        <p>발행된 법안 분석 리포트 {sortedReports.length}개 · 상세 내용은 카드를 클릭하세요</p>
       </Header>
 
-      {reports.length === 0 ? (
+      {sortedReports.length === 0 ? (
         <EmptyMessage>아직 발행된 리포트가 없습니다.</EmptyMessage>
       ) : (
-        reports.map((report) => (
+        sortedReports.map((report) => (
           <ReportCard key={report.id} onClick={() => setSelectedSlug(report.slug)}>
             <CardHeader>
               <CardTitle>{report.headline}</CardTitle>

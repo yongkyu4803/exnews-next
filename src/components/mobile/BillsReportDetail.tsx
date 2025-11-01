@@ -227,18 +227,18 @@ const BillCard = styled.div<{ bgColor: string; borderColor: string }>`
 `;
 
 const BillName = styled.h4<{ textColor: string }>`
-  font-size: 15px;
+  font-size: 1rem;
   font-weight: 600;
   color: ${props => props.textColor};
   margin: 0 0 8px 0;
 
   @media (max-width: 768px) {
-    font-size: 14px;
+    font-size: 0.9375rem;
   }
 `;
 
 const BillMeta = styled.div`
-  font-size: 12px;
+  font-size: 0.875rem;
   color: #6b7280;
   margin-bottom: 12px;
   display: flex;
@@ -246,42 +246,42 @@ const BillMeta = styled.div`
   flex-wrap: wrap;
 
   @media (max-width: 768px) {
-    font-size: 11px;
+    font-size: 0.8125rem;
   }
 `;
 
 const BillSummary = styled.div`
-  font-size: 14px;
+  font-size: 1rem;
   color: #374151;
   line-height: 1.6;
   margin-bottom: 8px;
   font-weight: 500;
 
   @media (max-width: 768px) {
-    font-size: 13px;
+    font-size: 0.875rem;
   }
 `;
 
 const BillExplanation = styled.div`
-  font-size: 13px;
+  font-size: 1rem;
   color: #6b7280;
   line-height: 1.6;
   padding-left: 12px;
   border-left: 3px solid #e5e7eb;
 
   @media (max-width: 768px) {
-    font-size: 12px;
+    font-size: 0.875rem;
   }
 `;
 
 const AffectedGroups = styled.div`
   margin-top: 8px;
-  font-size: 12px;
+  font-size: 0.875rem;
   color: #6b7280;
   line-height: 1.6;
 
   @media (max-width: 768px) {
-    font-size: 11px;
+    font-size: 0.8125rem;
   }
 `;
 
