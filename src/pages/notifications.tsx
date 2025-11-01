@@ -19,8 +19,8 @@ export default function NotificationsPage() {
   return (
     <>
       <Head>
-        <title>알림 설정 - EXNEWS</title>
-        <meta name="description" content="EXNEWS 알림 설정" />
+        <title>NEWS-GQAI</title>
+        <meta name="description" content="NEWS-GQAI 알림 설정" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
       </Head>
 

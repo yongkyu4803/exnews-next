@@ -56,7 +56,7 @@ const AdminLoginPage = () => {
       padding: '20px'
     }}>
       <Head>
-        <title>관리자 로그인 - EXNEWS</title>
+        <title>관리자 로그인 - NEWS-GQAI</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 

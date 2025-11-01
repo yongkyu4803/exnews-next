@@ -98,8 +98,8 @@ const AnalyticsPage = () => {
   return (
     <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '1200px', margin: '0 auto' }}>
       <Head>
-        <title>방문자 통계 - EXNEWS</title>
-        <meta name="description" content="EXNEWS 방문자 통계 대시보드" />
+        <title>방문자 통계 - NEWS-GQAI</title>
+        <meta name="description" content="NEWS-GQAI 방문자 통계 대시보드" />
       </Head>
 
       <h1 style={{ marginBottom: '24px', fontFamily: "'Cafe24Anemone', sans-serif" }}>

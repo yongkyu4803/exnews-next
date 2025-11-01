@@ -2,7 +2,7 @@
 
 **문서 버전**: 1.0
 **작성일**: 2025-10-20
-**대상 프로젝트**: EXNEWS-Next (단독뉴스)
+**대상 프로젝트**: NEWS-GQAI (단독뉴스)
 **전제 조건**: Phase 1-2 완료
 
 ---
@@ -2194,8 +2194,8 @@ export function useOfflineNews(category?: string) {
 **`public/manifest.json`**:
 ```json
 {
-  "name": "단독뉴스 - EXNEWS",
-  "short_name": "EXNEWS",
+  "name": "NEWS-GQAI",
+  "short_name": "GQNEWS",
   "description": "실시간 단독 뉴스 및 랭킹 뉴스를 제공하는 Progressive Web App",
   "start_url": "/",
   "display": "standalone",

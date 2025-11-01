@@ -356,7 +356,7 @@ export default function RestaurantsPage() {
   return (
     <>
       <Head>
-        <title>국회앞 식당정보 - ExNews</title>
+        <title>국회앞 식당정보 - GQAI</title>
         <meta name="description" content="국회 주변 맛집 정보를 제공합니다." />
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
       </Head>

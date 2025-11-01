@@ -518,8 +518,8 @@ const HomePage = () => {
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: '#ffffff' }}>
       <Head>
-        <title>EXNEWS</title>
-        <meta name="description" content="EXNEWS - 뉴스 플랫폼" />
+        <title>NEWS-GQAI</title>
+        <meta name="description" content="GQAI- 뉴스 플랫폼" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </Head>
       

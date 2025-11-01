@@ -139,7 +139,7 @@ const AdminAnalyticsPage = () => {
   return (
     <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '1400px', margin: '0 auto' }}>
       <Head>
-        <title>관리자 통계 대시보드 - EXNEWS</title>
+        <title>관리자 통계 대시보드 - GQAI</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
