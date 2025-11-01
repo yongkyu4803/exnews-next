@@ -293,7 +293,7 @@ interface BillsReportDetailProps {
 
 const BillsReportDetail: React.FC<BillsReportDetailProps> = ({ slug, onBack }) => {
   const [expandedSections, setExpandedSections] = useState<Set<RegulationType>>(
-    new Set(['신설', '강화', '완화', '비규제'])
+    new Set<RegulationType>(['신설', '강화', '완화', '비규제'])
   );
 
   const { data, isLoading, error } = useQuery<{ data: BillsReportWithBills }>(
