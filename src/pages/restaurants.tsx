@@ -44,7 +44,7 @@ export default function RestaurantsPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isRealData, setIsRealData] = useState<boolean>(true);
-  
+
   const [setupLoading, setSetupLoading] = useState<boolean>(false);
   const [setupSuccess, setSetupSuccess] = useState<boolean>(false);
   const [setupError, setSetupError] = useState<string | null>(null);
@@ -55,11 +55,27 @@ export default function RestaurantsPage() {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(20);
   const [totalCount, setTotalCount] = useState<number>(0);
-  
+
   // 뷰 모드 상태 추가
   const [viewMode, setViewMode] = useState<'category' | 'building'>('category');
   const [allRestaurants, setAllRestaurants] = useState<RestaurantItem[]>([]);
   const [buildingLoading, setBuildingLoading] = useState<boolean>(false);
+
+  // 모바일 여부 및 화면 크기 체크
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [windowWidth, setWindowWidth] = useState<number>(1920);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+      setWindowWidth(window.innerWidth);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // 데이터 로드 함수
   const fetchData = async (categoryFilter: string = selectedCategory, page: number = currentPage, size: number = pageSize) => {
@@ -358,30 +374,30 @@ export default function RestaurantsPage() {
           width: '100%',
           maxWidth: '1200px',
           margin: '0 auto',
-          padding: window.innerWidth <= 768 ? '8px 4px' : '32px 16px',
+          padding: isMobile ? '8px 4px' : '32px 16px',
           flex: 1,
           overflow: 'visible',
-          paddingBottom: window.innerWidth <= 768 ? '60px' : '40px'
+          paddingBottom: isMobile ? '60px' : '40px'
         }}>
           <div className="bg-gradient-to-r from-blue-800 to-indigo-900 text-white rounded-lg shadow-md mb-4" style={{
-            padding: window.innerWidth <= 768 ? '12px' : '32px 24px'
+            padding: isMobile ? '12px' : '32px 24px'
           }}>
             <h1 style={{
               fontFamily: "'Cafe24Anemone', sans-serif",
-              fontSize: window.innerWidth <= 768 ? '20px' : '30px',
+              fontSize: isMobile ? '20px' : '30px',
               fontWeight: 'bold',
-              marginBottom: window.innerWidth <= 768 ? '4px' : '8px'
+              marginBottom: isMobile ? '4px' : '8px'
             }}>국회앞 식당정보</h1>
             <p style={{
               color: '#dbeafe',
-              fontSize: window.innerWidth <= 768 ? '12px' : '14px'
+              fontSize: isMobile ? '12px' : '14px'
             }}>국회앞 식당 정보를 카테고리별로 확인해보세요.</p>
           </div>
 
           <ClientOnly>
             <div style={{ width: '100%', overflow: 'visible', height: 'auto' }}>
               {typeof window !== 'undefined' && (
-                <RestaurantContent 
+                <RestaurantContent
                   restaurants={restaurants}
                   loading={loading}
                   error={error}
@@ -407,6 +423,8 @@ export default function RestaurantsPage() {
                   allRestaurants={allRestaurants}
                   buildingLoading={buildingLoading}
                   fetchAllRestaurants={fetchAllRestaurants}
+                  isMobile={isMobile}
+                  windowWidth={windowWidth}
                 />
               )}
             </div>
@@ -443,10 +461,13 @@ interface RestaurantContentProps {
   allRestaurants: RestaurantItem[];
   buildingLoading: boolean;
   fetchAllRestaurants: () => Promise<void>;
+  isMobile: boolean;
+  windowWidth: number;
 }
 
 // 클라이언트 컴포넌트 분리
 function RestaurantContent(props: RestaurantContentProps) {
+  const { isMobile, windowWidth } = props;
 
   // 카테고리별 텍스트 색상 매핑 (배경색 제거)
   const getCategoryTextColor = (category: string) => {
@@ -485,40 +506,40 @@ function RestaurantContent(props: RestaurantContentProps) {
       {/* 상단 헤더 섹션 */}
       <div style={{
         backgroundColor: '#f9fafb',
-        padding: window.innerWidth <= 768 ? '12px 8px' : '24px',
-        marginBottom: window.innerWidth <= 768 ? '12px' : '32px',
+        padding: isMobile ? '12px 8px' : '24px',
+        marginBottom: isMobile ? '12px' : '32px',
         borderRadius: '8px',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)'
       }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: window.innerWidth <= 768 ? '0 4px' : '0 16px' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: isMobile ? '0 4px' : '0 16px' }}>
           {/* 뷰 모드 선택 및 새로고침 버튼 */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: window.innerWidth <= 768 ? '12px' : '24px',
-            gap: window.innerWidth <= 768 ? '8px' : '20px',
+            marginBottom: isMobile ? '12px' : '24px',
+            gap: isMobile ? '8px' : '20px',
             flexWrap: 'wrap'
           }}>
             {/* 뷰 모드 선택 - 커스텀 스타일 */}
             <div style={{
               display: 'flex',
               backgroundColor: 'white',
-              borderRadius: window.innerWidth <= 768 ? '6px' : '8px',
-              padding: window.innerWidth <= 768 ? '2px' : '4px',
+              borderRadius: isMobile ? '6px' : '8px',
+              padding: isMobile ? '2px' : '4px',
               border: '1px solid #e5e7eb',
               boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
             }}>
               <button
                 onClick={() => setViewMode('category')}
                 style={{
-                  padding: window.innerWidth <= 768 ? '8px 12px' : '12px 20px',
-                  borderRadius: window.innerWidth <= 768 ? '4px' : '6px',
+                  padding: isMobile ? '8px 12px' : '12px 20px',
+                  borderRadius: isMobile ? '4px' : '6px',
                   border: 'none',
                   backgroundColor: viewMode === 'category' ? '#3b82f6' : 'transparent',
                   color: viewMode === 'category' ? 'white' : '#6b7280',
                   fontWeight: '500',
-                  fontSize: window.innerWidth <= 768 ? '12px' : '14px',
+                  fontSize: isMobile ? '12px' : '14px',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                   marginRight: '2px',
@@ -540,13 +561,13 @@ function RestaurantContent(props: RestaurantContentProps) {
               <button
                 onClick={() => setViewMode('building')}
                 style={{
-                  padding: window.innerWidth <= 768 ? '8px 12px' : '12px 20px',
-                  borderRadius: window.innerWidth <= 768 ? '4px' : '6px',
+                  padding: isMobile ? '8px 12px' : '12px 20px',
+                  borderRadius: isMobile ? '4px' : '6px',
                   border: 'none',
                   backgroundColor: viewMode === 'building' ? '#3b82f6' : 'transparent',
                   color: viewMode === 'building' ? 'white' : '#6b7280',
                   fontWeight: '500',
-                  fontSize: window.innerWidth <= 768 ? '12px' : '14px',
+                  fontSize: isMobile ? '12px' : '14px',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
                   whiteSpace: 'nowrap'
@@ -571,20 +592,20 @@ function RestaurantContent(props: RestaurantContentProps) {
               onClick={() => viewMode === 'category' ? fetchData(selectedCategory) : fetchAllRestaurants()}
               disabled={viewMode === 'category' ? loading : buildingLoading}
               style={{
-                padding: window.innerWidth <= 768 ? '8px 12px' : '12px 24px',
-                borderRadius: window.innerWidth <= 768 ? '6px' : '8px',
+                padding: isMobile ? '8px 12px' : '12px 24px',
+                borderRadius: isMobile ? '6px' : '8px',
                 border: 'none',
                 backgroundColor: '#10b981',
                 color: 'white',
                 fontWeight: '500',
-                fontSize: window.innerWidth <= 768 ? '12px' : '14px',
+                fontSize: isMobile ? '12px' : '14px',
                 cursor: (viewMode === 'category' ? loading : buildingLoading) ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s ease',
                 boxShadow: '0 2px 4px 0 rgba(16, 185, 129, 0.2)',
                 opacity: (viewMode === 'category' ? loading : buildingLoading) ? 0.6 : 1,
                 display: 'flex',
                 alignItems: 'center',
-                gap: window.innerWidth <= 768 ? '4px' : '8px',
+                gap: isMobile ? '4px' : '8px',
                 whiteSpace: 'nowrap'
               }}
               onMouseEnter={(e) => {
@@ -657,7 +678,7 @@ function RestaurantContent(props: RestaurantContentProps) {
       </div>
       
       {/* 상태 표시 */}
-      <div style={{ marginTop: window.innerWidth <= 768 ? '12px' : '24px', overflow: 'visible', height: 'auto' }}>
+      <div style={{ marginTop: isMobile ? '12px' : '24px', overflow: 'visible', height: 'auto' }}>
         {!isRealData && !loading && (
         <Alert
           message="샘플 데이터 표시 중"
@@ -750,7 +771,7 @@ function RestaurantContent(props: RestaurantContentProps) {
           display: 'flex',
           justifyContent: 'center',
           alignItems: 'center',
-          padding: window.innerWidth <= 768 ? '40px 0' : '80px 0',
+          padding: isMobile ? '40px 0' : '80px 0',
           overflow: 'visible',
           height: 'auto'
         }}>
@@ -761,7 +782,7 @@ function RestaurantContent(props: RestaurantContentProps) {
           {/* 카테고리별 보기 */}
           {viewMode === 'category' && (
             <div style={{
-              padding: window.innerWidth <= 768 ? '0 4px' : '0 16px',
+              padding: isMobile ? '0 4px' : '0 16px',
               width: '100%',
               overflow: 'visible',
               height: 'auto'
@@ -769,14 +790,14 @@ function RestaurantContent(props: RestaurantContentProps) {
               {/* 식당 카드 그리드 */}
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: window.innerWidth <= 768
+                gridTemplateColumns: isMobile
                   ? '1fr'
-                  : window.innerWidth <= 1024
+                  : windowWidth <= 1024
                     ? 'repeat(2, 1fr)'
-                    : window.innerWidth <= 1440
+                    : windowWidth <= 1440
                       ? 'repeat(3, 1fr)'
                       : 'repeat(4, 1fr)',
-                gap: window.innerWidth <= 768 ? '12px' : '16px',
+                gap: isMobile ? '12px' : '16px',
                 marginBottom: '24px'
               }}>
                 {restaurants.map((item: RestaurantItem) => (
@@ -786,7 +807,7 @@ function RestaurantContent(props: RestaurantContentProps) {
                       backgroundColor: 'white',
                       border: '1px solid #e8e8e8',
                       borderRadius: '12px',
-                      padding: window.innerWidth <= 768 ? '12px' : '16px',
+                      padding: isMobile ? '12px' : '16px',
                       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                       transition: 'all 0.3s ease',
                       cursor: 'pointer',
@@ -814,7 +835,7 @@ function RestaurantContent(props: RestaurantContentProps) {
                     }}>
                       <h4 style={{
                         margin: '0',
-                        fontSize: window.innerWidth <= 768 ? '15px' : '16px',
+                        fontSize: isMobile ? '15px' : '16px',
                         fontWeight: 'bold',
                         color: '#333',
                         flex: 1,
@@ -848,7 +869,7 @@ function RestaurantContent(props: RestaurantContentProps) {
                           color: 'white',
                           padding: '4px 8px',
                           borderRadius: '16px',
-                          fontSize: window.innerWidth <= 768 ? '11px' : '12px',
+                          fontSize: isMobile ? '11px' : '12px',
                           fontWeight: 'bold',
                           marginLeft: '8px',
                           whiteSpace: 'nowrap',
@@ -862,7 +883,7 @@ function RestaurantContent(props: RestaurantContentProps) {
                     {/* 식당 정보 */}
                     <div style={{
                       lineHeight: '1.6',
-                      fontSize: window.innerWidth <= 768 ? '13px' : '14px',
+                      fontSize: isMobile ? '13px' : '14px',
                       color: '#666',
                       flex: 1
                     }}>
@@ -885,7 +906,7 @@ function RestaurantContent(props: RestaurantContentProps) {
                           padding: '8px',
                           backgroundColor: '#f8f9fa',
                           borderRadius: '6px',
-                          fontSize: window.innerWidth <= 768 ? '12px' : '13px',
+                          fontSize: isMobile ? '12px' : '13px',
                           fontStyle: 'italic'
                         }}>
                           💬 {item.remark}
@@ -933,7 +954,7 @@ function RestaurantContent(props: RestaurantContentProps) {
           {/* 빌딩별 보기 */}
           {viewMode === 'building' && (
             <div style={{
-              padding: window.innerWidth <= 768 ? '0 4px' : '0 16px',
+              padding: isMobile ? '0 4px' : '0 16px',
               width: '100%',
               overflowY: 'visible',
               minHeight: 'auto'
@@ -953,9 +974,9 @@ function RestaurantContent(props: RestaurantContentProps) {
         padding: '16px',
         textAlign: 'center',
         borderTop: '1px solid #eaeaea',
-        marginTop: window.innerWidth <= 768 ? '24px' : '32px',
+        marginTop: isMobile ? '24px' : '32px',
         color: '#666',
-        fontSize: window.innerWidth <= 768 ? '12px' : '16px',
+        fontSize: isMobile ? '12px' : '16px',
         backgroundColor: '#f9f9f9',
         fontFamily: "'Inter', 'Roboto', 'Helvetica Neue', sans-serif"
       }}>

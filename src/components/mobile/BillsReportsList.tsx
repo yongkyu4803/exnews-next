@@ -19,26 +19,7 @@ const Container = styled.div`
 `;
 
 const Header = styled.div`
-  margin-bottom: 24px;
-
-  h1 {
-    font-family: 'Anemone', sans-serif;
-    font-size: 28px;
-    font-weight: bold;
-    color: #1a1a1a;
-    margin-bottom: 8px;
-  }
-
-  p {
-    font-size: 14px;
-    color: #666;
-  }
-
-  @media (max-width: 768px) {
-    h1 {
-      font-size: 24px;
-    }
-  }
+  display: none;
 `;
 
 const ReportCard = styled.div`

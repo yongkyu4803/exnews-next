@@ -49,8 +49,8 @@ const ReportDate = styled.div`
 `;
 
 const ReportTitle = styled.h1`
-  font-family: 'Anemone', sans-serif;
-  font-size: 28px;
+  font-family: 'Cafe24Anemone', sans-serif;
+  font-size: 24px;
   font-weight: bold;
   color: #1a1a1a;
   margin-bottom: 16px;

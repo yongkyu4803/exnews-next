@@ -55,11 +55,7 @@ const NavMenu = styled(Menu)`
   .ant-menu-item {
     min-width: 65px;
     height: 40px !important;
-    line-height: 1.2 !important;
     margin: 6px 4px !important;
-    font-size: 14px;
-    font-family: 'Cafe24Anemone', sans-serif;
-    font-weight: normal;
     cursor: pointer !important;
     user-select: none;
     touch-action: manipulation;
@@ -68,16 +64,41 @@ const NavMenu = styled(Menu)`
     border-radius: 8px !important;
     transition: all 0.3s ease;
     padding: 8px 8px !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* 모든 자식 요소에 강제로 동일한 스타일 적용 */
+  .ant-menu-item span,
+  .ant-menu-item-selected span {
+    font-family: 'Cafe24Anemone', sans-serif !important;
+    font-weight: normal !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    text-align: center !important;
+    display: inline-block !important;
+    width: 100% !important;
+    height: 100% !important;
+    vertical-align: middle !important;
+  }
+
+  /* Ant Design의 자동 생성 클래스 무력화 */
+  .ant-menu-item span *,
+  .ant-menu-item-selected span * {
+    font-family: 'Cafe24Anemone', sans-serif !important;
+    font-weight: normal !important;
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .ant-menu-item:hover {
     color: #ffffff !important;
     background-color: rgba(255, 255, 255, 0.2) !important;
-    padding-top: 16px !important;
-    padding-bottom: 0px !important;
+    padding-top: 9.6px !important;
+    padding-bottom: 6.4px !important;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 
@@ -87,12 +108,14 @@ const NavMenu = styled(Menu)`
   }
 
   .ant-menu-item-selected {
-    font-family: 'Cafe24Anemone', sans-serif;
-    font-weight: normal;
     color: #ffffff !important;
     background-color: rgba(255, 255, 255, 0.3) !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    height: 40px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   /* 모바일 최적화 */
@@ -107,8 +130,8 @@ const NavMenu = styled(Menu)`
     }
 
     .ant-menu-item:hover {
-      padding-top: 12px !important;
-      padding-bottom: 0px !important;
+      padding-top: 7.2px !important;
+      padding-bottom: 4.8px !important;
     }
   }
 
@@ -124,8 +147,8 @@ const NavMenu = styled(Menu)`
     }
 
     .ant-menu-item:hover {
-      padding-top: 12px !important;
-      padding-bottom: 0px !important;
+      padding-top: 7.2px !important;
+      padding-bottom: 4.8px !important;
     }
   }
 `;
@@ -178,8 +201,13 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
         }}
         items={[
           {
+            key: 'exclusive',
+            label: <span style={{ fontFamily: 'Cafe24Anemone, sans-serif', fontWeight: 'normal', fontSize: '14px', textAlign: 'center', lineHeight: '1.2', display: 'inline-block' }}>단독<br/>뉴스</span>,
+            onClick: () => router.push('/'),
+          },
+          {
             key: 'ranking',
-            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>랭킹<br/>뉴스</div>,
+            label: <span style={{ fontFamily: 'Cafe24Anemone, sans-serif', fontWeight: 'normal', fontSize: '14px', textAlign: 'center', lineHeight: '1.2', display: 'inline-block' }}>랭킹<br/>뉴스</span>,
             onClick: () => {
               if (currentPath === '/') {
                 if (onTabChange) onTabChange('ranking');
@@ -189,13 +217,8 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
             },
           },
           {
-            key: 'exclusive',
-            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>단독<br/>뉴스</div>,
-            onClick: () => router.push('/'),
-          },
-          {
             key: 'political',
-            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>정치<br/>리포트</div>,
+            label: <span style={{ fontFamily: 'Cafe24Anemone, sans-serif', fontWeight: 'normal', fontSize: '14px', textAlign: 'center', lineHeight: '1.2', display: 'inline-block' }}>정치<br/>리포트</span>,
             onClick: () => {
               if (currentPath === '/') {
                 if (onTabChange) onTabChange('political');
@@ -206,7 +229,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
           },
           {
             key: 'bills',
-            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>오늘의<br/>법안</div>,
+            label: <span style={{ fontFamily: 'Cafe24Anemone, sans-serif', fontWeight: 'normal', fontSize: '14px', textAlign: 'center', lineHeight: '1.2', display: 'inline-block' }}>오늘의<br/>법안</span>,
             onClick: () => {
               if (currentPath === '/') {
                 if (onTabChange) onTabChange('bills');
@@ -217,7 +240,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
           },
           {
             key: 'editorial',
-            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>오늘의<br/>사설</div>,
+            label: <span style={{ fontFamily: 'Cafe24Anemone, sans-serif', fontWeight: 'normal', fontSize: '14px', textAlign: 'center', lineHeight: '1.2', display: 'inline-block' }}>오늘의<br/>사설</span>,
             onClick: () => {
               if (currentPath === '/') {
                 if (onTabChange) onTabChange('editorial');
@@ -228,7 +251,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
           },
           {
             key: 'restaurants',
-            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>국회앞<br/>식당</div>,
+            label: <span style={{ fontFamily: 'Cafe24Anemone, sans-serif', fontWeight: 'normal', fontSize: '14px', textAlign: 'center', lineHeight: '1.2', display: 'inline-block' }}>국회앞<br/>식당</span>,
             onClick: () => router.push('/restaurants'),
           }
         ]}

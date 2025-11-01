@@ -978,6 +978,15 @@ const HomePage = () => {
 
                 {activeTab === 'political' && (
                   <>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: isMobile ? 'wrap' : 'nowrap',
+                      gap: '12px'
+                    }}>
+                      <Title level={isMobile ? 4 : 3} style={{ fontFamily: "'Cafe24Anemone', sans-serif" }}>📰 정치 리포트</Title>
+                    </div>
                     {selectedPoliticalReport ? (
                       <PoliticalReportDetail
                         slug={selectedPoliticalReport}
@@ -992,7 +1001,18 @@ const HomePage = () => {
                 )}
 
                 {activeTab === 'bills' && (
-                  <BillsReportsList />
+                  <>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: isMobile ? 'wrap' : 'nowrap',
+                      gap: '12px'
+                    }}>
+                      <Title level={isMobile ? 4 : 3} style={{ fontFamily: "'Cafe24Anemone', sans-serif" }}>📜 오늘의 법안</Title>
+                    </div>
+                    <BillsReportsList />
+                  </>
                 )}
               </Space>
             </div>
