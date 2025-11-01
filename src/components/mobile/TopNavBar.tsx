@@ -46,6 +46,18 @@ const NavMenu = styled(Menu)`
   max-width: 1000px;
   width: 100%;
   background: transparent !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
+
+  @media (max-width: 768px) {
+    justify-content: flex-start;
+  }
 
   .ant-menu-item {
     min-width: 65px;
