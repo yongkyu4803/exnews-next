@@ -165,12 +165,12 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
         items={[
           {
             key: 'exclusive',
-            label: '단독 뉴스',
+            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>단독<br/>뉴스</div>,
             onClick: () => router.push('/'),
           },
           {
             key: 'ranking',
-            label: '랭킹 뉴스',
+            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>랭킹<br/>뉴스</div>,
             onClick: () => {
               if (currentPath === '/') {
                 if (onTabChange) onTabChange('ranking');
@@ -181,7 +181,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
           },
           {
             key: 'editorial',
-            label: '오늘의 사설',
+            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>오늘의<br/>사설</div>,
             onClick: () => {
               if (currentPath === '/') {
                 if (onTabChange) onTabChange('editorial');
@@ -192,7 +192,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
           },
           {
             key: 'political',
-            label: '정치 리포트',
+            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>정치<br/>리포트</div>,
             onClick: () => {
               if (currentPath === '/') {
                 if (onTabChange) onTabChange('political');
@@ -203,7 +203,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
           },
           {
             key: 'bills',
-            label: '국회 법안',
+            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>국회<br/>법안</div>,
             onClick: () => {
               if (currentPath === '/') {
                 if (onTabChange) onTabChange('bills');
@@ -214,7 +214,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
           },
           {
             key: 'restaurants',
-            label: '국회앞 식당',
+            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>국회앞<br/>식당</div>,
             onClick: () => router.push('/restaurants'),
           }
         ]}
