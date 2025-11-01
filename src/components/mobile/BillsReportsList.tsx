@@ -230,8 +230,8 @@ const BillsReportsList: React.FC = () => {
   return (
     <Container>
       <Header>
-        <h1>📜 국회 법안 모니터링</h1>
-        <p>발행된 법안 분석 리포트 {sortedReports.length}개 · 상세 내용은 카드를 클릭하세요</p>
+        <h1>📜 오늘의 발의 법안</h1>
+        <p>가장 빠른 발의 법안 분석 정보</p>
       </Header>
 
       {sortedReports.length === 0 ? (

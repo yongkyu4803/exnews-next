@@ -178,11 +178,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
         }}
         items={[
           {
-            key: 'exclusive',
-            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>단독<br/>뉴스</div>,
-            onClick: () => router.push('/'),
-          },
-          {
             key: 'ranking',
             label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>랭킹<br/>뉴스</div>,
             onClick: () => {
@@ -194,15 +189,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
             },
           },
           {
-            key: 'editorial',
-            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>오늘의<br/>사설</div>,
-            onClick: () => {
-              if (currentPath === '/') {
-                if (onTabChange) onTabChange('editorial');
-              } else {
-                router.push('/?tab=editorial');
-              }
-            },
+            key: 'exclusive',
+            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>단독<br/>뉴스</div>,
+            onClick: () => router.push('/'),
           },
           {
             key: 'political',
@@ -223,6 +212,17 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
                 if (onTabChange) onTabChange('bills');
               } else {
                 router.push('/?tab=bills');
+              }
+            },
+          },
+          {
+            key: 'editorial',
+            label: <div style={{ textAlign: 'center', lineHeight: '1.2' }}>오늘의<br/>사설</div>,
+            onClick: () => {
+              if (currentPath === '/') {
+                if (onTabChange) onTabChange('editorial');
+              } else {
+                router.push('/?tab=editorial');
               }
             },
           },
