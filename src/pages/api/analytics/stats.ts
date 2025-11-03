@@ -72,7 +72,7 @@ export default async function handler(
     // 디버깅: 가져온 데이터 정보 로그
     if (analyticsData && analyticsData.length > 0) {
       const dates = analyticsData.map(item => new Date(item.created_at).toISOString().split('T')[0]);
-      const uniqueDates = [...new Set(dates)].sort();
+      const uniqueDates = Array.from(new Set(dates)).sort();
       logger.info('Fetched analytics data', {
         totalRecords: analyticsData.length,
         pagesLoaded: page,
