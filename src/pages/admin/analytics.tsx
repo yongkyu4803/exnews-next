@@ -205,7 +205,9 @@ const AdminAnalyticsPage = () => {
                 { value: 'exclusive', label: '단독 뉴스' },
                 { value: 'ranking', label: '랭킹 뉴스' },
                 { value: 'editorial', label: '오늘의 사설' },
-                { value: 'restaurant', label: '식당' }
+                { value: 'political', label: '정치 리포트' },
+                { value: 'bills', label: '오늘의 법안' },
+                { value: 'restaurant', label: '국회앞 식당' }
               ]}
             />
           </div>
@@ -375,31 +377,34 @@ const AdminAnalyticsPage = () => {
                 <div style={{ marginBottom: '12px', padding: '8px', background: '#fffbe6', borderRadius: '4px', fontSize: '12px', color: '#ad6800', border: '1px solid #ffe58f' }}>
                   💡 <strong>tab_name</strong> 필드 기준으로 집계 | 페이지뷰 + 탭변경 이벤트 모두 포함 | 클릭하면 해당 탭만 필터링됩니다
                 </div>
-                <Row gutter={[16, 16]}>
-                  {stats.tab_stats.map((tab: TabStats) => (
-                    <Col xs={12} sm={6} key={tab.tab_name}>
-                      <Card
-                        size="small"
-                        style={{
-                          background: selectedTab === tab.tab_name ? '#f0f5ff' : '#fafafa',
-                          border: selectedTab === tab.tab_name ? '2px solid #1890ff' : '1px solid #d9d9d9',
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => setSelectedTab(tab.tab_name)}
-                      >
-                        <Statistic
-                          title={getTabNameKorean(tab.tab_name)}
-                          value={tab.count}
-                          suffix={
-                            <span style={{ fontSize: '14px', color: '#666' }}>
-                              ({tab.percentage}%)
-                            </span>
-                          }
-                          valueStyle={{ fontSize: isMobile ? '20px' : '24px' }}
-                        />
-                      </Card>
-                    </Col>
-                  ))}
+                <Row gutter={[12, 12]}>
+                  {['exclusive', 'ranking', 'editorial', 'political', 'bills', 'restaurant'].map((tabName) => {
+                    const tabStat = stats.tab_stats.find((t: TabStats) => t.tab_name === tabName);
+                    return (
+                      <Col xs={12} sm={8} md={4} key={tabName}>
+                        <Card
+                          size="small"
+                          style={{
+                            background: selectedTab === tabName ? '#f0f5ff' : '#fafafa',
+                            border: selectedTab === tabName ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => setSelectedTab(tabName as any)}
+                        >
+                          <Statistic
+                            title={<span style={{ fontSize: '12px' }}>{getTabNameKorean(tabName)}</span>}
+                            value={tabStat?.count || 0}
+                            suffix={
+                              <span style={{ fontSize: '12px', color: '#666' }}>
+                                ({tabStat?.percentage || 0}%)
+                              </span>
+                            }
+                            valueStyle={{ fontSize: isMobile ? '18px' : '20px' }}
+                          />
+                        </Card>
+                      </Col>
+                    );
+                  })}
                 </Row>
               </Card>
             </Col>

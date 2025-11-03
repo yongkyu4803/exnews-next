@@ -26,4 +26,12 @@ if (process.env.NODE_ENV !== 'production') {
   });
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  db: {
+    schema: 'public',
+  },
+  global: {
+    headers: {},
+  },
+  // Explicitly set no default limit
+});

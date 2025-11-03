@@ -22,26 +22,63 @@ export default async function handler(
   try {
     const { startDate, endDate, tabName, trend } = req.query;
 
-    // Build date filter
-    let query = supabase.from('exnews_visit_analytics').select('*');
+    // Fetch all data with pagination to bypass 1000 row limit
+    let allData: any[] = [];
+    let page = 0;
+    const pageSize = 1000;
+    let hasMore = true;
 
-    if (startDate) {
-      query = query.gte('created_at', startDate as string);
-    }
-    if (endDate) {
-      query = query.lte('created_at', endDate as string);
-    }
-    if (tabName && tabName !== 'all') {
-      query = query.eq('tab_name', tabName as string);
+    while (hasMore) {
+      let query = supabase
+        .from('exnews_visit_analytics')
+        .select('*');
+
+      if (startDate) {
+        query = query.gte('created_at', startDate as string);
+      }
+      if (endDate) {
+        query = query.lte('created_at', endDate as string);
+      }
+      if (tabName && tabName !== 'all') {
+        query = query.eq('tab_name', tabName as string);
+      }
+
+      // Apply ordering and pagination
+      query = query
+        .order('created_at', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+
+      const { data, error } = await query;
+
+      if (error) {
+        logger.error('Failed to fetch analytics data', { error, page });
+        return res.status(500).json({
+          error: 'Failed to fetch analytics data',
+          details: error.message
+        });
+      }
+
+      if (!data || data.length === 0) {
+        hasMore = false;
+      } else {
+        allData = allData.concat(data);
+        hasMore = data.length === pageSize;
+        page++;
+      }
     }
 
-    const { data: analyticsData, error } = await query;
+    const analyticsData = allData;
 
-    if (error) {
-      logger.error('Failed to fetch analytics data', { error });
-      return res.status(500).json({
-        error: 'Failed to fetch analytics data',
-        details: error.message
+    // 디버깅: 가져온 데이터 정보 로그
+    if (analyticsData && analyticsData.length > 0) {
+      const dates = analyticsData.map(item => new Date(item.created_at).toISOString().split('T')[0]);
+      const uniqueDates = [...new Set(dates)].sort();
+      logger.info('Fetched analytics data', {
+        totalRecords: analyticsData.length,
+        pagesLoaded: page,
+        dateRange: `${uniqueDates[0]} ~ ${uniqueDates[uniqueDates.length - 1]}`,
+        uniqueDates: uniqueDates.length,
+        latestDate: uniqueDates[uniqueDates.length - 1]
       });
     }
 

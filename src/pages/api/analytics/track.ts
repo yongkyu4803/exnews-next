@@ -73,7 +73,7 @@ export default async function handler(
 
     // Validate tab_name if provided
     if (trackData.tab_name) {
-      const validTabNames = ['exclusive', 'ranking', 'editorial', 'political', 'restaurant'];
+      const validTabNames = ['exclusive', 'ranking', 'editorial', 'political', 'bills', 'restaurant'];
       if (!validTabNames.includes(trackData.tab_name)) {
         return res.status(400).json({
           error: 'Invalid tab_name',

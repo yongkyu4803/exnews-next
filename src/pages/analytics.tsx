@@ -72,9 +72,17 @@ const AnalyticsPage = () => {
       enabled: isMounted,
       retry: 2,
       refetchOnWindowFocus: true, // 탭 전환 시 자동 업데이트
-      refetchInterval: 30000, // 30초마다 자동 새로고침
-      staleTime: 10000, // 10초 후 데이터를 stale로 간주
-      cacheTime: 60000, // 1분 동안 캐시 유지
+      refetchOnMount: 'always', // 마운트 시 항상 새로 가져오기
+      refetchInterval: 10000, // 10초마다 자동 새로고침
+      staleTime: 0, // 즉시 stale 처리 (항상 fresh 데이터 요청)
+      cacheTime: 30000, // 30초 동안만 캐시 유지
+      onSuccess: (data) => {
+        logger.info('Analytics data fetched successfully', {
+          visitors: data.stats.total_visitors,
+          sessions: data.stats.total_sessions,
+          pageviews: data.stats.total_pageviews
+        });
+      },
       onError: (error) => {
         logger.error('Failed to fetch analytics stats', error);
       }
@@ -173,15 +181,18 @@ const AnalyticsPage = () => {
             <Col xs={24}>
               <Card title="탭별 방문 통계">
                 <Row gutter={[16, 16]}>
-                  {stats.tab_stats.map((tab: TabStats) => (
-                    <Col xs={12} sm={6} key={tab.tab_name}>
-                      <Statistic
-                        title={getTabNameKorean(tab.tab_name)}
-                        value={tab.count}
-                        suffix={`(${tab.percentage}%)`}
-                      />
-                    </Col>
-                  ))}
+                  {['exclusive', 'ranking', 'editorial', 'political', 'bills', 'restaurant'].map((tabName) => {
+                    const tabStat = stats.tab_stats.find((t: TabStats) => t.tab_name === tabName);
+                    return (
+                      <Col xs={12} sm={6} key={tabName}>
+                        <Statistic
+                          title={getTabNameKorean(tabName)}
+                          value={tabStat?.count || 0}
+                          suffix={`(${tabStat?.percentage || 0}%)`}
+                        />
+                      </Col>
+                    );
+                  })}
                 </Row>
               </Card>
             </Col>
@@ -263,7 +274,9 @@ function getTabNameKorean(tabName: string): string {
     'exclusive': '단독 뉴스',
     'ranking': '랭킹 뉴스',
     'editorial': '오늘의 사설',
-    'restaurant': '식당'
+    'political': '정치 리포트',
+    'bills': '오늘의 법안',
+    'restaurant': '국회앞 식당'
   };
   return tabNames[tabName] || tabName;
 }

@@ -369,6 +369,8 @@ const HomePage = () => {
       'exclusive': 'exclusive',
       'ranking': 'ranking',
       'editorial': 'editorial',
+      'political': 'political',
+      'bills': 'bills',
       'restaurant': 'restaurant'
     };
     if (tabMap[key]) {
