@@ -71,6 +71,10 @@ const AnalyticsPage = () => {
     {
       enabled: isMounted,
       retry: 2,
+      refetchOnWindowFocus: true, // 탭 전환 시 자동 업데이트
+      refetchInterval: 30000, // 30초마다 자동 새로고침
+      staleTime: 10000, // 10초 후 데이터를 stale로 간주
+      cacheTime: 60000, // 1분 동안 캐시 유지
       onError: (error) => {
         logger.error('Failed to fetch analytics stats', error);
       }
