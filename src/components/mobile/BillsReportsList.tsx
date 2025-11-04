@@ -157,8 +157,23 @@ const EmptyMessage = styled.div`
   font-size: 16px;
 `;
 
-const BillsReportsList: React.FC = () => {
-  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+interface BillsReportsListProps {
+  onReportClick?: (slug: string) => void;
+  selectedSlug?: string | null;
+  onBack?: () => void;
+}
+
+const BillsReportsList: React.FC<BillsReportsListProps> = ({
+  onReportClick,
+  selectedSlug: externalSelectedSlug,
+  onBack: externalOnBack
+}) => {
+  const [internalSelectedSlug, setInternalSelectedSlug] = useState<string | null>(null);
+
+  // 외부에서 제어하거나 내부 상태 사용
+  const selectedSlug = externalSelectedSlug !== undefined ? externalSelectedSlug : internalSelectedSlug;
+  const setSelectedSlug = onReportClick || setInternalSelectedSlug;
+  const handleBack = externalOnBack || (() => setInternalSelectedSlug(null));
 
   const { data, isLoading, error } = useQuery<{ data: BillsReport[] }>(
     'billsReports',
@@ -203,7 +218,7 @@ const BillsReportsList: React.FC = () => {
     return (
       <BillsReportDetail
         slug={selectedSlug}
-        onBack={() => setSelectedSlug(null)}
+        onBack={handleBack}
       />
     );
   }

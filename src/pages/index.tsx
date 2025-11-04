@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import VirtualNewsList from '@/components/mobile/VirtualNewsList';
 import VirtualRankingNewsList from '@/components/mobile/VirtualRankingNewsList';
 import { CopyOutlined, ShopOutlined } from '@ant-design/icons';
@@ -81,6 +82,7 @@ const BillsReportsList = dynamic(() => import('@/components/mobile/BillsReportsL
 
 // 전체 컴포넌트를 클라이언트 사이드에서만 렌더링
 const HomePage = () => {
+  const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -96,6 +98,7 @@ const HomePage = () => {
   const [editorialCurrentPage, setEditorialCurrentPage] = useState(1);
   const [editorialPageSize] = useState(6); // 한 페이지에 6개 (2열 그리드 x 3행)
   const [selectedPoliticalReport, setSelectedPoliticalReport] = useState<string | null>(null);
+  const [selectedBillsReport, setSelectedBillsReport] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // activeTab을 TabName 타입으로 변환
@@ -123,10 +126,21 @@ const HomePage = () => {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const tabParam = urlParams.get('tab');
-      if (tabParam === 'ranking') {
-        setActiveTab('ranking');
-      } else if (tabParam === 'editorial') {
-        setActiveTab('editorial');
+      const validTabs = ['exclusive', 'ranking', 'editorial', 'political', 'bills', 'restaurant'];
+
+      if (tabParam && validTabs.includes(tabParam)) {
+        setActiveTab(tabParam);
+      }
+
+      // 정치 리포트 상세 페이지
+      const reportId = urlParams.get('id');
+      if (tabParam === 'political' && reportId) {
+        setSelectedPoliticalReport(reportId);
+      }
+
+      // 법안 리포트 상세 페이지
+      if (tabParam === 'bills' && reportId) {
+        setSelectedBillsReport(reportId);
       }
     }
   }, []);
@@ -363,6 +377,11 @@ const HomePage = () => {
     setSelectedRows([]);
     setRankingSelectedKeys([]);
     setRankingSelectedRows([]);
+    setSelectedPoliticalReport(null);
+    setSelectedBillsReport(null);
+
+    // URL 업데이트
+    router.push(`/?tab=${key}`, undefined, { shallow: true });
 
     // Phase 2: 탭 변경 추적
     const tabMap: Record<string, TabName> = {
@@ -992,11 +1011,17 @@ const HomePage = () => {
                     {selectedPoliticalReport ? (
                       <PoliticalReportDetail
                         slug={selectedPoliticalReport}
-                        onBack={() => setSelectedPoliticalReport(null)}
+                        onBack={() => {
+                          setSelectedPoliticalReport(null);
+                          router.push('/?tab=political', undefined, { shallow: true });
+                        }}
                       />
                     ) : (
                       <PoliticalReportsList
-                        onReportClick={(slug) => setSelectedPoliticalReport(slug)}
+                        onReportClick={(slug) => {
+                          setSelectedPoliticalReport(slug);
+                          router.push(`/?tab=political&id=${slug}`, undefined, { shallow: true });
+                        }}
                       />
                     )}
                   </>
@@ -1013,7 +1038,17 @@ const HomePage = () => {
                     }}>
                       <Title level={isMobile ? 4 : 3} style={{ fontFamily: "'Cafe24Anemone', sans-serif" }}>📜 오늘의 법안</Title>
                     </div>
-                    <BillsReportsList />
+                    <BillsReportsList
+                      selectedSlug={selectedBillsReport}
+                      onReportClick={(slug) => {
+                        setSelectedBillsReport(slug);
+                        router.push(`/?tab=bills&id=${slug}`, undefined, { shallow: true });
+                      }}
+                      onBack={() => {
+                        setSelectedBillsReport(null);
+                        router.push('/?tab=bills', undefined, { shallow: true });
+                      }}
+                    />
                   </>
                 )}
               </Space>
