@@ -87,6 +87,7 @@ export interface ReportListItem {
   tags?: string[];
   category?: string;
   summary?: string;
+  keywords?: string[];
   source: 'supabase' | 'local';
 }
 
