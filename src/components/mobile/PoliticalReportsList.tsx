@@ -26,41 +26,69 @@ const Header = styled.div`
   display: none;
 `;
 
-const ReportGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 20px;
+// 게시판 목록 컨테이너
+const ReportList = styled.div`
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  overflow: hidden;
+`;
+
+// 게시판 목록 아이템
+const ReportListItem = styled.div`
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f3f4f6;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background-color: #f9fafb;
+  }
 
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    padding: 14px 16px;
   }
 `;
 
-const ReportCard = styled.div<{ isLatest?: boolean }>`
-  position: relative;
-  background: ${props => props.isLatest
-    ? 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)'
-    : 'white'};
-  border: ${props => props.isLatest ? '2px solid #3b82f6' : '1px solid #e5e7eb'};
-  border-radius: 12px;
-  padding: 6px 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: ${props => props.isLatest
-    ? '0 4px 12px rgba(59, 130, 246, 0.15)'
-    : '0 1px 3px rgba(0, 0, 0, 0.05)'};
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: ${props => props.isLatest
-      ? '0 8px 20px rgba(59, 130, 246, 0.25)'
-      : '0 8px 16px rgba(0, 0, 0, 0.1)'};
-    border-color: #3b82f6;
-  }
+const ListItemHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 
   @media (max-width: 768px) {
-    padding: 5px 16px;
+    gap: 12px;
+  }
+`;
+
+const ListItemTitle = styled.h3`
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1.5;
+  flex: 1;
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
+`;
+
+const ListItemMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: #6b7280;
+  flex-shrink: 0;
+
+  @media (max-width: 768px) {
+    font-size: 12px;
+    gap: 8px;
   }
 `;
 
@@ -168,6 +196,94 @@ const EmptyContainer = styled.div`
   }
 `;
 
+// 최신 뉴스 전용 컨테이너 (그리드 밖에 배치)
+const LatestReportContainer = styled.div`
+  margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 20px;
+  }
+`;
+
+// 최신 리포트 카드 (더 크고 상세한 버전)
+const LatestReportCard = styled.div`
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 2px solid #3b82f6;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+  }
+
+  @media (max-width: 768px) {
+    padding: 20px;
+  }
+`;
+
+// 요약 섹션
+const SummarySection = styled.div`
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(59, 130, 246, 0.2);
+`;
+
+const SummaryLabel = styled.div`
+  font-size: 13px;
+  font-weight: 600;
+  color: #3b82f6;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const SummaryText = styled.p`
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.6;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 13px;
+  }
+`;
+
+// 키워드 섹션
+const KeywordsSection = styled.div`
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const KeywordTag = styled.span`
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 12px;
+  font-size: 12px;
+  color: #1e40af;
+  font-weight: 500;
+
+  &::before {
+    content: '#';
+    margin-right: 2px;
+    opacity: 0.7;
+  }
+
+  @media (max-width: 768px) {
+    font-size: 11px;
+    padding: 3px 10px;
+  }
+`;
+
 interface PoliticalReportsListProps {
   onReportClick?: (slug: string) => void;
 }
@@ -269,40 +385,86 @@ const PoliticalReportsList: React.FC<PoliticalReportsListProps> = ({ onReportCli
         <p>최신 정치 이슈를 분석한 {reports.length}개의 리포트</p>
       </Header>
 
-      <ReportGrid>
-        {reports.map((report, index) => (
-          <ReportCard
-            key={report.id}
-            onClick={() => handleCardClick(report.slug)}
-            isLatest={index === 0}
-          >
+      {/* 최신 리포트 (그리드 밖에 별도 배치) */}
+      {reports.length > 0 && (
+        <LatestReportContainer>
+          <LatestReportCard onClick={() => handleCardClick(reports[0].slug)}>
             <CardHeader>
               <CardTitle>
-                {index === 0 && <NewBadge>NEW</NewBadge>}
-                {report.topic}
+                <NewBadge>NEW</NewBadge>
+                {reports[0].topic}
               </CardTitle>
               <CardMeta>
                 <MetaItem>
                   <span>📅</span>
-                  {formatDate(report.created_at)}
+                  {formatDate(reports[0].created_at)}
                 </MetaItem>
-                {report.duration_ms && (
+                {reports[0].duration_ms && (
                   <MetaItem>
                     <span>⏱️</span>
-                    {formatDuration(report.duration_ms)}
+                    {formatDuration(reports[0].duration_ms)}
                   </MetaItem>
                 )}
-                {report.cost_usd && (
+                {reports[0].cost_usd && (
                   <MetaItem>
                     <span>💰</span>
-                    ${report.cost_usd}
+                    ${reports[0].cost_usd}
                   </MetaItem>
                 )}
               </CardMeta>
             </CardHeader>
-          </ReportCard>
-        ))}
-      </ReportGrid>
+
+            {/* 요약 섹션 */}
+            {reports[0].summary && (
+              <SummarySection>
+                <SummaryText>{reports[0].summary}</SummaryText>
+              </SummarySection>
+            )}
+
+            {/* 핵심 키워드 섹션 */}
+            {reports[0].keywords && reports[0].keywords.length > 0 && (
+              <KeywordsSection>
+                {reports[0].keywords.slice(0, 5).map((keyword, idx) => (
+                  <KeywordTag key={idx}>{keyword}</KeywordTag>
+                ))}
+              </KeywordsSection>
+            )}
+          </LatestReportCard>
+        </LatestReportContainer>
+      )}
+
+      {/* 나머지 리포트들 (게시판 목록) */}
+      {reports.length > 1 && (
+        <ReportList>
+          {reports.slice(1).map((report) => (
+            <ReportListItem
+              key={report.id}
+              onClick={() => handleCardClick(report.slug)}
+            >
+              <ListItemHeader>
+                <ListItemTitle>{report.topic}</ListItemTitle>
+                <ListItemMeta>
+                  <MetaItem>
+                    {formatDate(report.created_at)}
+                  </MetaItem>
+                  {report.duration_ms && (
+                    <MetaItem>
+                      <span>⏱️</span>
+                      {formatDuration(report.duration_ms)}
+                    </MetaItem>
+                  )}
+                  {report.cost_usd && (
+                    <MetaItem>
+                      <span>💰</span>
+                      ${report.cost_usd}
+                    </MetaItem>
+                  )}
+                </ListItemMeta>
+              </ListItemHeader>
+            </ReportListItem>
+          ))}
+        </ReportList>
+      )}
     </Container>
   );
 };

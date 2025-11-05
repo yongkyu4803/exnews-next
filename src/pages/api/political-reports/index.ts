@@ -25,7 +25,7 @@ export default async function handler(
 
     const { data, error } = await politicalSupabase
       .from(TABLES.NEWS_REPORTS)
-      .select('id, slug, topic, created_at, duration_ms, cost_usd')
+      .select('id, slug, topic, created_at, duration_ms, cost_usd, report_data')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -41,6 +41,8 @@ export default async function handler(
       created_at: item.created_at,
       duration_ms: item.duration_ms,
       cost_usd: item.cost_usd ? parseFloat(item.cost_usd).toFixed(4) : undefined,
+      summary: item.report_data?.summary,
+      keywords: item.report_data?.keywords?.map((k: any) => k.term) || [],
       source: 'supabase' as const
     }));
 
