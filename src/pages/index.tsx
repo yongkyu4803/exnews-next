@@ -99,6 +99,7 @@ const HomePage = () => {
   const [editorialPageSize] = useState(6); // 한 페이지에 6개 (2열 그리드 x 3행)
   const [selectedPoliticalReport, setSelectedPoliticalReport] = useState<string | null>(null);
   const [selectedBillsReport, setSelectedBillsReport] = useState<string | null>(null);
+  const [selectedEditorialAnalysis, setSelectedEditorialAnalysis] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // activeTab을 TabName 타입으로 변환
@@ -141,6 +142,11 @@ const HomePage = () => {
       // 법안 리포트 상세 페이지
       if (tabParam === 'bills' && reportId) {
         setSelectedBillsReport(reportId);
+      }
+
+      // 사설 분석 상세 페이지
+      if (tabParam === 'editorial' && reportId) {
+        setSelectedEditorialAnalysis(reportId);
       }
     }
   }, []);
@@ -379,6 +385,7 @@ const HomePage = () => {
     setRankingSelectedRows([]);
     setSelectedPoliticalReport(null);
     setSelectedBillsReport(null);
+    setSelectedEditorialAnalysis(null);
 
     // URL 업데이트
     router.push(`/?tab=${key}`, undefined, { shallow: true });
@@ -952,6 +959,15 @@ const HomePage = () => {
                     <VirtualEditorialList
                       items={paginatedEditorialItems}
                       isLoading={editorialIsLoading}
+                      selectedEditorialId={selectedEditorialAnalysis}
+                      onEditorialClick={(id) => {
+                        setSelectedEditorialAnalysis(id);
+                        router.push(`/?tab=editorial&id=${id}`, undefined, { shallow: true });
+                      }}
+                      onBack={() => {
+                        setSelectedEditorialAnalysis(null);
+                        router.push('/?tab=editorial', undefined, { shallow: true });
+                      }}
                     />
 
                     {/* 페이지네이션 */}
