@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import VirtualNewsList from '@/components/mobile/VirtualNewsList';
 import VirtualRankingNewsList from '@/components/mobile/VirtualRankingNewsList';
 import { CopyOutlined, ShopOutlined } from '@ant-design/icons';
-import PwaInstallPrompt from '@/components/PwaInstallPrompt';
+// import PwaInstallPrompt from '@/components/PwaInstallPrompt';
 import { NewsItem, NewsResponse, RankingNewsItem, RankingNewsResponse, EditorialResponse } from '@/types';
 import { Pagination } from 'antd';
 import BottomNav from '@/components/mobile/BottomNav';
@@ -588,8 +588,8 @@ const HomePage = () => {
               margin: '0 auto'
             }}>
               <Space direction="vertical" style={{ width: '100%' }}>
-                <PwaInstallPrompt />
-                
+                {/* <PwaInstallPrompt /> */}
+
                 {activeTab === 'exclusive' && (
                   <>
                     <div style={{ 
