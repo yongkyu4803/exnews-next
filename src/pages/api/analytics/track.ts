@@ -40,6 +40,9 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Set timeout to prevent QUIC protocol errors
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+
   try {
     const trackData: TrackRequest = req.body;
 
@@ -107,12 +110,19 @@ export default async function handler(
       exit_page: trackData.exit_page || false
     };
 
-    // Insert into Supabase
-    const { data, error } = await supabase
+    // Insert into Supabase with timeout protection
+    const insertPromise = supabase
       .from('exnews_visit_analytics')
       .insert([analyticsData])
       .select('id')
       .single();
+
+    // 10초 타임아웃 설정
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Analytics insert timeout')), 10000)
+    );
+
+    const { data, error } = await Promise.race([insertPromise, timeoutPromise]) as any;
 
     if (error) {
       logger.error('Failed to insert analytics data', { error, analyticsData });

@@ -28,16 +28,23 @@ ON ranking_news(id);
 CREATE INDEX IF NOT EXISTS idx_editorials_created_at
 ON editorials(created_at DESC);
 
--- 5. restaurants 테이블: category 인덱스
+-- 5. skills_news_reports 테이블: created_at 인덱스 (정치 리포트)
+-- 용도: 최신 정치 리포트 조회 최적화
+-- 예상 효과: 쿼리 속도 85-90% 개선 (1.29s → 0.15s)
+CREATE INDEX IF NOT EXISTS idx_skills_news_reports_created_at
+ON skills_news_reports(created_at DESC);
+
+-- 6. restaurants 테이블: category 인덱스
 -- 용도: 카테고리별 식당 조회 최적화
 CREATE INDEX IF NOT EXISTS idx_restaurants_category
 ON restaurants(category);
 
--- 6. Query Planner 통계 업데이트
+-- 7. Query Planner 통계 업데이트
 -- 용도: PostgreSQL이 최적의 쿼리 계획을 세우도록 통계 갱신
 ANALYZE news;
 ANALYZE ranking_news;
 ANALYZE editorials;
+ANALYZE skills_news_reports;
 ANALYZE restaurants;
 
 -- ============================================
@@ -157,7 +164,7 @@ ORDER BY relname;
 4. 이 SQL 파일의 내용을 복사하여 붙여넣기
 
 5. 인덱스 생성 부분만 선택하여 실행:
-   - 1번부터 6번까지 순차 실행
+   - 1번부터 7번까지 순차 실행
    - 또는 전체 선택 후 "RUN" 버튼 클릭
 
 6. 인덱스 생성 확인 쿼리 실행:
@@ -169,8 +176,9 @@ ORDER BY relname;
    - Execution Time 비교
 
 예상 결과:
-✅ 인덱스 5개 생성 완료
+✅ 인덱스 6개 생성 완료
 ✅ ANALYZE 완료
 ✅ 쿼리 속도 10-50ms로 개선 (기존 500-1000ms)
-✅ API 응답 시간 -90% 개선
+✅ API 응답 시간 -85~90% 개선
+✅ 정치 리포트: 1.29s → 0.15s
 */
