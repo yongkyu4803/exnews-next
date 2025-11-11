@@ -251,10 +251,10 @@ const HomePage = () => {
 
   // Editorial analysis items query - lazy load only when tab is active
   const { data: editorialData, isLoading: editorialIsLoading, error: editorialError } = useQuery<EditorialResponse, Error>(
-    'editorialItems',
+    ['editorialItems', editorialCurrentPage, editorialPageSize],
     async () => {
-      logger.debug('사설 분석 데이터 요청 시작');
-      const response = await fetch('/api/editorials');
+      logger.debug('사설 분석 데이터 요청 시작', { page: editorialCurrentPage, pageSize: editorialPageSize });
+      const response = await fetch(`/api/editorials?page=${editorialCurrentPage}&pageSize=${editorialPageSize}`);
       if (!response.ok) {
         let errorMessage = `Failed to fetch editorial items: ${response.status}`;
         try {
@@ -268,7 +268,7 @@ const HomePage = () => {
         throw new Error(errorMessage);
       }
       const result = await response.json();
-      logger.info('사설 분석 API 응답', { itemCount: result?.items?.length || 0 });
+      logger.info('사설 분석 API 응답', { itemCount: result?.items?.length || 0, totalCount: result?.totalCount || 0 });
       return result;
     },
     {
