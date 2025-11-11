@@ -51,7 +51,7 @@ const CanvaBanner: React.FC = () => {
         aria-label="GQAI 방문하기"
       >
         <Image
-          src="/Blue Geometric Technology Linkedin Banner.png"
+          src="/blue-geometric-linkedin-banner.png"
           alt="GQAI 생성형 AI 실전 강의"
           fill
           style={{ objectFit: 'contain' }}
