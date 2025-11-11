@@ -194,19 +194,20 @@ const HomePage = () => {
     }
   );
 
-  // News items query - lazy load only when exclusive tab is active
+  // News items query - server-side pagination with lazy loading
   const { data, isLoading, error } = useQuery<NewsResponse, Error>(
-    ['newsItems', selectedCategory],
+    ['newsItems', selectedCategory, currentPage, pageSize],
     async () => {
-      logger.debug('뉴스 데이터 요청 시작', { category: selectedCategory });
-      const response = await fetch(`/api/news?all=true${selectedCategory ? `&category=${selectedCategory}` : ''}`);
+      logger.debug('뉴스 데이터 요청 시작', { category: selectedCategory, page: currentPage, pageSize });
+      const categoryParam = selectedCategory ? `&category=${selectedCategory}` : '';
+      const response = await fetch(`/api/news?page=${currentPage}&pageSize=${pageSize}${categoryParam}`);
       if (!response.ok) {
         const errorText = await response.text();
         logger.error('뉴스 API 응답 오류', { status: response.status, errorText });
         throw new Error(`Failed to fetch news items: ${response.status} ${errorText}`);
       }
       const result = await response.json();
-      logger.info('뉴스 API 응답', { itemCount: result?.items?.length || 0 });
+      logger.info('뉴스 API 응답', { itemCount: result?.items?.length || 0, totalCount: result?.totalCount || 0 });
       return result;
     },
     {
@@ -221,19 +222,19 @@ const HomePage = () => {
     }
   );
 
-  // Ranking news items query - lazy load only when tab is active
+  // Ranking news items query - server-side pagination with lazy loading
   const { data: rankingData, isLoading: rankingIsLoading, error: rankingError } = useQuery<RankingNewsResponse, Error>(
-    'rankingNewsItems',
+    ['rankingNewsItems', rankingCurrentPage, rankingPageSize],
     async () => {
-      console.log('랭킹 뉴스 데이터 요청 시작');
-      const response = await fetch('/api/ranking-news?all=true');
+      console.log('랭킹 뉴스 데이터 요청 시작', { page: rankingCurrentPage, pageSize: rankingPageSize });
+      const response = await fetch(`/api/ranking-news?page=${rankingCurrentPage}&pageSize=${rankingPageSize}`);
       if (!response.ok) {
         const errorText = await response.text();
         console.error('랭킹 뉴스 API 응답 오류:', response.status, errorText);
         throw new Error(`Failed to fetch ranking news items: ${response.status} ${errorText}`);
       }
       const result = await response.json();
-      console.log('랭킹 API 응답:', result?.items?.length || 0, '개 항목');
+      console.log('랭킹 API 응답:', result?.items?.length || 0, '개 항목, 총:', result?.totalCount || 0);
       return result;
     },
     {
@@ -282,19 +283,16 @@ const HomePage = () => {
     }
   );
 
-  // 현재 페이지의 아이템만 필터링
+  // Server-side pagination - items already paginated by API
   const paginatedItems = React.useMemo(() => {
-    if (!data?.items) return [];
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    return data.items.slice(startIndex, endIndex);
-  }, [data?.items, currentPage, pageSize]);
+    return data?.items || [];
+  }, [data?.items]);
 
-  // 전체 페이지 수 계산
+  // Calculate total pages from server response
   const totalPages = React.useMemo(() => {
-    if (!data?.items) return 0;
-    return Math.ceil(data.items.length / pageSize);
-  }, [data?.items, pageSize]);
+    if (!data?.totalCount) return 0;
+    return Math.ceil(data.totalCount / pageSize);
+  }, [data?.totalCount, pageSize]);
 
   // 페이지 변경 핸들러
   const handlePageChange = (page: number) => {
@@ -317,21 +315,18 @@ const HomePage = () => {
     }, 10); // 최소 지연으로 상태 업데이트 후 스크롤 실행
   };
 
-  // 랭킹 뉴스 페이지네이션된 아이템
+  // Server-side pagination for ranking news - items already paginated by API
   const paginatedRankingItems = React.useMemo(() => {
     if (!rankingData?.items) return [];
-    const validItems = rankingData.items.filter(item => item && item.id && item.title && item.link);
-    const startIndex = (rankingCurrentPage - 1) * rankingPageSize;
-    const endIndex = startIndex + rankingPageSize;
-    return validItems.slice(startIndex, endIndex);
-  }, [rankingData?.items, rankingCurrentPage, rankingPageSize]);
+    // Filter out invalid items just in case
+    return rankingData.items.filter(item => item && item.id && item.title && item.link);
+  }, [rankingData?.items]);
 
-  // 랭킹 뉴스 전체 페이지 수
+  // Calculate total pages from server response
   const rankingTotalPages = React.useMemo(() => {
-    if (!rankingData?.items) return 0;
-    const validItems = rankingData.items.filter(item => item && item.id && item.title && item.link);
-    return Math.ceil(validItems.length / rankingPageSize);
-  }, [rankingData?.items, rankingPageSize]);
+    if (!rankingData?.totalCount) return 0;
+    return Math.ceil(rankingData.totalCount / rankingPageSize);
+  }, [rankingData?.totalCount, rankingPageSize]);
 
   // 랭킹 뉴스 페이지 변경 핸들러
   const handleRankingPageChange = (page: number) => {
@@ -687,7 +682,7 @@ const HomePage = () => {
                             </div> */}
                             <Pagination
                               current={currentPage}
-                              total={data?.items?.length || 0}
+                              total={data?.totalCount || 0}
                               pageSize={pageSize}
                               onChange={handlePageChange}
                               size="small"
@@ -737,7 +732,7 @@ const HomePage = () => {
                             </div> */}
                             <Pagination
                               current={currentPage}
-                              total={data?.items?.length || 0}
+                              total={data?.totalCount || 0}
                               pageSize={pageSize}
                               onChange={handlePageChange}
                               size="small"
@@ -839,7 +834,7 @@ const HomePage = () => {
                             </div> */}
                             <Pagination
                               current={rankingCurrentPage}
-                              total={rankingData?.items?.filter(item => item && item.id && item.title && item.link).length || 0}
+                              total={rankingData?.totalCount || 0}
                               pageSize={rankingPageSize}
                               onChange={handleRankingPageChange}
                               size="small"
@@ -895,7 +890,7 @@ const HomePage = () => {
                                 </div> */}
                                 <Pagination
                                   current={rankingCurrentPage}
-                                  total={rankingData?.items?.filter(item => item && item.id && item.title && item.link).length || 0}
+                                  total={rankingData?.totalCount || 0}
                                   pageSize={rankingPageSize}
                                   onChange={handleRankingPageChange}
                                   size="small"
@@ -984,7 +979,7 @@ const HomePage = () => {
                       }}>
                         <Pagination
                           current={editorialCurrentPage}
-                          total={editorialData?.items?.length || 0}
+                          total={editorialData?.totalCount || 0}
                           pageSize={editorialPageSize}
                           onChange={handleEditorialPageChange}
                           size="small"

@@ -20,14 +20,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    logger.info('사설 분석 데이터 요청 시작');
+    // Edge 캐싱 설정 (5분 캐시, 10분 stale-while-revalidate)
+    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
 
-    // 1. news_analysis 테이블에서 사설 분석 목록 조회
-    // Note: analysis_type 컬럼이 없으므로 모든 데이터 조회
-    const { data: analysisData, error: analysisError } = await editorialSupabase
+    // 페이지네이션 파라미터
+    const page = parseInt(req.query.page as string) || 1;
+    const pageSize = parseInt(req.query.pageSize as string) || 12;
+    const startIndex = (page - 1) * pageSize;
+
+    logger.info('사설 분석 데이터 요청', { page, pageSize, startIndex });
+
+    // JOIN 쿼리로 N+1 문제 해결 (41번 쿼리 → 1번 쿼리)
+    // 1번의 쿼리로 analysis + topics + articles 모두 조회
+    const { data: analysisData, error: analysisError, count } = await editorialSupabase
       .from('news_analysis')
-      .select('*')
-      .order('analyzed_at', { ascending: false });
+      .select(`
+        *,
+        topics:analysis_topic(
+          *,
+          articles:analysis_article(*)
+        )
+      `, { count: 'exact' })
+      .order('analyzed_at', { ascending: false })
+      .range(startIndex, startIndex + pageSize - 1);
 
     if (analysisError) {
       logger.error('사설 분석 조회 실패', analysisError);
@@ -45,65 +60,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    logger.info('사설 분석 기본 데이터 조회 완료', { count: analysisData.length });
+    // topics와 articles를 정렬
+    const sortedAnalysis = analysisData.map(analysis => ({
+      ...analysis,
+      topics: (analysis.topics || [])
+        .sort((a: any, b: any) => (a.topic_number || 0) - (b.topic_number || 0))
+        .map((topic: any) => ({
+          ...topic,
+          articles: (topic.articles || []).sort((a: any, b: any) => (a.article_number || 0) - (b.article_number || 0))
+        }))
+    })) as EditorialAnalysis[];
 
-    // 2. 각 분석에 대한 주제(topics) 및 기사(articles) 조회
-    const analysisWithTopics = await Promise.all(
-      analysisData.map(async (analysis) => {
-        // 주제 조회
-        const { data: topicsData, error: topicsError } = await editorialSupabase
-          .from('analysis_topic')
-          .select('*')
-          .eq('analysis_id', analysis.id)
-          .order('topic_number', { ascending: true });
-
-        if (topicsError) {
-          logger.error('주제 조회 실패', { analysisId: analysis.id, error: topicsError });
-          return {
-            ...analysis,
-            topics: []
-          };
-        }
-
-        // 각 주제에 대한 기사 조회
-        const topicsWithArticles = await Promise.all(
-          (topicsData || []).map(async (topic) => {
-            const { data: articlesData, error: articlesError } = await editorialSupabase
-              .from('analysis_article')
-              .select('*')
-              .eq('topic_id', topic.id)
-              .order('article_number', { ascending: true });
-
-            if (articlesError) {
-              logger.error('기사 조회 실패', { topicId: topic.id, error: articlesError });
-              return {
-                ...topic,
-                articles: []
-              };
-            }
-
-            return {
-              ...topic,
-              articles: articlesData || []
-            } as EditorialTopic;
-          })
-        );
-
-        return {
-          ...analysis,
-          topics: topicsWithArticles
-        } as EditorialAnalysis;
-      })
-    );
-
-    logger.info('사설 분석 데이터 처리 완료', {
-      count: analysisWithTopics.length,
-      totalTopics: analysisWithTopics.reduce((sum, a) => sum + (a.topics?.length || 0), 0)
+    logger.info('사설 분석 데이터 조회 완료', {
+      page,
+      pageSize,
+      itemCount: sortedAnalysis.length,
+      totalCount: count || 0,
+      totalTopics: sortedAnalysis.reduce((sum, a) => sum + (a.topics?.length || 0), 0)
     });
 
     return res.status(200).json({
-      items: analysisWithTopics,
-      totalCount: analysisWithTopics.length
+      items: sortedAnalysis,
+      totalCount: count || 0
     });
 
   } catch (error) {

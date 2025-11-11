@@ -10,6 +10,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<NewsResponse | { error: string }>
 ) {
+  // Set cache headers for better performance
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+
   if (req.method === 'GET') {
     try {
       const { page = '1', pageSize = '20', category, all = 'false' } = req.query;

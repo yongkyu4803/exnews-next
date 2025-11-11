@@ -9,6 +9,9 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<RankingNewsResponse | { error: string }>
 ) {
+  // Set cache headers for better performance
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+
   if (req.method === 'GET') {
     try {
       logger.info('랭킹 뉴스 API 요청 시작');
