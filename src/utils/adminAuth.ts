@@ -1,9 +1,8 @@
 /**
  * Simple admin authentication utility
- * Password is hardcoded for basic protection
+ * Password verification moved to server-side API for security
  */
 
-const ADMIN_PASSWORD = 'sm32320909';
 const AUTH_TOKEN_KEY = 'exnews_admin_auth';
 const AUTH_TOKEN_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -13,10 +12,26 @@ export interface AuthToken {
 }
 
 /**
- * Verify password
+ * Verify password via server-side API
+ * @param password - Password to verify
+ * @returns Promise that resolves to true if password is correct
  */
-export const verifyPassword = (password: string): boolean => {
-  return password === ADMIN_PASSWORD;
+export const verifyPassword = async (password: string): Promise<boolean> => {
+  try {
+    const response = await fetch('/api/admin/verify-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ password }),
+    });
+
+    const data = await response.json();
+    return data.success === true;
+  } catch (error) {
+    console.error('Password verification error:', error);
+    return false;
+  }
 };
 
 /**

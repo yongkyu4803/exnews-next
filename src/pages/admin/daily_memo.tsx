@@ -11,6 +11,7 @@ import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { isAuthenticated, getAuthTimeRemaining, clearAuth } from '@/utils/adminAuth';
 import { createLogger } from '@/utils/logger';
+import AdminNav from '@/components/Admin/AdminNav';
 
 const logger = createLogger('Pages:Admin:DailyMemo');
 
@@ -19,23 +20,23 @@ const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as any;
 const Spin = dynamic(() => import('antd/lib/spin'), { ssr: false }) as any;
 
 const Container = styled.div`
-  min-height: 100vh;
+  min-height: 50vh;
   background: #f5f5f5;
-  padding: 20px;
+  padding: 8px;
 
   @media (max-width: 768px) {
-    padding: 16px;
+    padding: 8px;
   }
 `;
 
 const Header = styled.div`
   max-width: 800px;
-  margin: 0 auto 24px;
+  margin: 0 auto 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
 `;
 
 const Title = styled.h1`
@@ -58,28 +59,28 @@ const MemoCard = styled.div`
   max-width: 800px;
   margin: 0 auto;
   background: white;
-  border-radius: 12px;
-  padding: 32px;
+  border-radius: 8px;
+  padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   @media (max-width: 768px) {
-    padding: 20px;
+    padding: 12px;
     border-radius: 8px;
   }
 `;
 
 const MemoContent = styled.div`
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  font-size: 15px;
-  line-height: 1.7;
+  font-size: 14px;
+  line-height: 1.5;
   color: #333;
   white-space: pre-wrap;
   word-break: keep-all;
 
   h2 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
-    margin: 24px 0 12px 0;
+    margin: 10px 0 6px 0;
     color: #1a1a1a;
 
     &:first-of-type {
@@ -88,36 +89,37 @@ const MemoContent = styled.div`
   }
 
   h3 {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
-    margin: 16px 0 8px 0;
+    margin: 6px 0 3px 0;
     color: #333;
   }
 
   h4 {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
-    margin: 12px 0 8px 0;
+    margin: 4px 0 3px 0;
     color: #555;
   }
 
   p {
-    margin: 8px 0;
+    margin: 4px 0;
   }
 
   ul {
-    margin: 8px 0;
+    margin: 4px 0;
     padding-left: 20px;
   }
 
   li {
-    margin: 4px 0;
+    margin: 1px 0;
+    line-height: 1.4;
   }
 
   hr {
     border: none;
     border-top: 1px solid #e5e5e5;
-    margin: 24px 0;
+    margin: 10px 0;
   }
 
   a {
@@ -277,93 +279,78 @@ const DailyMemoPage = () => {
       }
     };
 
-    let memo = `📋 오늘의 주요 이슈 메모\n**생성일시**: ${now}\n\n---\n\n`;
+    let memo = `📋 오늘의 주요 이슈 메모\n생성일시: ${now}\n\n---\n`;
 
     // 정치 리포트
     if (political) {
-      memo += `## 📊 정치 리포트\n\n`;
-      memo += `**주제**: ${political.topic || '정보 없음'}\n`;
-      memo += `**분석일**: ${formatDate(political.created_at)}\n\n`;
-      memo += `### 요약\n${political.summary || '요약 정보가 없습니다.'}\n\n`;
-      memo += `**상세보기**: ${window.location.origin}/?tab=political&id=${political.slug}\n\n`;
-      memo += `---\n\n`;
+      memo += `\n## 📊 정치 리포트\n`;
+      memo += `주제: ${political.topic || '정보 없음'}\n`;
+      memo += `날짜: ${formatDate(political.created_at)}\n`;
+      memo += `${political.summary || '요약 정보가 없습니다.'}\n`;
+      memo += `상세보기: ${window.location.origin}/?tab=political&id=${political.slug}\n`;
+      memo += `\n---\n`;
     }
 
     // 법안 리포트
     if (bills) {
-      memo += `## 📜 오늘의 법안\n\n`;
-      memo += `**제목**: ${bills.headline || '제목 없음'}\n`;
-      memo += `**발의일**: ${formatShortDate(bills.report_date)}\n\n`;
-      memo += `### 개요\n${bills.overview || '개요 정보가 없습니다.'}\n\n`;
+      memo += `\n## 📜 오늘의 법안\n`;
+      memo += `제목: ${bills.headline || '제목 없음'}\n`;
+      memo += `발의일: ${formatShortDate(bills.report_date)}\n`;
+      memo += `${bills.overview || '개요 정보가 없습니다.'}\n`;
 
       if (bills.key_trends && bills.key_trends.length > 0) {
-        memo += `### 주요 동향\n`;
+        memo += `\n`;
         bills.key_trends.forEach((trend: string) => {
           memo += `- ${trend}\n`;
         });
-        memo += `\n`;
       }
 
       if (bills.statistics) {
         const stats = bills.statistics.regulation;
-        memo += `**법안 분류**: `;
+        memo += `법안 분류: `;
         memo += `신설 ${stats?.new || 0}건, `;
         memo += `강화 ${stats?.strengthen || 0}건, `;
         memo += `완화 ${stats?.relax || 0}건, `;
-        memo += `비규제 ${stats?.non_regulatory || 0}건\n\n`;
+        memo += `비규제 ${stats?.non_regulatory || 0}건\n`;
       }
 
-      memo += `**상세보기**: ${window.location.origin}/?tab=bills&id=${bills.slug}\n\n`;
-      memo += `---\n\n`;
+      memo += `상세보기: ${window.location.origin}/?tab=bills&id=${bills.slug}\n`;
+      memo += `\n---\n`;
     }
 
     // 사설 분석
     if (editorial) {
-      memo += `## 📰 오늘의 사설\n\n`;
-      memo += `**분석 주제**: ${editorial.query || '분석 주제 없음'}\n`;
-      memo += `**분석일**: ${formatShortDate(editorial.analyzed_at)}\n\n`;
+      memo += `\n## 📰 오늘의 사설\n`;
+      memo += `분석 주제: ${editorial.query || '분석 주제 없음'}\n`;
+      memo += `분석일: ${formatShortDate(editorial.analyzed_at)}\n`;
 
       if (editorial.topics && editorial.topics.length > 0) {
-        memo += `### 주요 주제\n\n`;
         editorial.topics.forEach((topic: any) => {
-          memo += `#### 주제 ${topic.topic_number}: ${topic.topic_title}\n\n`;
-          memo += `${topic.topic_summary}\n\n`;
+          memo += `\n주제 ${topic.topic_number}: ${topic.topic_title}\n`;
+          memo += `${topic.topic_summary}\n`;
         });
       }
 
-      memo += `**상세보기**: ${window.location.origin}/?tab=editorial&id=${editorial.id}\n\n`;
-      memo += `---\n\n`;
-    }
-
-    // 주요 키워드 (모든 리포트에서 추출 가능한 키워드)
-    const keywords: string[] = [];
-    if (political?.tags) keywords.push(...political.tags);
-    if (bills?.key_trends) {
-      // 법안 주요 동향에서 키워드 추출
-      keywords.push('산업안전보건', '사회연대경제', '국가전략산업');
-    }
-    if (editorial?.query) {
-      // 사설 쿼리에서 해시태그 추출
-      const hashtagMatches = editorial.query.match(/#\S+/g);
-      if (hashtagMatches) {
-        keywords.push(...hashtagMatches.map((tag: string) => tag.replace('#', '')));
-      }
-    }
-
-    if (keywords.length > 0) {
-      memo += `## 💡 주요 키워드\n`;
-      keywords.slice(0, 10).forEach(keyword => {
-        memo += `- ${keyword}\n`;
-      });
+      memo += `상세보기: ${window.location.origin}/?tab=editorial&id=${editorial.id}\n`;
+      memo += `\n---\n`;
     }
 
     setMemoText(memo);
   }, [politicalData, billsData, editorialData]);
 
-  // 클립보드 복사
+  // 클립보드 복사 (마크다운 문법 제거)
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(memoText);
+      // 마크다운 문법 제거한 평문 텍스트
+      const plainText = memoText
+        .replace(/\*\*(.*?)\*\*/g, '$1')  // **볼드** 제거
+        .replace(/^## /gm, '')             // ## 제거
+        .replace(/^### /gm, '')            // ### 제거
+        .replace(/^#### /gm, '')           // #### 제거
+        .replace(/^---$/gm, '───────')     // --- 를 실선으로
+        .trim();
+
+      await navigator.clipboard.writeText(plainText);
       const antdMessage = await import('antd/lib/message');
       antdMessage.default.success('메모가 복사되었습니다!');
     } catch (error) {
@@ -392,13 +379,16 @@ const DailyMemoPage = () => {
   const hasError = !!(politicalError || billsError || editorialError);
 
   return (
-    <Container>
+    <>
       <Head>
         <title>오늘의 이슈 메모 - 관리자</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
 
-      <Header>
+      <AdminNav currentPage="daily_memo" />
+
+      <Container>
+        <Header>
         <div>
           <Title>📋 오늘의 이슈 메모</Title>
           {authTimeLeft && (
@@ -441,15 +431,19 @@ const DailyMemoPage = () => {
               .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
               .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
               .replace(/^#### (.*?)$/gm, '<h4>$1</h4>')
-              .replace(/^- (.*?)$/gm, '<li>$1</li>')
-              .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+              .replace(/^- (.*?)$/gm, '___LISTITEM___$1___ENDLISTITEM___')
+              .replace(/(___LISTITEM___.*?___ENDLISTITEM___(\n___LISTITEM___.*?___ENDLISTITEM___)*)/g, (match) => {
+                const items = match.replace(/___LISTITEM___(.*?)___ENDLISTITEM___/g, '<li>$1</li>').replace(/\n/g, '');
+                return `<ul>${items}</ul>`;
+              })
               .replace(/^---$/gm, '<hr>')
               .replace(/\n/g, '<br>')
               .replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
           }} />
         </MemoCard>
       )}
-    </Container>
+      </Container>
+    </>
   );
 };
 

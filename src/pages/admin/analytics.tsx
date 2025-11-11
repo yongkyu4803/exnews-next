@@ -6,6 +6,7 @@ import Head from 'next/head';
 import { AnalyticsResponse, TabStats } from '@/types';
 import { createLogger } from '@/utils/logger';
 import { isAuthenticated, clearAuth, getAuthTimeRemaining } from '@/utils/adminAuth';
+import AdminNav from '@/components/Admin/AdminNav';
 
 const logger = createLogger('Pages:Admin:Analytics');
 
@@ -137,11 +138,15 @@ const AdminAnalyticsPage = () => {
   const stats = data?.stats;
 
   return (
-    <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '1400px', margin: '0 auto' }}>
+    <>
       <Head>
         <title>관리자 통계 대시보드 - GQAI</title>
         <meta name="robots" content="noindex, nofollow" />
       </Head>
+
+      <AdminNav currentPage="analytics" />
+
+      <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '1400px', margin: '0 auto' }}>
 
       {/* Header */}
       <div style={{
@@ -561,7 +566,8 @@ const AdminAnalyticsPage = () => {
           <p style={{ textAlign: 'center', color: '#999' }}>통계 데이터가 없습니다.</p>
         </Card>
       )}
-    </div>
+      </div>
+    </>
   );
 };
 

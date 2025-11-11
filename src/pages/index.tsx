@@ -12,6 +12,7 @@ import { Pagination } from 'antd';
 import BottomNav from '@/components/mobile/BottomNav';
 import TopNavBar from '@/components/mobile/TopNavBar';
 import CanvaBanner from '@/components/common/CanvaBanner';
+import NewsletterButton from '@/components/common/NewsletterButton';
 import FloatingButtonWrapper from '@/components/common/FloatingButtonWrapper';
 import MicroButton from '@/components/common/MicroButton';
 import RefreshIcon from '@/components/common/RefreshIcon';
@@ -561,6 +562,9 @@ const HomePage = () => {
 
           {/* Canva 배너 */}
           <CanvaBanner />
+
+          {/* 뉴스레터 구독 버튼 */}
+          <NewsletterButton />
 
           <div style={{ paddingBottom: isMobile ? '76px' : '20px' }}>
             <style jsx global>{`

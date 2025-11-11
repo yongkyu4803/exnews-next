@@ -23,14 +23,15 @@ const AdminLoginPage = () => {
     }
   }, [router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    // Simulate a small delay for better UX
-    setTimeout(() => {
-      if (verifyPassword(password)) {
+    try {
+      const isValid = await verifyPassword(password);
+
+      if (isValid) {
         setAuthToken();
         logger.info('Admin login successful');
         router.push('/admin/analytics');
@@ -39,7 +40,11 @@ const AdminLoginPage = () => {
         logger.warn('Failed admin login attempt');
         setLoading(false);
       }
-    }, 500);
+    } catch (err) {
+      logger.error('Login error', err);
+      setError('로그인 처리 중 오류가 발생했습니다.');
+      setLoading(false);
+    }
   };
 
   if (!isMounted) {
