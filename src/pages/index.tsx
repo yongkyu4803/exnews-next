@@ -23,22 +23,10 @@ import { usePageTracking } from '@/hooks/usePageTracking';
 
 const logger = createLogger('Pages:Home');
 
-// 동적으로 Ant Design 컴포넌트 임포트
-import type {
-  DynamicTypography,
-  DynamicTitle,
-  DynamicSpace,
-  DynamicAlert,
-  DynamicButton,
-  DynamicTabs
-} from '@/types/antd-dynamic';
+// 동적으로 Ant Design 컴포넌트 임포트 - 번들 최적화
+import { Typography, Space, Alert, Button, Tabs } from 'antd';
 
-const Typography = dynamic(() => import('antd/lib/typography'), { ssr: false }) as DynamicTypography;
-const Title = dynamic(() => import('antd/lib/typography/Title'), { ssr: false }) as DynamicTitle;
-const Space = dynamic(() => import('antd/lib/space'), { ssr: false }) as DynamicSpace;
-const Alert = dynamic(() => import('antd/lib/alert'), { ssr: false }) as DynamicAlert;
-const Button = dynamic(() => import('antd/lib/button'), { ssr: false }) as DynamicButton;
-const Tabs = dynamic(() => import('antd/lib/tabs'), { ssr: false }) as DynamicTabs;
+const { Title } = Typography;
 
 // 테이블 컴포넌트를 동적으로 불러옴
 const NewsTable = dynamic(() => import('@/components/NewsTable'), { 
@@ -189,7 +177,7 @@ const HomePage = () => {
     }
   }, []);
 
-  // Categories query
+  // Categories query - always load as it's lightweight
   const { data: categories = [] } = useQuery<string[], Error>(
     'categories',
     async () => {
@@ -200,11 +188,13 @@ const HomePage = () => {
       return response.json();
     },
     {
-      enabled: isMounted // 클라이언트 사이드에서만 실행
+      enabled: isMounted, // 클라이언트 사이드에서만 실행
+      staleTime: 10 * 60 * 1000, // 10 minutes - categories rarely change
+      cacheTime: 30 * 60 * 1000, // 30 minutes
     }
   );
 
-  // News items query
+  // News items query - lazy load only when exclusive tab is active
   const { data, isLoading, error } = useQuery<NewsResponse, Error>(
     ['newsItems', selectedCategory],
     async () => {
@@ -221,7 +211,9 @@ const HomePage = () => {
     },
     {
       keepPreviousData: true,
-      enabled: isMounted,
+      enabled: isMounted && activeTab === 'exclusive', // Only load when exclusive tab is active
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
       retry: 2,
       onError: (error) => {
         logger.error('뉴스 쿼리 오류', error);
@@ -229,7 +221,7 @@ const HomePage = () => {
     }
   );
 
-  // Ranking news items query
+  // Ranking news items query - lazy load only when tab is active
   const { data: rankingData, isLoading: rankingIsLoading, error: rankingError } = useQuery<RankingNewsResponse, Error>(
     'rankingNewsItems',
     async () => {
@@ -246,8 +238,9 @@ const HomePage = () => {
     },
     {
       keepPreviousData: true,
-      enabled: isMounted, // 항상 로드되도록 수정
-      // 재시도 옵션 추가
+      enabled: isMounted && activeTab === 'ranking', // Only load when ranking tab is active
+      staleTime: 5 * 60 * 1000, // 5 minutes - don't refetch if data is fresh
+      cacheTime: 10 * 60 * 1000, // 10 minutes - keep in cache
       retry: 2,
       onError: (error) => {
         console.error('랭킹 뉴스 쿼리 오류:', error);
@@ -255,7 +248,7 @@ const HomePage = () => {
     }
   );
 
-  // Editorial analysis items query
+  // Editorial analysis items query - lazy load only when tab is active
   const { data: editorialData, isLoading: editorialIsLoading, error: editorialError } = useQuery<EditorialResponse, Error>(
     'editorialItems',
     async () => {
@@ -279,7 +272,9 @@ const HomePage = () => {
     },
     {
       keepPreviousData: true,
-      enabled: isMounted,
+      enabled: isMounted && activeTab === 'editorial', // Only load when editorial tab is active
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
       retry: 2,
       onError: (error) => {
         logger.error('사설 분석 쿼리 오류', error);
@@ -634,13 +629,13 @@ const HomePage = () => {
                         { key: '연예/스포츠', label: '연예/스포츠', className: 'tab-entertainment' },
                         { key: '기타', label: '기타', className: 'tab-etc' }
                       ]}
-                      style={{ 
+                      style={{
                         marginBottom: '12px',
                         backgroundColor: '#ffffff',
                         padding: isMobile ? '4px' : '8px',
                         borderRadius: '4px'
                       }}
-                      size={isMobile ? 'small' : 'middle'}
+                      size={isMobile ? 'small' : 'large'}
                       className="category-tabs"
                     />
 

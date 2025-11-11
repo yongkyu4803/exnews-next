@@ -2,10 +2,12 @@
  * GQAI 배너 컴포넌트
  *
  * 내브바 하단에 고정 표시되는 배너
+ * Next.js Image 컴포넌트로 자동 최적화 (WebP/AVIF 변환, lazy loading)
  */
 
 import React from 'react';
 import styled from '@emotion/styled';
+import Image from 'next/image';
 
 const BannerContainer = styled.div`
   width: 100%;
@@ -15,6 +17,7 @@ const BannerContainer = styled.div`
   border-bottom: 1px solid #e5e7eb;
   overflow: hidden;
   padding: 0 20px;
+  position: relative;
 
   @media (max-width: 768px) {
     border-bottom: 1px solid #ddd;
@@ -28,17 +31,14 @@ const BannerLink = styled.a`
   text-decoration: none;
   cursor: pointer;
   transition: opacity 0.2s ease;
+  position: relative;
+  width: 70%;
+  margin: 0 auto;
+  aspect-ratio: 2000 / 600;
 
   &:hover {
     opacity: 0.9;
   }
-`;
-
-const BannerImage = styled.img`
-  width: 70%;
-  height: auto;
-  display: block;
-  margin: 0 auto;
 `;
 
 const CanvaBanner: React.FC = () => {
@@ -50,10 +50,13 @@ const CanvaBanner: React.FC = () => {
         rel="noopener noreferrer"
         aria-label="GQAI 방문하기"
       >
-        <BannerImage
+        <Image
           src="/Blue Geometric Technology Linkedin Banner.png"
           alt="GQAI 생성형 AI 실전 강의"
-          loading="lazy"
+          fill
+          style={{ objectFit: 'contain' }}
+          sizes="(max-width: 768px) 90vw, 70vw"
+          priority
         />
       </BannerLink>
     </BannerContainer>

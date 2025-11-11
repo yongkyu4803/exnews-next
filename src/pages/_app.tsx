@@ -6,12 +6,14 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { trackPageView } from '@/utils/analytics';
 import '@/styles/globals.css';
 
-// Create a client
+// Create a client with optimized caching strategy
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      retry: false
+      retry: 1, // Retry once on failure
+      staleTime: 5 * 60 * 1000, // 5 minutes - data is fresh for 5 min
+      cacheTime: 10 * 60 * 1000, // 10 minutes - keep unused data in cache
     },
   },
 });
