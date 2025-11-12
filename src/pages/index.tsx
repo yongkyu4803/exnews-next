@@ -7,7 +7,7 @@ import VirtualNewsList from '@/components/mobile/VirtualNewsList';
 import VirtualRankingNewsList from '@/components/mobile/VirtualRankingNewsList';
 import { CopyOutlined, ShopOutlined } from '@ant-design/icons';
 // import PwaInstallPrompt from '@/components/PwaInstallPrompt';
-import { NewsItem, NewsResponse, RankingNewsItem, RankingNewsResponse, EditorialResponse } from '@/types';
+import { NewsItem, NewsResponse, RankingNewsItem, RankingNewsResponse, EditorialResponse, EditorialAnalysis } from '@/types';
 import { Pagination } from 'antd';
 import BottomNav from '@/components/mobile/BottomNav';
 import TopNavBar from '@/components/mobile/TopNavBar';
@@ -86,6 +86,7 @@ const HomePage = () => {
   const rankingPageSize = isMobile ? 7 : 12; // 모바일 7개, 웹 12개
   const [editorialCurrentPage, setEditorialCurrentPage] = useState(1);
   const [editorialPageSize] = useState(6); // 한 페이지에 6개 (2열 그리드 x 3행)
+  const [useEditorialLandingMode, setUseEditorialLandingMode] = useState(true);
   const [selectedPoliticalReport, setSelectedPoliticalReport] = useState<string | null>(null);
   const [selectedBillsReport, setSelectedBillsReport] = useState<string | null>(null);
   const [selectedEditorialAnalysis, setSelectedEditorialAnalysis] = useState<string | null>(null);
@@ -250,26 +251,47 @@ const HomePage = () => {
   );
 
   // Editorial analysis items query - lazy load only when tab is active
-  const { data: editorialData, isLoading: editorialIsLoading, error: editorialError } = useQuery<EditorialResponse, Error>(
-    ['editorialItems', editorialCurrentPage, editorialPageSize],
+  const { data: editorialData, isLoading: editorialIsLoading, error: editorialError } = useQuery<EditorialResponse | { latest?: EditorialAnalysis; previous?: Array<{ id: string; analyzed_at: string }>; totalCount: number }, Error>(
+    useEditorialLandingMode ? 'editorialItemsLandingV2' : ['editorialItemsPaginationV2', editorialCurrentPage, editorialPageSize],
     async () => {
-      logger.debug('사설 분석 데이터 요청 시작', { page: editorialCurrentPage, pageSize: editorialPageSize });
-      const response = await fetch(`/api/editorials?page=${editorialCurrentPage}&pageSize=${editorialPageSize}`);
-      if (!response.ok) {
-        let errorMessage = `Failed to fetch editorial items: ${response.status}`;
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorData.error || errorMessage;
-        } catch {
-          const errorText = await response.text();
-          errorMessage = errorText || errorMessage;
+      if (useEditorialLandingMode) {
+        logger.debug('사설 분석 랜딩 모드 요청 시작');
+        const response = await fetch(`/api/editorials?landing=true&_t=${Date.now()}`);
+        if (!response.ok) {
+          let errorMessage = `Failed to fetch editorial items: ${response.status}`;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorData.error || errorMessage;
+          } catch {
+            const errorText = await response.text();
+            errorMessage = errorText || errorMessage;
+          }
+          logger.error('사설 분석 API 응답 오류', { status: response.status, message: errorMessage });
+          throw new Error(errorMessage);
         }
-        logger.error('사설 분석 API 응답 오류', { status: response.status, message: errorMessage });
-        throw new Error(errorMessage);
+        const result = await response.json();
+        console.log('Editorial Landing API Response:', result);
+        return result;
+      } else {
+        logger.debug('사설 분석 데이터 요청 시작', { page: editorialCurrentPage, pageSize: editorialPageSize });
+        const response = await fetch(`/api/editorials?page=${editorialCurrentPage}&pageSize=${editorialPageSize}&_t=${Date.now()}`);
+        if (!response.ok) {
+          let errorMessage = `Failed to fetch editorial items: ${response.status}`;
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorData.error || errorMessage;
+          } catch {
+            const errorText = await response.text();
+            errorMessage = errorText || errorMessage;
+          }
+          logger.error('사설 분석 API 응답 오류', { status: response.status, message: errorMessage });
+          throw new Error(errorMessage);
+        }
+        const result = await response.json();
+        console.log('Editorial Pagination API Response:', result);
+        logger.info('사설 분석 API 응답', { itemCount: result?.items?.length || 0, totalCount: result?.totalCount || 0 });
+        return result;
       }
-      const result = await response.json();
-      logger.info('사설 분석 API 응답', { itemCount: result?.items?.length || 0, totalCount: result?.totalCount || 0 });
-      return result;
     },
     {
       keepPreviousData: true,
@@ -337,19 +359,26 @@ const HomePage = () => {
     }, 10);
   };
 
+  // 사설 데이터 처리
+  const editorialLatest = editorialData && 'latest' in editorialData ? editorialData.latest : null;
+  const editorialPrevious = editorialData && 'previous' in editorialData ? (editorialData.previous || []) : [];
+  const editorialPaginationItems = editorialData && 'items' in editorialData ? (editorialData.items || []) : [];
+  const editorialTotalCount = editorialData?.totalCount || 0;
+
   // 사설 페이지네이션된 아이템
   const paginatedEditorialItems = React.useMemo(() => {
-    if (!editorialData?.items) return [];
-    const startIndex = (editorialCurrentPage - 1) * editorialPageSize;
-    const endIndex = startIndex + editorialPageSize;
-    return editorialData.items.slice(startIndex, endIndex);
-  }, [editorialData?.items, editorialCurrentPage, editorialPageSize]);
+    if (useEditorialLandingMode) {
+      return editorialLatest ? [editorialLatest] : [];
+    } else {
+      return editorialPaginationItems;
+    }
+  }, [useEditorialLandingMode, editorialLatest, editorialPaginationItems]);
 
   // 사설 전체 페이지 수
   const editorialTotalPages = React.useMemo(() => {
-    if (!editorialData?.items) return 0;
-    return Math.ceil(editorialData.items.length / editorialPageSize);
-  }, [editorialData?.items, editorialPageSize]);
+    if (!editorialTotalCount) return 0;
+    return Math.ceil(editorialTotalCount / editorialPageSize);
+  }, [editorialTotalCount, editorialPageSize]);
 
   // 사설 페이지 변경 핸들러
   const handleEditorialPageChange = (page: number) => {
@@ -964,8 +993,107 @@ const HomePage = () => {
                       }}
                     />
 
-                    {/* 페이지네이션 */}
-                    {editorialTotalPages > 1 && (
+                    {/* 랜딩 모드: 이전 리포트 섹션 + 더 보기 버튼 */}
+                    {useEditorialLandingMode && editorialPrevious.length > 0 && (
+                      <>
+                        <div style={{
+                          marginTop: '32px',
+                          paddingTop: '24px',
+                          borderTop: '1px solid #e5e7eb'
+                        }}>
+                          <h3 style={{
+                            fontSize: '16px',
+                            fontWeight: 600,
+                            color: '#374151',
+                            margin: '0 0 16px 0'
+                          }}>이전 리포트</h3>
+                          {editorialPrevious.map((report: any) => (
+                            <div
+                              key={report.id}
+                              onClick={() => {
+                                setSelectedEditorialAnalysis(report.id);
+                                router.push(`/?tab=editorial&id=${report.id}`, undefined, { shallow: true });
+                              }}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '12px 16px',
+                                background: '#f9fafb',
+                                borderRadius: '8px',
+                                marginBottom: '8px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#f3f4f6';
+                                e.currentTarget.style.transform = 'translateX(4px)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '#f9fafb';
+                                e.currentTarget.style.transform = 'translateX(0)';
+                              }}
+                            >
+                              <span style={{
+                                fontSize: '14px',
+                                color: '#4b5563',
+                                fontWeight: 500
+                              }}>
+                                {new Date(report.analyzed_at).toLocaleDateString('ko-KR', {
+                                  year: 'numeric',
+                                  month: 'long',
+                                  day: 'numeric'
+                                })}
+                              </span>
+                              <span style={{
+                                fontSize: '13px',
+                                color: '#3b82f6',
+                                fontWeight: 500
+                              }}>자세히 보기 →</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* 더 보기 버튼 */}
+                        {(() => {
+                          console.log('Editorial ViewMore Button Check:', { totalCount: editorialTotalCount, shouldShow: editorialTotalCount > 5 });
+                          return editorialTotalCount > 5 && (
+                            <button
+                              onClick={() => {
+                                console.log('Switching to pagination mode');
+                                setUseEditorialLandingMode(false);
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '14px',
+                                marginTop: '24px',
+                                background: 'white',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '8px',
+                                color: '#3b82f6',
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease'
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#f9fafb';
+                                e.currentTarget.style.borderColor = '#3b82f6';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'white';
+                                e.currentTarget.style.borderColor = '#e5e7eb';
+                              }}
+                            >
+                              전체 리포트 보기 ({editorialTotalCount}개) →
+                            </button>
+                          );
+                        })()}
+                      </>
+                    )}
+
+                    {/* 페이지네이션 모드: 페이지네이션 UI */}
+                    {!useEditorialLandingMode && editorialTotalPages > 1 && (
                       <div style={{
                         display: 'flex',
                         flexDirection: 'column',
@@ -979,7 +1107,7 @@ const HomePage = () => {
                       }}>
                         <Pagination
                           current={editorialCurrentPage}
-                          total={editorialData?.totalCount || 0}
+                          total={editorialTotalCount}
                           pageSize={editorialPageSize}
                           onChange={handleEditorialPageChange}
                           size="small"

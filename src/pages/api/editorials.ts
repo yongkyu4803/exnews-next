@@ -23,7 +23,72 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Edge 캐싱 설정 (5분 캐시, 10분 stale-while-revalidate)
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
 
-    // 페이지네이션 파라미터
+    const { landing } = req.query;
+
+    // 랜딩 페이지 모드: 최신 1개 전체 + 이전 4개 날짜만
+    if (landing === 'true') {
+      logger.info('사설 분석 랜딩 모드 조회 시작');
+
+      // 전체 개수 먼저 조회
+      const { count: totalCountResult } = await editorialSupabase
+        .from('news_analysis')
+        .select('*', { count: 'exact', head: true });
+
+      // 최신 분석 1개 (전체 데이터 with topics & articles)
+      const { data: latestData, error: latestError } = await editorialSupabase
+        .from('news_analysis')
+        .select(`
+          *,
+          topics:analysis_topic(
+            *,
+            articles:analysis_article(*)
+          )
+        `)
+        .order('analyzed_at', { ascending: false })
+        .limit(1);
+
+      if (latestError) {
+        logger.error('최신 사설 분석 조회 실패', latestError);
+        throw latestError;
+      }
+
+      // 이전 4개 (id, analyzed_at만)
+      const { data: previousData, error: previousError } = await editorialSupabase
+        .from('news_analysis')
+        .select('id, analyzed_at')
+        .order('analyzed_at', { ascending: false })
+        .range(1, 4); // 2번째~5번째
+
+      if (previousError) {
+        logger.error('이전 사설 분석 조회 실패', previousError);
+        throw previousError;
+      }
+
+      // 최신 데이터 정렬
+      const latest = latestData?.[0] ? {
+        ...latestData[0],
+        topics: (latestData[0].topics || [])
+          .sort((a: any, b: any) => (a.topic_number || 0) - (b.topic_number || 0))
+          .map((topic: any) => ({
+            ...topic,
+            articles: (topic.articles || []).sort((a: any, b: any) => (a.article_number || 0) - (b.article_number || 0))
+          }))
+      } : null;
+
+      logger.info('사설 분석 랜딩 모드 조회 완료', {
+        latestCount: latestData?.length || 0,
+        previousCount: previousData?.length || 0,
+        totalCount: totalCountResult || 0
+      });
+
+      return res.status(200).json({
+        latest,
+        previous: previousData || [],
+        totalCount: totalCountResult || 0
+      });
+    }
+
+    // 일반 페이지네이션 모드
     const page = parseInt(req.query.page as string) || 1;
     const pageSize = parseInt(req.query.pageSize as string) || 12;
     const startIndex = (page - 1) * pageSize;
