@@ -251,6 +251,48 @@ const Checkbox = styled.input`
   flex-shrink: 0;
 `;
 
+const PreviousReportsSection = styled.div`
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 16px;
+  font-weight: 600;
+  color: #6b7280;
+  margin: 0 0 16px 0;
+`;
+
+const PreviousReportLink = styled.div`
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &:hover {
+    border-color: #3b82f6;
+    background: #f9fafb;
+  }
+`;
+
+const PreviousReportDate = styled.span`
+  font-size: 14px;
+  color: #1f2937;
+  font-weight: 500;
+`;
+
+const ViewDetailText = styled.span`
+  font-size: 13px;
+  color: #6b7280;
+`;
+
 interface BillsReportsListProps {
   onReportClick?: (slug: string) => void;
   selectedSlug?: string | null;
@@ -331,10 +373,15 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
     }
   };
 
-  const { data, isLoading, error } = useQuery<{ data: BillsReport[] }>(
+  const { data, isLoading, error } = useQuery<{
+    latest: BillsReport | null;
+    previous: Array<{ id: string; report_date: string; slug: string }>;
+    totalCount: number;
+  }>(
     'billsReports',
     async () => {
-      const res = await fetch('/api/bills');
+      // 랜딩 모드 사용: 최신 1개 전체 + 이전 4개 날짜만
+      const res = await fetch('/api/bills?landing=true');
       const json = await res.json();
       console.log('Bills API Response:', json);
       return json;
@@ -361,14 +408,12 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
     );
   }
 
-  const reports = data?.data || [];
+  // 랜딩 모드 응답: { latest, previous, totalCount }
+  const latestReport = data?.latest;
+  const previousReports = data?.previous || [];
 
-  // 날짜 기준으로 최신순 정렬 (클라이언트 사이드에서 보장)
-  const sortedReports = [...reports].sort((a, b) => {
-    const dateA = new Date(a.report_date).getTime();
-    const dateB = new Date(b.report_date).getTime();
-    return dateB - dateA; // 내림차순 (최신이 먼저)
-  });
+  // 최신 리포트만 전체 데이터 표시
+  const sortedReports = latestReport ? [latestReport] : [];
 
   if (selectedSlug) {
     return (
@@ -445,6 +490,28 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
               </CardContent>
             </ReportCard>
           ))}
+
+          {/* 이전 리포트 섹션 */}
+          {previousReports.length > 0 && (
+            <PreviousReportsSection>
+              <SectionTitle>이전 리포트</SectionTitle>
+              {previousReports.map((report) => (
+                <PreviousReportLink
+                  key={report.id}
+                  onClick={() => setSelectedSlug(report.slug)}
+                >
+                  <PreviousReportDate>
+                    {new Date(report.report_date).toLocaleDateString('ko-KR', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </PreviousReportDate>
+                  <ViewDetailText>자세히 보기 →</ViewDetailText>
+                </PreviousReportLink>
+              ))}
+            </PreviousReportsSection>
+          )}
         </>
       )}
     </Container>
