@@ -15,6 +15,9 @@ export default async function handler(
 ) {
   if (req.method === 'GET') {
     try {
+      // Edge 캐싱 설정 (5분 캐시, 10분 stale-while-revalidate)
+      res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+
       console.log('식당 정보 API 요청 시작 - 클라이언트 IP:', req.headers['x-forwarded-for'] || req.socket.remoteAddress);
       console.log('쿼리 파라미터:', req.query);
       const { page = '1', pageSize = '20', category, all = 'false' } = req.query;
@@ -34,128 +37,80 @@ export default async function handler(
         return;
       }
       
-      // 먼저 전체 카운트를 계산하기 위한 쿼리
-      console.log('카운트 쿼리 시작...');
-      let countQuery = supabase
+      // 페이지네이션 파라미터 파싱
+      const pageNum = parseInt(page as string, 10);
+      const pageSizeNum = parseInt(pageSize as string, 10);
+
+      // 통합 쿼리: count + data를 한 번에 조회
+      console.log('Supabase 통합 쿼리 시작... 테이블: nares');
+
+      let query = supabase
         .from('nares')
-        .select('id', { count: 'exact', head: true });
-      
+        .select('id, category, name, location, building_name, pnum, price, remark, link', { count: 'exact' })
+        .not('name', 'is', null)
+        .not('location', 'is', null);
+
+      // 카테고리 필터 적용
       if (category && category !== 'all') {
-        countQuery = countQuery.eq('category', category);
+        query = query.eq('category', category);
       }
-      
-      // 데이터를 가져오는 쿼리
-      console.log('데이터 쿼리 시작...');
-      let dataQuery = supabase
-        .from('nares')
-        .select('id, category, name, location, building_name, pnum, price, remark, link');
-      
-      if (category && category !== 'all') {
-        dataQuery = dataQuery.eq('category', category);
-      }
-      
+
       // all 파라미터가 'true'인 경우 모든 데이터 가져오기
       if (all === 'true') {
-        // 전체 데이터 가져오기 (최대 1000개)
-        dataQuery = dataQuery.limit(1000);
-      } else {
+        query = query.limit(1000);
+      } else if (pageNum > 0 && pageSizeNum > 0) {
         // 일반 페이지네이션 적용
-        const pageNum = parseInt(page as string, 10);
-        const pageSizeNum = parseInt(pageSize as string, 10);
-        
-        // 페이지네이션 설정
-        if (pageNum > 0 && pageSizeNum > 0) {
-          dataQuery = dataQuery.limit(pageSizeNum);
-          const startIndex = (pageNum - 1) * pageSizeNum;
-          dataQuery = dataQuery.range(startIndex, startIndex + pageSizeNum - 1);
-        } else {
-          // 페이지네이션 없이 최대 100개 데이터 가져오기
-          dataQuery = dataQuery.limit(100);
-        }
+        const startIndex = (pageNum - 1) * pageSizeNum;
+        query = query.range(startIndex, startIndex + pageSizeNum - 1);
+      } else {
+        // 페이지네이션 없이 최대 100개 데이터 가져오기
+        query = query.limit(100);
       }
-      
-      // 두 쿼리 동시 실행
-      console.log('Supabase 쿼리 실행 중... 테이블: nares');
-      
-      let countResult, dataResult;
-      try {
-        [countResult, dataResult] = await Promise.all([
-          countQuery,
-          dataQuery
-        ]);
-      } catch (err) {
-        console.error('Supabase 쿼리 실행 오류:', err);
-        throw err;
-      }
-      
-      console.log('카운트 결과:', countResult);
-      console.log('데이터 결과:', { 
-        status: dataResult.status, 
-        error: dataResult.error, 
-        count: dataResult.data?.length 
+
+      // 단일 쿼리 실행 (count + data 동시 조회)
+      const { data, error, count } = await query;
+
+      console.log('Supabase 쿼리 결과:', {
+        count: count,
+        itemCount: data?.length
       });
-      
+
       // 오류 처리를 위한 플래그
       let useBackupData = false;
       let errorDetails = null;
-      
-      if (countResult.error) {
-        console.error('Supabase count 쿼리 오류:', countResult.error);
-        errorDetails = countResult.error;
-        
-        if (countResult.error.code === 'PGRST116' || countResult.error.message?.includes('does not exist')) {
+
+      if (error) {
+        console.error('Supabase 쿼리 오류:', error);
+        errorDetails = error;
+
+        if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
           console.error('테이블이 존재하지 않습니다. nares 테이블을 생성해야 합니다.');
           useBackupData = true;
         } else {
-          throw countResult.error;
+          throw error;
         }
       }
-      
-      if (dataResult.error) {
-        console.error('Supabase data 쿼리 오류:', dataResult.error);
-        errorDetails = dataResult.error;
-        
-        if (dataResult.error.code === 'PGRST116' || dataResult.error.message?.includes('does not exist')) {
-          console.error('테이블이 존재하지 않습니다. nares 테이블을 생성해야 합니다.');
-          useBackupData = true;
-        } else {
-          throw dataResult.error;
-        }
-      }
-      
+
       let items: RestaurantItem[] = [];
       let totalCount = 0;
-      
+
       if (!useBackupData) {
-        items = dataResult.data || [];
-        totalCount = countResult.count || 0;
+        items = data || [];
+        totalCount = count || 0;
       }
       
-      console.log('Supabase 쿼리 결과:', { 
-        count: totalCount, 
+      console.log('Supabase 쿼리 결과:', {
+        count: totalCount,
         itemCount: items.length,
         useBackupData
       });
-      
-      // 필수 필드가 없는 아이템 제거
-      const filteredItems = items.filter(item => 
-        item && 
-        item.id !== undefined && 
-        item.id !== null && 
-        item.name && 
-        item.location
-      );
-      
-      if (filteredItems.length !== items.length) {
-        console.log(`유효하지 않은 항목 ${items.length - filteredItems.length}개 필터링됨`);
-      }
-      
-      // 필드 확인 및 기본값 제공
-      items = filteredItems.map(item => ({
+
+      // 기본값 제공 (DB에서 이미 null 필터링 완료)
+      items = items.map(item => ({
         id: item.id,
         category: item.category || '기타',
-        name: item.name || '이름 없음',
-        location: item.location || '위치 정보 없음',
+        name: item.name,
+        location: item.location,
         building_name: item.building_name || undefined,
         pnum: item.pnum || '전화번호 정보 없음',
         price: item.price || '가격 정보 없음',
