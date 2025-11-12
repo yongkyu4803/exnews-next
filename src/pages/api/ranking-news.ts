@@ -16,55 +16,40 @@ export default async function handler(
     try {
       logger.info('랭킹 뉴스 API 요청 시작');
       const { page = '1', pageSize = '20', all = 'false' } = req.query;
-      
-      // 먼저 전체 카운트를 계산하기 위한 쿼리
-      let countQuery = supabase
+
+      // 페이지네이션 파라미터
+      const pageNum = parseInt(page as string, 10);
+      const pageSizeNum = parseInt(pageSize as string, 10);
+
+      // 통합 쿼리: count + data를 한 번에 조회
+      let query = supabase
         .from('ranking_news')
-        .select('id', { count: 'exact', head: true });
-      
-      // 데이터를 가져오는 쿼리
-      let dataQuery = supabase
-        .from('ranking_news')
-        .select('id, title, link, media_name');
-      
+        .select('id, title, link, media_name', { count: 'exact' });
+
       // all 파라미터가 'true'인 경우 모든 데이터 가져오기
       if (all === 'true') {
         // 전체 데이터 가져오기 (최대 1000개)
-        dataQuery = dataQuery.limit(1000);
-      } else {
+        query = query.limit(1000);
+      } else if (pageNum > 0 && pageSizeNum > 0) {
         // 일반 페이지네이션 적용
-        const pageNum = parseInt(page as string, 10);
-        const pageSizeNum = parseInt(pageSize as string, 10);
-        
-        // 페이지네이션 설정
-        if (pageNum > 0 && pageSizeNum > 0) {
-          dataQuery = dataQuery.limit(pageSizeNum);
-          const startIndex = (pageNum - 1) * pageSizeNum;
-          dataQuery = dataQuery.range(startIndex, startIndex + pageSizeNum - 1);
-        } else {
-          // 페이지네이션 없이 최대 100개 데이터 가져오기
-          dataQuery = dataQuery.limit(100);
-        }
-      }
-      
-      // 두 쿼리 동시 실행
-      logger.debug('Supabase 쿼리 실행 중...');
-      const [countResult, dataResult] = await Promise.all([
-        countQuery,
-        dataQuery
-      ]);
-
-      if (countResult.error) {
-        logger.error('Supabase count 쿼리 오류', countResult.error);
-        throw countResult.error;
-      }
-      if (dataResult.error) {
-        logger.error('Supabase data 쿼리 오류', dataResult.error);
-        throw dataResult.error;
+        const startIndex = (pageNum - 1) * pageSizeNum;
+        query = query.range(startIndex, startIndex + pageSizeNum - 1);
+      } else {
+        // 페이지네이션 없이 최대 100개 데이터 가져오기
+        query = query.limit(100);
       }
 
-      let items: RankingNewsItem[] = dataResult.data || [];
-      logger.debug('Supabase 쿼리 결과', { count: countResult.count, itemCount: items.length });
+      // 단일 쿼리 실행 (count + data 동시 조회)
+      logger.debug('Supabase 쿼리 실행 중...', { page: pageNum, pageSize: pageSizeNum });
+      const { data, error, count } = await query;
+
+      if (error) {
+        logger.error('Supabase 쿼리 오류', error);
+        throw error;
+      }
+
+      let items: RankingNewsItem[] = data || [];
+      logger.debug('Supabase 쿼리 결과', { count, itemCount: items.length });
       
       // 필수 필드가 없는 아이템 제거
       const filteredItems = items.filter(item => 
@@ -90,7 +75,7 @@ export default async function handler(
       }));
 
       // 실제 총 개수
-      const totalCount = countResult.count || 0;
+      const totalCount = count || 0;
 
       // 데이터가 없는 경우 샘플 데이터로 대체
       if (items.length === 0) {
