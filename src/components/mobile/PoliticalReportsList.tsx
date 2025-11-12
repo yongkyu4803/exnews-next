@@ -4,7 +4,7 @@
  * Supabase에서 정치 리포트 목록을 가져와 표시합니다.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import styled from '@emotion/styled';
 import { useQuery } from 'react-query';
 import type { ReportListItem } from '@/types/political-report';
@@ -284,22 +284,139 @@ const KeywordTag = styled.span`
   }
 `;
 
+// 이전 리포트 섹션
+const PreviousReportsSection = styled.div`
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid #e5e7eb;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 16px 0;
+`;
+
+const PreviousReportLink = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f3f4f6;
+    transform: translateX(4px);
+  }
+`;
+
+const PreviousReportDate = styled.span`
+  font-size: 14px;
+  color: #4b5563;
+  font-weight: 500;
+`;
+
+const ViewDetailText = styled.span`
+  font-size: 13px;
+  color: #3b82f6;
+  font-weight: 500;
+`;
+
+// 더 보기 버튼
+const ViewMoreButton = styled.button`
+  width: 100%;
+  padding: 14px;
+  margin-top: 24px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #3b82f6;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f9fafb;
+    border-color: #3b82f6;
+  }
+`;
+
+// 페이지네이션 UI
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 32px;
+  padding: 20px 0;
+`;
+
+const PageButton = styled.button<{ active?: boolean }>`
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid ${props => props.active ? '#3b82f6' : '#e5e7eb'};
+  background: ${props => props.active ? '#3b82f6' : 'white'};
+  color: ${props => props.active ? 'white' : '#374151'};
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    border-color: #3b82f6;
+    ${props => !props.active && 'background: #f9fafb;'}
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
 interface PoliticalReportsListProps {
   onReportClick?: (slug: string) => void;
 }
 
 const PoliticalReportsList: React.FC<PoliticalReportsListProps> = ({ onReportClick }) => {
-  const { data, isLoading, error } = useQuery<{ success: boolean; reports: ReportListItem[] }>(
-    'politicalReports',
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [useLandingMode, setUseLandingMode] = useState<boolean>(true);
+
+  const { data, isLoading, error } = useQuery<{
+    success: boolean;
+    latest?: ReportListItem | null;
+    previous?: Array<{ id: string; created_at: string; slug: string; topic: string }>;
+    reports?: ReportListItem[];
+    totalCount: number;
+  }>(
+    useLandingMode ? 'politicalReportsLandingV2' : ['politicalReportsPaginationV2', currentPage],
     async () => {
-      logger.info('정치 리포트 목록 요청 시작');
-      const response = await fetch('/api/political-reports');
-      if (!response.ok) {
-        throw new Error('Failed to fetch political reports');
+      if (useLandingMode) {
+        logger.info('정치 리포트 랜딩 모드 요청 시작');
+        const response = await fetch('/api/political-reports?landing=true&_t=' + Date.now());
+        if (!response.ok) {
+          throw new Error('Failed to fetch political reports');
+        }
+        const result = await response.json();
+        console.log('Political Reports Landing API Response:', result);
+        return result;
+      } else {
+        logger.info('정치 리포트 페이지네이션 모드 요청 시작', { page: currentPage });
+        const response = await fetch(`/api/political-reports?page=${currentPage}&pageSize=12&_t=` + Date.now());
+        if (!response.ok) {
+          throw new Error('Failed to fetch political reports');
+        }
+        const result = await response.json();
+        console.log('Political Reports Pagination API Response:', result);
+        return result;
       }
-      const result = await response.json();
-      logger.info('정치 리포트 목록 요청 완료', { count: result.reports?.length || 0 });
-      return result;
     },
     {
       refetchOnWindowFocus: false,
@@ -361,9 +478,18 @@ const PoliticalReportsList: React.FC<PoliticalReportsListProps> = ({ onReportCli
     );
   }
 
-  const reports = data?.reports || [];
+  // 데이터 처리
+  const latestReport = data?.latest;
+  const previousReports = data?.previous || [];
+  const paginationReports = data?.reports || [];
+  const totalCount = data?.totalCount || 0;
 
-  if (reports.length === 0) {
+  // 표시할 리포트 결정
+  const reports = useLandingMode
+    ? (latestReport ? [latestReport] : [])
+    : paginationReports;
+
+  if (reports.length === 0 && !useLandingMode) {
     return (
       <Container>
         <Header>
@@ -382,7 +508,7 @@ const PoliticalReportsList: React.FC<PoliticalReportsListProps> = ({ onReportCli
     <Container>
       <Header>
         <h1>📰 정치 뉴스 리포트</h1>
-        <p>최신 정치 이슈를 분석한 {reports.length}개의 리포트</p>
+        <p>최신 정치 이슈를 분석한 리포트를 확인하세요</p>
       </Header>
 
       {/* 최신 리포트 (그리드 밖에 별도 배치) */}
@@ -433,8 +559,8 @@ const PoliticalReportsList: React.FC<PoliticalReportsListProps> = ({ onReportCli
         </LatestReportContainer>
       )}
 
-      {/* 나머지 리포트들 (게시판 목록) */}
-      {reports.length > 1 && (
+      {/* 나머지 리포트들 (게시판 목록) - 페이지네이션 모드에서만 표시 */}
+      {!useLandingMode && reports.length > 1 && (
         <ReportList>
           {reports.slice(1).map((report) => (
             <ReportListItem
@@ -464,6 +590,76 @@ const PoliticalReportsList: React.FC<PoliticalReportsListProps> = ({ onReportCli
             </ReportListItem>
           ))}
         </ReportList>
+      )}
+
+      {/* 랜딩 모드: 이전 리포트 섹션 + 더 보기 버튼 */}
+      {useLandingMode && previousReports.length > 0 && (
+        <>
+          <PreviousReportsSection>
+            <SectionTitle>이전 리포트</SectionTitle>
+            {previousReports.map((report) => (
+              <PreviousReportLink
+                key={report.id}
+                onClick={() => handleCardClick(report.slug)}
+              >
+                <PreviousReportDate>
+                  {formatDate(report.created_at)}
+                </PreviousReportDate>
+                <ViewDetailText>자세히 보기 →</ViewDetailText>
+              </PreviousReportLink>
+            ))}
+          </PreviousReportsSection>
+
+          {/* 더 보기 버튼 */}
+          {(() => {
+            console.log('Political ViewMore Button Check:', { totalCount, shouldShow: totalCount > 5 });
+            return totalCount > 5 && (
+              <ViewMoreButton onClick={() => {
+                console.log('Switching to pagination mode');
+                setUseLandingMode(false);
+              }}>
+                전체 리포트 보기 ({totalCount}개) →
+              </ViewMoreButton>
+            );
+          })()}
+        </>
+      )}
+
+      {/* 페이지네이션 모드: 페이지네이션 UI */}
+      {!useLandingMode && totalCount > 12 && (
+        <PaginationContainer>
+          <PageButton
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+          >
+            ←
+          </PageButton>
+
+          {Array.from({ length: Math.min(5, Math.ceil(totalCount / 12)) }, (_, i) => {
+            const startPage = Math.max(1, currentPage - 2);
+            const pageNum = startPage + i;
+            const totalPages = Math.ceil(totalCount / 12);
+
+            if (pageNum > totalPages) return null;
+
+            return (
+              <PageButton
+                key={pageNum}
+                active={pageNum === currentPage}
+                onClick={() => setCurrentPage(pageNum)}
+              >
+                {pageNum}
+              </PageButton>
+            );
+          })}
+
+          <PageButton
+            onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalCount / 12), p + 1))}
+            disabled={currentPage >= Math.ceil(totalCount / 12)}
+          >
+            →
+          </PageButton>
+        </PaginationContainer>
       )}
     </Container>
   );
