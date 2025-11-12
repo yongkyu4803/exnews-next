@@ -293,6 +293,58 @@ const ViewDetailText = styled.span`
   color: #6b7280;
 `;
 
+const ViewMoreButton = styled.button`
+  width: 100%;
+  padding: 14px;
+  margin-top: 24px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #3b82f6;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #f9fafb;
+    border-color: #3b82f6;
+  }
+`;
+
+const PaginationContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 32px;
+  padding: 20px 0;
+`;
+
+const PageButton = styled.button<{ active?: boolean }>`
+  min-width: 36px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid ${props => props.active ? '#3b82f6' : '#e5e7eb'};
+  background: ${props => props.active ? '#3b82f6' : 'white'};
+  color: ${props => props.active ? 'white' : '#374151'};
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    border-color: #3b82f6;
+    ${props => !props.active && 'background: #f9fafb;'}
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
 interface BillsReportsListProps {
   onReportClick?: (slug: string) => void;
   selectedSlug?: string | null;
@@ -306,6 +358,8 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
 }) => {
   const [internalSelectedSlug, setInternalSelectedSlug] = useState<string | null>(null);
   const [selectedReports, setSelectedReports] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [useLandingMode, setUseLandingMode] = useState<boolean>(true);
 
   // 외부에서 제어하거나 내부 상태 사용
   const selectedSlug = externalSelectedSlug !== undefined ? externalSelectedSlug : internalSelectedSlug;
@@ -374,17 +428,26 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
   };
 
   const { data, isLoading, error } = useQuery<{
-    latest: BillsReport | null;
-    previous: Array<{ id: string; report_date: string; slug: string }>;
+    latest?: BillsReport | null;
+    previous?: Array<{ id: string; report_date: string; slug: string }>;
+    data?: BillsReport[];
     totalCount: number;
   }>(
-    'billsReportsLanding', // 캐시 키 변경으로 이전 캐시 무효화
+    useLandingMode ? 'billsReportsLanding' : ['billsReportsPagination', currentPage],
     async () => {
-      // 랜딩 모드 사용: 최신 1개 전체 + 이전 4개 날짜만
-      const res = await fetch('/api/bills?landing=true');
-      const json = await res.json();
-      console.log('Bills API Response:', json);
-      return json;
+      if (useLandingMode) {
+        // 랜딩 모드: 최신 1개 전체 + 이전 4개 날짜만
+        const res = await fetch('/api/bills?landing=true');
+        const json = await res.json();
+        console.log('Bills Landing API Response:', json);
+        return json;
+      } else {
+        // 페이지네이션 모드
+        const res = await fetch(`/api/bills?page=${currentPage}&pageSize=12`);
+        const json = await res.json();
+        console.log('Bills Pagination API Response:', json);
+        return json;
+      }
     },
     {
       refetchOnWindowFocus: false,
@@ -408,12 +471,16 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
     );
   }
 
-  // 랜딩 모드 응답: { latest, previous, totalCount }
+  // 데이터 처리
   const latestReport = data?.latest;
   const previousReports = data?.previous || [];
+  const paginationData = data?.data || [];
+  const totalCount = data?.totalCount || 0;
 
-  // 최신 리포트만 전체 데이터 표시
-  const sortedReports = latestReport ? [latestReport] : [];
+  // 표시할 리포트 결정
+  const sortedReports = useLandingMode
+    ? (latestReport ? [latestReport] : [])
+    : paginationData;
 
   if (selectedSlug) {
     return (
@@ -491,26 +558,72 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
             </ReportCard>
           ))}
 
-          {/* 이전 리포트 섹션 */}
-          {previousReports.length > 0 && (
-            <PreviousReportsSection>
-              <SectionTitle>이전 리포트</SectionTitle>
-              {previousReports.map((report) => (
-                <PreviousReportLink
-                  key={report.id}
-                  onClick={() => setSelectedSlug(report.slug)}
-                >
-                  <PreviousReportDate>
-                    {new Date(report.report_date).toLocaleDateString('ko-KR', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </PreviousReportDate>
-                  <ViewDetailText>자세히 보기 →</ViewDetailText>
-                </PreviousReportLink>
-              ))}
-            </PreviousReportsSection>
+          {/* 랜딩 모드: 이전 리포트 섹션 + 더 보기 버튼 */}
+          {useLandingMode && previousReports.length > 0 && (
+            <>
+              <PreviousReportsSection>
+                <SectionTitle>이전 리포트</SectionTitle>
+                {previousReports.map((report) => (
+                  <PreviousReportLink
+                    key={report.id}
+                    onClick={() => setSelectedSlug(report.slug)}
+                  >
+                    <PreviousReportDate>
+                      {new Date(report.report_date).toLocaleDateString('ko-KR', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </PreviousReportDate>
+                    <ViewDetailText>자세히 보기 →</ViewDetailText>
+                  </PreviousReportLink>
+                ))}
+              </PreviousReportsSection>
+
+              {/* 더 보기 버튼 */}
+              {totalCount > 5 && (
+                <ViewMoreButton onClick={() => setUseLandingMode(false)}>
+                  전체 리포트 보기 ({totalCount}개) →
+                </ViewMoreButton>
+              )}
+            </>
+          )}
+
+          {/* 페이지네이션 모드: 페이지네이션 UI */}
+          {!useLandingMode && totalCount > 12 && (
+            <PaginationContainer>
+              <PageButton
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+              >
+                ←
+              </PageButton>
+
+              {Array.from({ length: Math.min(5, Math.ceil(totalCount / 12)) }, (_, i) => {
+                const startPage = Math.max(1, currentPage - 2);
+                const pageNum = startPage + i;
+                const totalPages = Math.ceil(totalCount / 12);
+
+                if (pageNum > totalPages) return null;
+
+                return (
+                  <PageButton
+                    key={pageNum}
+                    active={pageNum === currentPage}
+                    onClick={() => setCurrentPage(pageNum)}
+                  >
+                    {pageNum}
+                  </PageButton>
+                );
+              })}
+
+              <PageButton
+                onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalCount / 12), p + 1))}
+                disabled={currentPage >= Math.ceil(totalCount / 12)}
+              >
+                →
+              </PageButton>
+            </PaginationContainer>
           )}
         </>
       )}
