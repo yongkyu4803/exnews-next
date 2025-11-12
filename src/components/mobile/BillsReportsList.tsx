@@ -433,17 +433,17 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
     data?: BillsReport[];
     totalCount: number;
   }>(
-    useLandingMode ? 'billsReportsLanding' : ['billsReportsPagination', currentPage],
+    useLandingMode ? 'billsReportsLandingV2' : ['billsReportsPaginationV2', currentPage],
     async () => {
       if (useLandingMode) {
         // 랜딩 모드: 최신 1개 전체 + 이전 4개 날짜만
-        const res = await fetch('/api/bills?landing=true');
+        const res = await fetch('/api/bills?landing=true&_t=' + Date.now());
         const json = await res.json();
         console.log('Bills Landing API Response:', json);
         return json;
       } else {
         // 페이지네이션 모드
-        const res = await fetch(`/api/bills?page=${currentPage}&pageSize=12`);
+        const res = await fetch(`/api/bills?page=${currentPage}&pageSize=12&_t=` + Date.now());
         const json = await res.json();
         console.log('Bills Pagination API Response:', json);
         return json;
@@ -580,12 +580,18 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
                 ))}
               </PreviousReportsSection>
 
-              {/* 더 보기 버튼 */}
-              {totalCount > 5 && (
-                <ViewMoreButton onClick={() => setUseLandingMode(false)}>
-                  전체 리포트 보기 ({totalCount}개) →
-                </ViewMoreButton>
-              )}
+              {/* 더 보기 버튼 - 디버깅용 로그 추가 */}
+              {(() => {
+                console.log('ViewMore Button Check:', { totalCount, shouldShow: totalCount > 5 });
+                return totalCount > 5 && (
+                  <ViewMoreButton onClick={() => {
+                    console.log('Switching to pagination mode');
+                    setUseLandingMode(false);
+                  }}>
+                    전체 리포트 보기 ({totalCount}개) →
+                  </ViewMoreButton>
+                );
+              })()}
             </>
           )}
 
