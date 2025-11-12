@@ -20,6 +20,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (landing === 'true') {
       logger.info('Bills landing mode requested');
 
+      // 전체 개수 먼저 조회
+      const { count: totalCountResult } = await supabase
+        .from('bills_monitor_reports')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_published', true);
+
       // 최신 리포트 1개 (전체 데이터)
       const { data: latestData, error: latestError } = await supabase
         .from('bills_monitor_reports')
@@ -48,13 +54,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       logger.info('Landing data fetched', {
         latestCount: latestData?.length || 0,
-        previousCount: previousData?.length || 0
+        previousCount: previousData?.length || 0,
+        totalCount: totalCountResult || 0
       });
 
       return res.status(200).json({
         latest: latestData?.[0] || null,
         previous: previousData || [],
-        totalCount: (latestData?.length || 0) + (previousData?.length || 0)
+        totalCount: totalCountResult || 0
       });
     }
 
