@@ -378,7 +378,7 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
     previous: Array<{ id: string; report_date: string; slug: string }>;
     totalCount: number;
   }>(
-    'billsReports',
+    'billsReportsLanding', // 캐시 키 변경으로 이전 캐시 무효화
     async () => {
       // 랜딩 모드 사용: 최신 1개 전체 + 이전 4개 날짜만
       const res = await fetch('/api/bills?landing=true');
