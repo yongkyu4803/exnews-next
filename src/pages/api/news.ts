@@ -56,7 +56,7 @@ export default async function handler(
         if (pageNum > 0 && pageSizeNum > 0) {
           const startIndex = (pageNum - 1) * pageSizeNum;
           const { data, error, count } = await dataQuery
-            .order('pub_date', { ascending: false })
+            .order('processed_at', { ascending: false })
             .range(startIndex, startIndex + pageSizeNum - 1);
 
           if (error) throw error;

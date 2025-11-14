@@ -214,8 +214,10 @@ const HomePage = () => {
     {
       keepPreviousData: true,
       enabled: isMounted && activeTab === 'exclusive', // Only load when exclusive tab is active
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 1 * 60 * 1000, // 1 minute - 뉴스는 실시간성이 중요
+      cacheTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnMount: true, // 탭 전환 시 항상 새로고침
+      refetchOnWindowFocus: true, // 윈도우 포커스 시 새로고침
       retry: 2,
       onError: (error) => {
         logger.error('뉴스 쿼리 오류', error);
@@ -241,8 +243,10 @@ const HomePage = () => {
     {
       keepPreviousData: true,
       enabled: isMounted && activeTab === 'ranking', // Only load when ranking tab is active
-      staleTime: 5 * 60 * 1000, // 5 minutes - don't refetch if data is fresh
-      cacheTime: 10 * 60 * 1000, // 10 minutes - keep in cache
+      staleTime: 1 * 60 * 1000, // 1 minute - 뉴스는 실시간성이 중요
+      cacheTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnMount: true, // 탭 전환 시 항상 새로고침
+      refetchOnWindowFocus: true, // 윈도우 포커스 시 새로고침
       retry: 2,
       onError: (error) => {
         console.error('랭킹 뉴스 쿼리 오류:', error);
