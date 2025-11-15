@@ -19,6 +19,46 @@ const NavBarContainer = styled.div`
   flex-shrink: 0;
 `;
 
+const NavWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+
+  @media (max-width: 768px) {
+    padding: 0;
+  }
+`;
+
+const BrandLogo = styled.div`
+  font-family: var(--gqai-font-display, 'Pretendard', sans-serif);
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.5px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  position: absolute;
+  left: 24px;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  span {
+    color: #fbbf24;
+  }
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
 const NavHeader = styled.div`
   display: flex;
   justify-content: space-between;
@@ -53,9 +93,9 @@ const NavMenu = styled(Menu)`
   }
 
   .ant-menu-item {
-    min-width: 65px;
-    height: 40px !important;
-    margin: 6px 4px !important;
+    min-width: 78px;
+    height: 48px !important;
+    margin: 7px 5px !important;
     cursor: pointer !important;
     user-select: none;
     touch-action: manipulation;
@@ -63,7 +103,7 @@ const NavMenu = styled(Menu)`
     border-bottom: none !important;
     border-radius: 8px !important;
     transition: all 0.3s ease;
-    padding: 8px 8px !important;
+    padding: 10px 10px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -97,8 +137,8 @@ const NavMenu = styled(Menu)`
   .ant-menu-item:hover {
     color: #ffffff !important;
     background-color: rgba(255, 255, 255, 0.2) !important;
-    padding-top: 9.6px !important;
-    padding-bottom: 6.4px !important;
+    padding-top: 11.5px !important;
+    padding-bottom: 7.7px !important;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   }
 
@@ -112,7 +152,7 @@ const NavMenu = styled(Menu)`
     background-color: rgba(255, 255, 255, 0.3) !important;
     border-radius: 8px !important;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    height: 40px !important;
+    height: 48px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -121,34 +161,34 @@ const NavMenu = styled(Menu)`
   /* 모바일 최적화 */
   @media (max-width: 768px) {
     .ant-menu-item {
-      min-width: 50px;
-      height: 40px !important;
+      min-width: 60px;
+      height: 48px !important;
       line-height: 1.2 !important;
-      margin: 4px 2px !important;
+      margin: 5px 2px !important;
       font-size: 13px;
-      padding: 6px 6px !important;
+      padding: 7px 7px !important;
     }
 
     .ant-menu-item:hover {
-      padding-top: 7.2px !important;
-      padding-bottom: 4.8px !important;
+      padding-top: 8.6px !important;
+      padding-bottom: 5.8px !important;
     }
   }
 
   /* 작은 모바일 화면 */
   @media (max-width: 360px) {
     .ant-menu-item {
-      min-width: 45px;
-      height: 36px !important;
+      min-width: 54px;
+      height: 43px !important;
       line-height: 1.2 !important;
-      margin: 4px 1px !important;
+      margin: 5px 1px !important;
       font-size: 12px;
-      padding: 6px 4px !important;
+      padding: 7px 5px !important;
     }
 
     .ant-menu-item:hover {
-      padding-top: 7.2px !important;
-      padding-bottom: 4.8px !important;
+      padding-top: 8.6px !important;
+      padding-bottom: 5.8px !important;
     }
   }
 `;
@@ -191,7 +231,11 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
   
   return (
     <NavBarContainer>
-      <NavMenu 
+      <NavWrapper>
+        <BrandLogo onClick={() => router.push('/dashboard')}>
+          GQ<span>AI</span>
+        </BrandLogo>
+        <NavMenu 
         mode="horizontal" 
         selectedKeys={[activeKey]}
         onSelect={handleTabChange}
@@ -256,6 +300,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
           }
         ]}
       />
+      </NavWrapper>
     </NavBarContainer>
   );
 };

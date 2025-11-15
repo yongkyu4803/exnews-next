@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { trackPageView } from '@/utils/analytics';
 import '@/styles/globals.css';
+import '@/styles/dashboard/theme.css';
+import '@/styles/dashboard/animations.css';
 
 // Create a client with optimized caching strategy
 const queryClient = new QueryClient({

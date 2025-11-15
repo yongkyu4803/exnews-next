@@ -26,10 +26,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .select('*', { count: 'exact', head: true })
         .eq('is_published', true);
 
-      // 최신 리포트 1개 (전체 데이터)
+      // 최신 리포트 1개 (전체 데이터 + bills JOIN)
       const { data: latestData, error: latestError } = await supabase
         .from('bills_monitor_reports')
-        .select('*')
+        .select(`
+          *,
+          bills:bills_monitor_bills(*)
+        `)
         .eq('is_published', true)
         .order('report_date', { ascending: false })
         .limit(1);

@@ -1,0 +1,109 @@
+/* GQAI Dashboard Animations */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Apply animations to elements */
+.fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.slideInLeft {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+.slideInRight {
+  animation: slideInRight 0.5s ease-out;
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Loading skeleton */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0px,
+    #f8f8f8 40px,
+    #f0f0f0 80px
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite linear;
+}
+
+/* Hover effects */
+.hoverScale {
+  transition: transform var(--gqai-transition-fast);
+}
+
+.hoverScale:hover {
+  transform: scale(1.02);
+}
+
+.hoverGlow {
+  transition: box-shadow var(--gqai-transition-fast);
+}
+
+.hoverGlow:hover {
+  box-shadow: 0 0 20px rgba(26, 75, 140, 0.3);
+}
+
+/* Stagger animation for lists */
+.staggeredFadeIn > * {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.staggeredFadeIn > *:nth-child(1) { animation-delay: 0.1s; }
+.staggeredFadeIn > *:nth-child(2) { animation-delay: 0.2s; }
+.staggeredFadeIn > *:nth-child(3) { animation-delay: 0.3s; }
+.staggeredFadeIn > *:nth-child(4) { animation-delay: 0.4s; }
+.staggeredFadeIn > *:nth-child(5) { animation-delay: 0.5s; }

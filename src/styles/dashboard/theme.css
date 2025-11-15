@@ -1,0 +1,110 @@
+/* GQAI Dashboard Theme */
+
+:root {
+  /* Brand Colors */
+  --gqai-primary: #1a4b8c;
+  --gqai-secondary: #2d5aa0;
+  --gqai-accent: #ff6b35;
+  --gqai-success: #06d6a0;
+  --gqai-warning: #ffd166;
+  --gqai-danger: #ef476f;
+
+  /* Backgrounds */
+  --gqai-bg-main: #f8f9fa;
+  --gqai-bg-card: #ffffff;
+  --gqai-bg-hover: #f3f4f6;
+  --gqai-bg-active: #e5e7eb;
+
+  /* Text Colors */
+  --gqai-text-primary: #1f2937;
+  --gqai-text-secondary: #6b7280;
+  --gqai-text-tertiary: #9ca3af;
+  --gqai-text-inverse: #ffffff;
+
+  /* Borders */
+  --gqai-border-light: #e5e7eb;
+  --gqai-border-medium: #d1d5db;
+  --gqai-border-dark: #9ca3af;
+
+  /* Shadows */
+  --gqai-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --gqai-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --gqai-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --gqai-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+  /* Spacing */
+  --gqai-space-xs: 4px;
+  --gqai-space-sm: 8px;
+  --gqai-space-md: 16px;
+  --gqai-space-lg: 24px;
+  --gqai-space-xl: 32px;
+  --gqai-space-2xl: 48px;
+
+  /* Border Radius */
+  --gqai-radius-sm: 4px;
+  --gqai-radius-md: 8px;
+  --gqai-radius-lg: 12px;
+  --gqai-radius-xl: 16px;
+  --gqai-radius-full: 9999px;
+
+  /* Typography */
+  --gqai-font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --gqai-font-display: 'Montserrat', 'Pretendard', sans-serif;
+  --gqai-font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Transitions */
+  --gqai-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --gqai-transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --gqai-transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-index Layers */
+  --gqai-z-base: 0;
+  --gqai-z-dropdown: 1000;
+  --gqai-z-sticky: 1020;
+  --gqai-z-fixed: 1030;
+  --gqai-z-modal-backdrop: 1040;
+  --gqai-z-modal: 1050;
+  --gqai-z-popover: 1060;
+  --gqai-z-tooltip: 1070;
+}
+
+/* Dark Mode Support (Future) */
+[data-theme="dark"] {
+  --gqai-primary: #3d7cc9;
+  --gqai-secondary: #5a9ad6;
+  --gqai-bg-main: #111827;
+  --gqai-bg-card: #1f2937;
+  --gqai-bg-hover: #374151;
+  --gqai-bg-active: #4b5563;
+  --gqai-text-primary: #f9fafb;
+  --gqai-text-secondary: #d1d5db;
+  --gqai-text-tertiary: #9ca3af;
+  --gqai-border-light: #374151;
+  --gqai-border-medium: #4b5563;
+  --gqai-border-dark: #6b7280;
+}
+
+/* Utility Classes */
+.gqai-text-primary {
+  color: var(--gqai-text-primary);
+}
+
+.gqai-text-secondary {
+  color: var(--gqai-text-secondary);
+}
+
+.gqai-text-accent {
+  color: var(--gqai-accent);
+}
+
+.gqai-bg-card {
+  background-color: var(--gqai-bg-card);
+}
+
+.gqai-shadow-md {
+  box-shadow: var(--gqai-shadow-md);
+}
+
+.gqai-transition {
+  transition: all var(--gqai-transition-base);
+}
