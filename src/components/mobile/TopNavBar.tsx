@@ -204,18 +204,15 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
   
   useEffect(() => {
     setIsMounted(true);
-    console.log('TopNavBar 마운트됨, 활성 탭:', activeTab);
   }, [activeTab]);
   
   const handleTabChange = (info: { key: string }) => {
-    console.log('탭 변경 시도:', info.key);
-    
     // 페이지 이동 처리
     if (info.key === 'restaurants') {
       router.push('/restaurants');
       return;
     }
-    
+
     if (onTabChange) {
       onTabChange(info.key);
     }
@@ -240,7 +237,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
         selectedKeys={[activeKey]}
         onSelect={handleTabChange}
         onClick={(info: { key: string, domEvent: React.MouseEvent<HTMLElement> }) => {
-          console.log('탭 클릭됨:', info.key);
           handleTabChange(info);
         }}
         items={[

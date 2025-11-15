@@ -19,7 +19,7 @@ const logger = createLogger('Pages:Dashboard');
 const DashboardPage = () => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
-  const activeTab = 'home'; // 대시보드는 항상 home 탭
+  const activeTab: string = 'home'; // 대시보드는 항상 home 탭
   const [activeCategory, setActiveCategory] = useState('all');
   const [randomRankingIndices, setRandomRankingIndices] = useState<number[]>([]);
   const [randomBillIndex, setRandomBillIndex] = useState<number>(0);
