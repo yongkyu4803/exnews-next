@@ -7,6 +7,15 @@
   font-display: swap;
 }
 
+/* 김정철 고딕 폰트 */
+@font-face {
+  font-family: 'KimjungchulGothic';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302_01@1.0/KimjungchulGothic-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* 전역 스타일 */
 :root {
   --primary-color: #1a73e8;

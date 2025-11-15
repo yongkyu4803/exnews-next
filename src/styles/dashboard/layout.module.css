@@ -81,7 +81,7 @@
 .dashboardMain {
   max-width: 1600px;
   margin: 0 auto;
-  padding: var(--gqai-space-xl);
+  padding: 22px 32px;
   display: grid;
   grid-template-columns: 4fr 4fr 2fr;
   gap: var(--gqai-space-lg);
@@ -161,7 +161,7 @@
       "left"
       "main"
       "right";
-    padding: var(--gqai-space-md);
+    padding: 11px 16px;
     gap: var(--gqai-space-md);
   }
 

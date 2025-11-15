@@ -257,9 +257,9 @@ const DashboardPage = () => {
     const titleStyle = {
       fontSize: 24,
       fontWeight: 700,
-      color: 'var(--gqai-text-primary)',
+      color: '#1e40af',
       marginBottom: 'var(--gqai-space-lg)',
-      fontFamily: 'var(--gqai-font-display)',
+      fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
     };
 
     switch (activeTab) {
@@ -393,16 +393,22 @@ const DashboardPage = () => {
               gridTemplateRows: 'auto auto',
               gap: 20,
             }}>
-              {/* 첫 번째 열 - 오늘의 법안 (4칼럼, 2행 병합) */}
+              {/* 첫 번째 열 - 오늘의 법안 + 배너 버튼 */}
               <div style={{
                 gridRow: '1 / 3',
-                ...containerStyle,
-                padding: 'var(--gqai-space-lg)',
-                minHeight: 'auto',
-                height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
+                gap: 12,
               }}>
+                {/* 오늘의 법안 섹션 */}
+                <div style={{
+                  ...containerStyle,
+                  padding: 'var(--gqai-space-lg)',
+                  minHeight: 'auto',
+                  flex: 1,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}>
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -412,8 +418,9 @@ const DashboardPage = () => {
                   <h3 style={{
                     fontSize: 20,
                     fontWeight: 700,
-                    color: 'var(--gqai-text-primary)',
+                    color: '#1e40af',
                     margin: 0,
+                    fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
                   }}>
                     ⚖️ 어제 발의된 법안
                   </h3>
@@ -453,14 +460,14 @@ const DashboardPage = () => {
                       style={{
                         padding: 9,
                         borderRadius: 'var(--gqai-radius-lg)',
-                        background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
-                        border: '2px solid #10b981',
+                        background: 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
+                        border: '2px solid #3b82f6',
                         cursor: 'pointer',
                         transition: 'all var(--gqai-transition-fast)',
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 8px 16px rgba(16, 185, 129, 0.2)';
+                        e.currentTarget.style.boxShadow = '0 8px 16px rgba(59, 130, 246, 0.2)';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = 'translateY(0)';
@@ -477,7 +484,7 @@ const DashboardPage = () => {
                       }}>
                         <div style={{
                           fontSize: 15,
-                          color: '#047857',
+                          color: '#1e40af',
                           fontWeight: 700,
                         }}>
                           📅 {new Date(billsData.latest.report_date).toLocaleDateString('ko-KR', {
@@ -539,7 +546,7 @@ const DashboardPage = () => {
                             >
                               <span style={{
                                 fontSize: 8,
-                                color: '#10b981',
+                                color: '#3b82f6',
                                 opacity: 0.4,
                               }}>●</span>
                               {trend}
@@ -559,7 +566,7 @@ const DashboardPage = () => {
                             padding: 8,
                             background: 'white',
                             borderRadius: 'var(--gqai-radius-md)',
-                            border: '2px solid #d1fae5',
+                            border: '2px solid #bfdbfe',
                             cursor: 'pointer',
                             transition: 'opacity 0.3s ease-in-out, transform 0.3s ease-in-out',
                             opacity: 1,
@@ -585,7 +592,7 @@ const DashboardPage = () => {
                               <span style={{
                                 fontSize: 13,
                                 fontWeight: 700,
-                                color: '#047857',
+                                color: '#1e40af',
                                 flex: 1,
                                 lineHeight: 1.5,
                               }}>
@@ -600,14 +607,14 @@ const DashboardPage = () => {
                                   whiteSpace: 'nowrap',
                                   background: randomBill.regulation_type === '신설' ? '#fef2f2' :
                                               randomBill.regulation_type === '강화' ? '#fffbeb' :
-                                              randomBill.regulation_type === '완화' ? '#f0fdf4' : '#f9fafb',
+                                              randomBill.regulation_type === '완화' ? '#eff6ff' : '#f9fafb',
                                   color: randomBill.regulation_type === '신설' ? '#dc2626' :
                                          randomBill.regulation_type === '강화' ? '#d97706' :
-                                         randomBill.regulation_type === '완화' ? '#16a34a' : '#6b7280',
+                                         randomBill.regulation_type === '완화' ? '#3b82f6' : '#6b7280',
                                   border: `1px solid ${
                                     randomBill.regulation_type === '신설' ? '#fecaca' :
                                     randomBill.regulation_type === '강화' ? '#fde68a' :
-                                    randomBill.regulation_type === '완화' ? '#bbf7d0' : '#e5e7eb'
+                                    randomBill.regulation_type === '완화' ? '#bfdbfe' : '#e5e7eb'
                                   }`,
                                 }}>
                                   {randomBill.regulation_type}
@@ -622,7 +629,7 @@ const DashboardPage = () => {
                               gap: 5,
                               marginBottom: 5,
                               fontSize: 11,
-                              color: '#059669',
+                              color: '#2563eb',
                             }}>
                               {randomBill.committee && (
                                 <span>🏛️ {randomBill.committee}</span>
@@ -639,9 +646,9 @@ const DashboardPage = () => {
                             {randomBill.summary_one_sentence && (
                               <div style={{
                                 fontSize: 12,
-                                color: '#065f46',
+                                color: '#1e40af',
                                 lineHeight: 1.6,
-                                background: '#f0fdf4',
+                                background: '#eff6ff',
                                 padding: 10,
                                 borderRadius: 'var(--gqai-radius-sm)',
                                 overflow: 'hidden',
@@ -664,6 +671,7 @@ const DashboardPage = () => {
                       width: '100%',
                       borderRadius: 'var(--gqai-radius-md)',
                       overflow: 'hidden',
+                      position: 'relative',
                     }}>
                       <img
                         src="/when_bill.png"
@@ -674,6 +682,37 @@ const DashboardPage = () => {
                           display: 'block',
                         }}
                       />
+
+                      {/* 자세히 보러가기 버튼 - 배너 위 우측 하단 */}
+                      <button
+                        style={{
+                          position: 'absolute',
+                          bottom: '16px',
+                          right: '16px',
+                          padding: '12px 24px',
+                          fontSize: 15,
+                          fontWeight: 700,
+                          color: 'white',
+                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                          border: 'none',
+                          borderRadius: 'var(--gqai-radius-lg)',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                          fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                          e.currentTarget.style.boxShadow = '0 6px 20px rgba(59, 130, 246, 0.4)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+                        }}
+                        onClick={() => router.push('/coming-soon')}
+                      >
+                        📊 자세히 보러가기 (beta)
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -681,6 +720,7 @@ const DashboardPage = () => {
                     법안 리포트가 없습니다
                   </div>
                 )}
+                </div>
               </div>
 
               {/* 오른쪽 영역 전체를 감싸는 컨테이너 */}
@@ -691,15 +731,46 @@ const DashboardPage = () => {
                   padding: 'var(--gqai-space-lg)',
                   minHeight: 280,
                 }}>
-                  <h3 style={{
-                    fontSize: 20,
-                    fontWeight: 700,
-                    color: 'var(--gqai-text-primary)',
-                    margin: 0,
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
                     marginBottom: 16,
                   }}>
-                    🏛️ 오늘의 정치
-                  </h3>
+                    <h3 style={{
+                      fontSize: 20,
+                      fontWeight: 700,
+                      color: '#1e40af',
+                      margin: 0,
+                      fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
+                    }}>
+                      🏛️ 오늘의 정치
+                    </h3>
+                    <button
+                      style={{
+                        padding: '4px 10px',
+                        fontSize: 12,
+                        fontWeight: 500,
+                        color: '#6b7280',
+                        background: '#f3f4f6',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#e5e7eb';
+                        e.currentTarget.style.color = '#374151';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#f3f4f6';
+                        e.currentTarget.style.color = '#6b7280';
+                      }}
+                      onClick={() => router.push('/?tab=political')}
+                    >
+                      이전 리포트 →
+                    </button>
+                  </div>
                   {politicalLoading ? (
                     <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
                       로딩 중...
@@ -708,34 +779,6 @@ const DashboardPage = () => {
                     <div>
                       {/* 최신 리포트 1개만 표시 */}
                       {renderCompactPoliticalCard(politicalData.reports[0], 0)}
-
-                      {/* 이전 리포트 보러가기 버튼 */}
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 12 }}>
-                        <button
-                          onClick={() => router.push('/?tab=political')}
-                          style={{
-                            padding: '4px 10px',
-                            background: '#f3f4f6',
-                            color: '#6b7280',
-                            border: '1px solid #e5e7eb',
-                            borderRadius: '6px',
-                            fontSize: 12,
-                            fontWeight: 500,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s ease',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = '#e5e7eb';
-                            e.currentTarget.style.color = '#374151';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#f3f4f6';
-                            e.currentTarget.style.color = '#6b7280';
-                          }}
-                        >
-                          이전 리포트 →
-                        </button>
-                      </div>
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-tertiary)' }}>
@@ -752,7 +795,7 @@ const DashboardPage = () => {
                   style={{
                     display: 'block',
                     width: '100%',
-                    margin: '8px 0',
+                    margin: '2px 0',
                     textDecoration: 'none',
                     cursor: 'pointer',
                   }}
@@ -786,11 +829,12 @@ const DashboardPage = () => {
                       <h3 style={{
                         fontSize: 18,
                         fontWeight: 700,
-                        color: 'var(--gqai-text-primary)',
+                        color: '#1e40af',
                         margin: 0,
                         display: 'flex',
                         alignItems: 'center',
                         gap: 8,
+                        fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
                       }}>
                         <img
                           src="/icons/icon-exnews.png"
@@ -843,11 +887,12 @@ const DashboardPage = () => {
                       <h3 style={{
                         fontSize: 18,
                         fontWeight: 700,
-                        color: 'var(--gqai-text-primary)',
+                        color: '#1e40af',
                         margin: 0,
                         display: 'flex',
                         alignItems: 'center',
                         gap: 8,
+                        fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
                       }}>
                         <img
                           src="/icons/icon-lankingnews.png"
@@ -901,8 +946,9 @@ const DashboardPage = () => {
                       <h3 style={{
                         fontSize: 18,
                         fontWeight: 700,
-                        color: 'var(--gqai-text-primary)',
+                        color: '#1e40af',
                         margin: 0,
+                        fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
                       }}>
                         📰 오늘의 사설
                       </h3>
@@ -1406,9 +1452,9 @@ const DashboardPage = () => {
                 padding: '4px 10px',
                 borderRadius: 'var(--gqai-radius-sm)',
                 fontSize: 12,
-                backgroundColor: '#f0fdf4',
-                color: '#166534',
-                border: '1px solid #bbf7d0',
+                backgroundColor: '#eff6ff',
+                color: '#1e40af',
+                border: '1px solid #bfdbfe',
               }}
             >
               {trend.length > 40 ? trend.substring(0, 40) + '...' : trend}
@@ -1642,6 +1688,7 @@ const DashboardPage = () => {
     const date = reportData.metadata?.timestamp || item.created_at;
     const category = reportData.metadata?.category || '정치뉴스';
     const summary = item.summary || reportData.summary;
+    const keywords = reportData.keywords || item.keywords || [];
 
     return (
       <div
@@ -1699,6 +1746,30 @@ const DashboardPage = () => {
         }}>
           {title}
         </div>
+        {keywords && keywords.length > 0 && (
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: 4,
+            marginBottom: summary ? 8 : 0,
+          }}>
+            {keywords.slice(0, 3).map((keyword: any, idx: number) => (
+              <span
+                key={idx}
+                style={{
+                  fontSize: 10,
+                  padding: '2px 8px',
+                  borderRadius: 'var(--gqai-radius-sm)',
+                  backgroundColor: '#eff6ff',
+                  color: '#1e40af',
+                  fontWeight: 500,
+                }}
+              >
+                #{typeof keyword === 'string' ? keyword : keyword.term || keyword.keyword}
+              </span>
+            ))}
+          </div>
+        )}
         {summary && (
           <div style={{
             fontSize: 16,
@@ -1734,8 +1805,8 @@ const DashboardPage = () => {
           cursor: 'pointer',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = '#10b981';
-          e.currentTarget.style.backgroundColor = '#f0fdf4';
+          e.currentTarget.style.borderColor = '#3b82f6';
+          e.currentTarget.style.backgroundColor = '#eff6ff';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.borderColor = 'var(--gqai-border-light)';
@@ -1757,7 +1828,7 @@ const DashboardPage = () => {
           </span>
           <span style={{
             fontSize: 11,
-            color: '#10b981',
+            color: '#3b82f6',
             fontWeight: 600,
           }}>
             📋 {item.total_bills}건

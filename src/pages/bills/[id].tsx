@@ -92,7 +92,7 @@ const Content = styled.div`
 
 const ReportHeader = styled.div`
   padding: 32px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
 
   @media (max-width: 768px) {
@@ -177,7 +177,7 @@ const TrendItem = styled.div`
   padding: 16px;
   background: var(--gqai-bg-secondary);
   border-radius: var(--gqai-radius-md);
-  border-left: 4px solid #10b981;
+  border-left: 4px solid #3b82f6;
   font-size: 15px;
   line-height: 1.6;
   color: var(--gqai-text-secondary);
@@ -333,17 +333,17 @@ const RegulationBadge = styled.span<{ type: string }>`
   background: ${props =>
     props.type === '신설' ? '#fef2f2' :
     props.type === '강화' ? '#fffbeb' :
-    props.type === '완화' ? '#f0fdf4' : '#f9fafb'
+    props.type === '완화' ? '#eff6ff' : '#f9fafb'
   };
   color: ${props =>
     props.type === '신설' ? '#dc2626' :
     props.type === '강화' ? '#d97706' :
-    props.type === '완화' ? '#16a34a' : '#6b7280'
+    props.type === '완화' ? '#3b82f6' : '#6b7280'
   };
   border: 1px solid ${props =>
     props.type === '신설' ? '#fecaca' :
     props.type === '강화' ? '#fde68a' :
-    props.type === '완화' ? '#bbf7d0' : '#e5e7eb'
+    props.type === '완화' ? '#bfdbfe' : '#e5e7eb'
   };
 `;
 
