@@ -69,6 +69,7 @@ export default async function handler(
         cost_usd: latestData[0].cost_usd ? parseFloat(latestData[0].cost_usd).toFixed(4) : undefined,
         summary: latestData[0].report_data?.summary,
         keywords: latestData[0].report_data?.keywords?.map((k: any) => k.term) || [],
+        report_data: latestData[0].report_data,
         source: 'supabase' as const
       } : null;
 

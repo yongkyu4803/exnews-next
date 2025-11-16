@@ -130,11 +130,11 @@ const DashboardPage = () => {
     }
   );
 
-  // Fetch political reports
+  // Fetch political reports (landing mode)
   const { data: politicalData, isLoading: politicalLoading } = useQuery(
     'dashboard-political',
     async () => {
-      const response = await fetch('/api/political-reports?page=1&pageSize=20');
+      const response = await fetch('/api/political-reports?landing=true');
       return response.json();
     },
     {
@@ -383,7 +383,8 @@ const DashboardPage = () => {
           </div>
         );
 
-      default: // home - 종합 대시보드
+      default:
+        // home - 종합 대시보드
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {/* 메인 그리드 - 4/6 레이아웃 */}
@@ -590,7 +591,7 @@ const DashboardPage = () => {
                               marginBottom: 6,
                             }}>
                               <span style={{
-                                fontSize: 13,
+                                fontSize: 17,
                                 fontWeight: 700,
                                 color: '#1e40af',
                                 flex: 1,
@@ -602,7 +603,7 @@ const DashboardPage = () => {
                                 <span style={{
                                   padding: '4px 10px',
                                   borderRadius: 'var(--gqai-radius-sm)',
-                                  fontSize: 11,
+                                  fontSize: 13,
                                   fontWeight: 600,
                                   whiteSpace: 'nowrap',
                                   background: randomBill.regulation_type === '신설' ? '#fef2f2' :
@@ -645,7 +646,7 @@ const DashboardPage = () => {
                             {/* 한줄 요약 */}
                             {randomBill.summary_one_sentence && (
                               <div style={{
-                                fontSize: 12,
+                                fontSize: 14,
                                 color: '#1e40af',
                                 lineHeight: 1.6,
                                 background: '#eff6ff',
@@ -711,7 +712,7 @@ const DashboardPage = () => {
                         }}
                         onClick={() => router.push('/coming-soon')}
                       >
-                        📊 자세히 보러가기 (beta)
+                        자세히 보러가기 (beta)
                       </button>
                     </div>
                   </div>
@@ -729,7 +730,7 @@ const DashboardPage = () => {
                 <div style={{
                   ...containerStyle,
                   padding: 'var(--gqai-space-lg)',
-                  minHeight: 280,
+                  minHeight: 'auto',
                 }}>
                   <div style={{
                     display: 'flex',
@@ -775,10 +776,10 @@ const DashboardPage = () => {
                     <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
                       로딩 중...
                     </div>
-                  ) : politicalData?.reports?.[0] ? (
+                  ) : politicalData?.latest ? (
                     <div>
                       {/* 최신 리포트 1개만 표시 */}
-                      {renderCompactPoliticalCard(politicalData.reports[0], 0)}
+                      {renderCompactPoliticalCard(politicalData.latest, 0)}
                     </div>
                   ) : (
                     <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-tertiary)' }}>
@@ -812,8 +813,8 @@ const DashboardPage = () => {
                   />
                 </a>
 
-                {/* 두 번째 행 - 3칼럼 (단독뉴스 | 랭킹뉴스 | 사설) */}
-                <div style={{ display: 'grid', gridTemplateColumns: '4fr 4fr 2fr', gap: 20 }}>
+                {/* 두 번째 행 - 3칼럼 균등 배치 (단독뉴스 | 랭킹뉴스 | 사설) */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
                   {/* 단독 뉴스 (4개) */}
                   <div style={{
                     ...containerStyle,
@@ -931,7 +932,7 @@ const DashboardPage = () => {
                     )}
                   </div>
 
-                  {/* 오늘의 사설 (2개) */}
+                  {/* 오늘의 사설 (최신 1개 주제) */}
                   <div style={{
                     ...containerStyle,
                     padding: 'var(--gqai-space-md)',
@@ -972,11 +973,11 @@ const DashboardPage = () => {
                       <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
                         로딩 중...
                       </div>
+                    ) : editorialData?.items?.[0] ? (
+                      renderEditorialTopicCard(editorialData.items[0])
                     ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                        {editorialData?.items?.slice(0, 2).map((item: any, index: number) =>
-                          renderCompactEditorialCard(item, index)
-                        )}
+                      <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-tertiary)' }}>
+                        사설이 없습니다
                       </div>
                     )}
                   </div>
@@ -1313,7 +1314,7 @@ const DashboardPage = () => {
           e.currentTarget.style.borderColor = 'var(--gqai-border-light)';
           e.currentTarget.style.boxShadow = 'none';
         }}
-        onClick={() => router.push(`/political-report/${slug}`)}
+        onClick={() => router.push(`/?tab=political&id=${slug}`)}
       >
         <div style={{
           display: 'flex',
@@ -1619,62 +1620,58 @@ const DashboardPage = () => {
     </div>
   );
 
-  const renderCompactEditorialCard = (item: any, index: number) => {
-    const editorialId = item.id || `editorial-${index}`;
-    const date = item.analyzed_at || item.published_at;
-    const topicCount = item.topics?.length || 0;
+  const renderEditorialTopicCard = (item: any) => {
+    const editorialId = item.id || 'latest-editorial';
+    const topics = item.topics || [];
 
     return (
       <div
         key={editorialId}
         style={{
-          padding: '12px',
-          borderRadius: 'var(--gqai-radius-md)',
-          border: '1px solid var(--gqai-border-light)',
+          padding: '20px',
+          borderRadius: 'var(--gqai-radius-lg)',
           transition: 'all var(--gqai-transition-fast)',
           cursor: 'pointer',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = '#3b82f6';
-          e.currentTarget.style.backgroundColor = '#eff6ff';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'var(--gqai-border-light)';
-          e.currentTarget.style.backgroundColor = 'transparent';
+          minHeight: '280px',
+          display: 'flex',
+          flexDirection: 'column',
         }}
         onClick={() => router.push(`/editorial/${editorialId}`)}
       >
+        {/* 주제 목록 */}
         <div style={{
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 6,
+          flexDirection: 'column',
+          gap: 14,
+          flex: 1,
         }}>
-          <span style={{
-            fontSize: 11,
-            color: 'var(--gqai-text-tertiary)',
-          }}>
-            {date ? new Date(date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : ''}
-          </span>
-          <span style={{
-            fontSize: 11,
-            color: '#3b82f6',
-            fontWeight: 600,
-          }}>
-            📑 {topicCount}개 주제
-          </span>
-        </div>
-        <div style={{
-          fontSize: 14,
-          fontWeight: 600,
-          color: 'var(--gqai-text-primary)',
-          lineHeight: 1.4,
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-        }}>
-          {item.title || `${date ? new Date(date).toLocaleDateString('ko-KR') : ''} 사설 분석`}
+          {topics.slice(0, 3).map((topic: any, idx: number) => {
+            const topicTitle = typeof topic === 'string'
+              ? topic
+              : (topic.topic_title || topic.title || '주제 없음');
+
+            return (
+              <div
+                key={idx}
+                style={{
+                  padding: '12px 14px',
+                  borderRadius: 'var(--gqai-radius-md)',
+                  background: 'white',
+                  border: '1px solid #bfdbfe',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: '#1e40af',
+                  lineHeight: 1.5,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}
+              >
+                {topicTitle}
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -1685,10 +1682,19 @@ const DashboardPage = () => {
     const reportData = item.report_data || item;
     const slug = item.slug || reportData.metadata?.slug || `report-${index}`;
     const title = reportData.metadata?.topic || item.topic || '제목 없음';
-    const date = reportData.metadata?.timestamp || item.created_at;
+    const date = item.created_at || reportData.metadata?.timestamp;
     const category = reportData.metadata?.category || '정치뉴스';
     const summary = item.summary || reportData.summary;
     const keywords = reportData.keywords || item.keywords || [];
+    const newsSections = reportData.newsSections || [];
+
+    // 요약 텍스트를 문장 단위로 분리 (마침표, 물음표, 느낌표 기준)
+    const formatSummary = (text: string) => {
+      if (!text) return [];
+      // 문장 부호 뒤에 줄바꿈 추가
+      const sentences = text.split(/(?<=[.?!])\s+/);
+      return sentences;
+    };
 
     return (
       <div
@@ -1708,25 +1714,26 @@ const DashboardPage = () => {
           e.currentTarget.style.borderColor = 'var(--gqai-border-light)';
           e.currentTarget.style.backgroundColor = 'transparent';
         }}
-        onClick={() => router.push(`/political-report/${slug}`)}
+        onClick={() => router.push(`/?tab=political&id=${slug}`)}
       >
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 6,
+          marginBottom: 8,
         }}>
           <span style={{
-            fontSize: 11,
-            color: 'var(--gqai-text-tertiary)',
+            fontSize: 12,
+            color: '#6b7280',
+            fontWeight: 500,
           }}>
-            {date ? new Date(date).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : ''}
+            📅 {date ? new Date(date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' }) : ''}
           </span>
           <span style={{
             fontSize: 10,
-            padding: '2px 6px',
+            padding: '3px 8px',
             borderRadius: 'var(--gqai-radius-sm)',
-            backgroundColor: 'var(--gqai-accent)',
+            backgroundColor: '#3b82f6',
             color: 'white',
             fontWeight: 600,
           }}>
@@ -1734,13 +1741,13 @@ const DashboardPage = () => {
           </span>
         </div>
         <div style={{
-          fontSize: 14,
-          fontWeight: 600,
+          fontSize: 20,
+          fontWeight: 700,
           color: 'var(--gqai-text-primary)',
           lineHeight: 1.4,
           marginBottom: summary ? 8 : 0,
           display: '-webkit-box',
-          WebkitLineClamp: 2,
+          WebkitLineClamp: 1,
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden',
         }}>
@@ -1772,18 +1779,93 @@ const DashboardPage = () => {
         )}
         {summary && (
           <div style={{
-            fontSize: 16,
+            fontSize: 15,
+            fontWeight: 600,
             color: 'var(--gqai-text-secondary)',
-            lineHeight: 1.6,
+            lineHeight: 1.4,
             background: '#f8fafc',
-            padding: 10,
+            padding: 5,
             borderRadius: 'var(--gqai-radius-sm)',
-            overflow: 'hidden',
-            display: '-webkit-box',
-            WebkitLineClamp: 9,
-            WebkitBoxOrient: 'vertical',
+            marginBottom: newsSections.length > 0 ? 10 : 0,
           }}>
-            📝 {summary}
+            {formatSummary(summary).map((sentence, idx) => (
+              <div key={idx} style={{ marginBottom: idx < formatSummary(summary).length - 1 ? 8 : 0 }}>
+                {sentence}
+              </div>
+            ))}
+          </div>
+        )}
+        {/* 주요 기사 섹션 */}
+        {newsSections.length > 0 && (
+          <div style={{
+            marginTop: 8,
+            marginLeft: 15,
+            marginRight: 15,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 6,
+          }}>
+            {newsSections.slice(0, 5).map((section: any, sectionIdx: number) => {
+              const article = section.articles?.[0];
+              if (!article) return null;
+
+              return (
+                <a
+                  key={sectionIdx}
+                  href={article.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    overflow: 'hidden',
+                    padding: '4px 0',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.opacity = '0.7';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.opacity = '1';
+                  }}
+                >
+                  <span style={{
+                    fontSize: 13,
+                    color: '#1f2937',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    flex: 1,
+                  }}>
+                    • {article.title}
+                  </span>
+                  <span style={{
+                    fontSize: 12,
+                    color: '#6b7280',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {article.source}
+                  </span>
+                  <span style={{
+                    fontSize: 12,
+                    color: '#6b7280',
+                  }}>
+                    •
+                  </span>
+                  <span style={{
+                    fontSize: 10,
+                    color: '#6b7280',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {article.date}
+                  </span>
+                </a>
+              );
+            })}
           </div>
         )}
       </div>
