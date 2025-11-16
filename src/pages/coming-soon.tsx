@@ -170,7 +170,7 @@ const ComingSoonPage: React.FC = () => {
   const router = useRouter();
 
   const handleEmailClick = () => {
-    window.location.href = 'mailto:gq_newslens@gmail.com';
+    window.location.href = 'mailto:gq.newslens@gmail.com';
   };
 
   return (
@@ -204,7 +204,7 @@ const ComingSoonPage: React.FC = () => {
               </ContactText>
               <EmailBox onClick={handleEmailClick}>
                 <span>📧</span>
-                <span>gq_newslens@gmail.com</span>
+                <span>gq.newslens@gmail.com</span>
               </EmailBox>
             </ContactSection>
 
