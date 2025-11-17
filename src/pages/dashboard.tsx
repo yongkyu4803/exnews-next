@@ -23,6 +23,7 @@ const DashboardPage = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [randomRankingIndices, setRandomRankingIndices] = useState<number[]>([]);
   const [randomBillIndex, setRandomBillIndex] = useState<number>(0);
+  const [currentNewsPage, setCurrentNewsPage] = useState<number>(0); // 뉴스 기사 페이지 인덱스
 
   useEffect(() => {
     setIsMounted(true);
@@ -175,6 +176,31 @@ const DashboardPage = () => {
 
     return () => clearInterval(interval);
   }, [billsData?.latest?.bills?.length]);
+
+  // 정치 뉴스 기사 자동 슬라이드 (10초마다)
+  useEffect(() => {
+    const latestReport = politicalData?.latest;
+    const newsSections = latestReport?.report_data?.newsSections || [];
+
+    // 모든 섹션의 모든 기사를 하나의 배열로 통합
+    const allArticles: any[] = [];
+    newsSections.forEach((section: any) => {
+      if (section.articles && Array.isArray(section.articles)) {
+        allArticles.push(...section.articles);
+      }
+    });
+
+    if (allArticles.length <= 5) return; // 5개 이하면 슬라이드 불필요
+
+    const totalPages = Math.ceil(allArticles.length / 5);
+
+    // 10초마다 페이지 변경
+    const interval = setInterval(() => {
+      setCurrentNewsPage((prevPage) => (prevPage + 1) % totalPages);
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [politicalData?.latest?.report_data?.newsSections]);
 
   // Fetch restaurants
   const { data: restaurantData, isLoading: restaurantLoading } = useQuery(
@@ -1688,6 +1714,17 @@ const DashboardPage = () => {
     const keywords = reportData.keywords || item.keywords || [];
     const newsSections = reportData.newsSections || [];
 
+    // 모든 섹션의 모든 기사를 하나의 배열로 통합
+    const allArticles: any[] = [];
+    newsSections.forEach((section: any) => {
+      if (section.articles && Array.isArray(section.articles)) {
+        allArticles.push(...section.articles);
+      }
+    });
+
+    // 디버깅: 전체 기사 개수 확인
+    console.log('정치 리포트 전체 기사 개수:', allArticles.length, allArticles);
+
     // 요약 텍스트를 문장 단위로 분리 (마침표, 물음표, 느낌표 기준)
     const formatSummary = (text: string) => {
       if (!text) return [];
@@ -1796,76 +1833,106 @@ const DashboardPage = () => {
           </div>
         )}
         {/* 주요 기사 섹션 */}
-        {newsSections.length > 0 && (
-          <div style={{
-            marginTop: 8,
-            marginLeft: 15,
-            marginRight: 15,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 6,
-          }}>
-            {newsSections.slice(0, 5).map((section: any, sectionIdx: number) => {
-              const article = section.articles?.[0];
-              if (!article) return null;
+        {allArticles.length > 0 && (
+          <div>
+            <div style={{
+              marginTop: 8,
+              marginLeft: 15,
+              marginRight: 15,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              minHeight: 145, // 5개 기사 높이 고정 (각 29px * 5)
+            }}>
+              {allArticles.slice(currentNewsPage * 5, currentNewsPage * 5 + 5).map((article: any, articleIdx: number) => {
+                if (!article) return null;
 
-              return (
-                <a
-                  key={sectionIdx}
-                  href={article.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  style={{
-                    textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    overflow: 'hidden',
-                    padding: '4px 0',
-                    transition: 'all 0.2s ease',
-                    cursor: 'pointer',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = '0.7';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = '1';
-                  }}
-                >
-                  <span style={{
-                    fontSize: 13,
-                    color: '#1f2937',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    flex: 1,
-                  }}>
-                    • {article.title}
-                  </span>
-                  <span style={{
-                    fontSize: 12,
-                    color: '#6b7280',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {article.source}
-                  </span>
-                  <span style={{
-                    fontSize: 12,
-                    color: '#6b7280',
-                  }}>
-                    •
-                  </span>
-                  <span style={{
-                    fontSize: 10,
-                    color: '#6b7280',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {article.date}
-                  </span>
-                </a>
-              );
-            })}
+                return (
+                  <a
+                    key={articleIdx}
+                    href={article.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      textDecoration: 'none',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      overflow: 'hidden',
+                      padding: '4px 0',
+                      transition: 'all 0.2s ease',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.opacity = '0.7';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.opacity = '1';
+                    }}
+                  >
+                    <span style={{
+                      fontSize: 13,
+                      color: '#1f2937',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      flex: 1,
+                    }}>
+                      • {article.title}
+                    </span>
+                    <span style={{
+                      fontSize: 12,
+                      color: '#6b7280',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {article.source}
+                    </span>
+                    <span style={{
+                      fontSize: 12,
+                      color: '#6b7280',
+                    }}>
+                      •
+                    </span>
+                    <span style={{
+                      fontSize: 10,
+                      color: '#6b7280',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {article.date}
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+            {/* 페이지 인디케이터 */}
+            {allArticles.length > 5 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: 6,
+                marginTop: 12,
+                paddingBottom: 4,
+              }}>
+                {Array.from({ length: Math.ceil(allArticles.length / 5) }).map((_, idx) => (
+                  <div
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentNewsPage(idx);
+                    }}
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      backgroundColor: idx === currentNewsPage ? '#3b82f6' : '#d1d5db',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
