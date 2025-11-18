@@ -175,7 +175,7 @@ const DashboardPage = () => {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [billsData?.latest?.bills?.length]);
+  }, [billsData?.latest?.bills]);
 
   // 정치 뉴스 기사 자동 슬라이드 (10초마다)
   useEffect(() => {
@@ -200,7 +200,7 @@ const DashboardPage = () => {
     }, 10000);
 
     return () => clearInterval(interval);
-  }, [politicalData?.latest?.report_data?.newsSections]);
+  }, [politicalData?.latest]);
 
   // Fetch restaurants
   const { data: restaurantData, isLoading: restaurantLoading } = useQuery(
@@ -2157,4 +2157,4 @@ const DashboardPage = () => {
   );
 };
 
-export default dynamic(() => Promise.resolve(DashboardPage), { ssr: false });
+export default DashboardPage;

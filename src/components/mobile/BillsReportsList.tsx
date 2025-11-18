@@ -440,6 +440,10 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
         const res = await fetch('/api/bills?landing=true&_t=' + Date.now());
         const json = await res.json();
         console.log('Bills Landing API Response:', json);
+        console.log('✓ latest:', json.latest);
+        console.log('✓ latest.bills length:', json.latest?.bills?.length);
+        console.log('✓ previous length:', json.previous?.length);
+        console.log('✓ totalCount:', json.totalCount);
         return json;
       } else {
         // 페이지네이션 모드
@@ -451,7 +455,8 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
     },
     {
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5분
+      staleTime: useLandingMode ? 0 : 5 * 60 * 1000, // 랜딩 모드는 항상 새로 fetch
+      cacheTime: useLandingMode ? 0 : 5 * 60 * 1000, // 랜딩 모드는 캐시 안함
     }
   );
 
