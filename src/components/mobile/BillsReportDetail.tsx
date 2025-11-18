@@ -323,7 +323,7 @@ const BillsReportDetail: React.FC<BillsReportDetailProps> = ({ slug, onBack }) =
     new Set<RegulationType>(['신설', '강화', '완화', '비규제'])
   );
 
-  const { data, isLoading, error } = useQuery<{ data: BillsReportWithBills }>(
+  const { data, isLoading, error } = useQuery<BillsReportWithBills>(
     ['billsReport', slug],
     () => fetch(`/api/bills/${slug}`).then(res => res.json()),
     {
@@ -331,6 +331,8 @@ const BillsReportDetail: React.FC<BillsReportDetailProps> = ({ slug, onBack }) =
       staleTime: 5 * 60 * 1000,
     }
   );
+
+  console.log('🔍 BillsReportDetail State:', { slug, isLoading, error, hasData: !!data, dataStructure: data });
 
   const toggleSection = (type: RegulationType) => {
     const newExpanded = new Set(expandedSections);
@@ -350,7 +352,7 @@ const BillsReportDetail: React.FC<BillsReportDetailProps> = ({ slug, onBack }) =
     );
   }
 
-  if (error || !data?.data) {
+  if (error || !data) {
     return (
       <Container>
         <BackButton onClick={onBack}>← 목록으로</BackButton>
@@ -359,7 +361,7 @@ const BillsReportDetail: React.FC<BillsReportDetailProps> = ({ slug, onBack }) =
     );
   }
 
-  const report = data.data;
+  const report = data;
   const billsByType: Record<RegulationType, BillItem[]> = {
     '신설': [],
     '강화': [],

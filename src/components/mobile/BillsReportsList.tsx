@@ -460,6 +460,8 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
     }
   );
 
+  console.log('🔍 BillsReportsList State:', { isLoading, error, hasData: !!data, useLandingMode });
+
   if (isLoading) {
     return (
       <Container>
@@ -469,6 +471,7 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
   }
 
   if (error) {
+    console.error('❌ BillsReportsList Error:', error);
     return (
       <Container>
         <ErrorMessage>법안 리포트를 불러오는데 실패했습니다.</ErrorMessage>
@@ -486,6 +489,13 @@ const BillsReportsList: React.FC<BillsReportsListProps> = ({
   const sortedReports = useLandingMode
     ? (latestReport ? [latestReport] : [])
     : paginationData;
+
+  console.log('📋 Render Data:', {
+    latestReport: !!latestReport,
+    previousReportsCount: previousReports.length,
+    sortedReportsCount: sortedReports.length,
+    selectedSlug,
+  });
 
   if (selectedSlug) {
     return (
