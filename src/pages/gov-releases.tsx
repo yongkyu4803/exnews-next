@@ -1,12 +1,12 @@
 import React from 'react';
 import { useQuery } from 'react-query';
 import styled from '@emotion/styled';
-import { Spin, Alert, Card, Typography, List } from 'antd';
+import { Spin, Alert, Typography } from 'antd';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('GovReleases');
 
-const { Title, Text, Link } = Typography;
+const { Title } = Typography;
 
 const PageContainer = styled.div`
   max-width: 1200px;
@@ -42,15 +42,26 @@ const ReleaseItem = styled.div`
   }
 `;
 
-const ReleaseTitle = styled(Link)`
+const ReleaseTitle = styled.a`
   font-size: 16px;
   font-weight: 500;
   display: block;
   margin-bottom: 4px;
+  color: #1890ff;
+  text-decoration: none;
+
+  &:hover {
+    color: #40a9ff;
+    text-decoration: underline;
+  }
 
   @media (max-width: 768px) {
     font-size: 14px;
   }
+`;
+
+const SecondaryText = styled.span`
+  color: #8c8c8c;
 `;
 
 const ReleaseInfo = styled.div`
@@ -59,6 +70,17 @@ const ReleaseInfo = styled.div`
 
   @media (max-width: 768px) {
     font-size: 12px;
+  }
+`;
+
+const CardContainer = styled.div`
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    padding: 16px;
   }
 `;
 
@@ -156,13 +178,13 @@ const GovReleasesPage: React.FC = () => {
 
       {data.data.map((agency) => (
         <AgencySection key={agency.agency_code}>
-          <Card>
+          <CardContainer>
             <AgencyTitle level={3}>
               {agency.agency_name}
               {agency.agency_name_en && (
-                <Text type="secondary" style={{ fontSize: '14px', marginLeft: '8px' }}>
+                <SecondaryText style={{ fontSize: '14px', marginLeft: '8px' }}>
                   ({agency.agency_name_en})
-                </Text>
+                </SecondaryText>
               )}
             </AgencyTitle>
 
@@ -174,11 +196,10 @@ const GovReleasesPage: React.FC = () => {
                 showIcon
               />
             ) : agency.items.length === 0 ? (
-              <Text type="secondary">최근 보도자료가 없습니다.</Text>
+              <SecondaryText>최근 보도자료가 없습니다.</SecondaryText>
             ) : (
-              <List
-                dataSource={agency.items}
-                renderItem={(item) => (
+              <div>
+                {agency.items.map((item) => (
                   <ReleaseItem key={item.id}>
                     <ReleaseTitle href={item.link} target="_blank" rel="noopener noreferrer">
                       {item.title}
@@ -199,10 +220,10 @@ const GovReleasesPage: React.FC = () => {
                       </div>
                     )}
                   </ReleaseItem>
-                )}
-              />
+                ))}
+              </div>
             )}
-          </Card>
+          </CardContainer>
         </AgencySection>
       ))}
     </PageContainer>
