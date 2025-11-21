@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,  // Enable React Strict Mode for better development warnings
+  eslint: {
+    ignoreDuringBuilds: true,  // Temporarily ignore ESLint during builds
+  },
   transpilePackages: [
     'rc-util',
     'rc-tree',

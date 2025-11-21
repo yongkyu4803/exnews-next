@@ -1085,363 +1085,140 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              {/* 정부기관 보도자료 - 2칼럼 */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-                {/* 왼쪽: 공정위 & 소비자원 */}
-                <div style={{
-                  background: 'var(--gqai-bg-card)',
-                  borderRadius: 'var(--gqai-radius-lg)',
-                  boxShadow: 'var(--gqai-shadow-sm)',
-                  padding: 'var(--gqai-space-lg)',
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: 16,
-                  }}>
-                    <h3 style={{
-                      fontSize: 18,
-                      fontWeight: 700,
-                      color: '#1e40af',
-                      margin: 0,
-                      fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
-                    }}>
-                      🏛️ 공정위 · 소비자원
-                    </h3>
-                    <button
-                      style={{
-                        padding: '6px 12px',
-                        fontSize: 12,
-                        color: 'var(--gqai-primary)',
-                        background: 'transparent',
-                        border: '1px solid var(--gqai-border)',
-                        borderRadius: 'var(--gqai-radius-sm)',
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => router.push('/gov-releases')}
-                    >
-                      더보기 →
-                    </button>
-                  </div>
-                  {govReleasesLoading ? (
-                    <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
-                      로딩 중...
-                    </div>
-                  ) : govReleasesData?.data ? (() => {
-                    // FTC와 KCA 찾기
-                    const ftcAgency = govReleasesData.data.find((a: any) => a.agency_code === 'ftc');
-                    const kcaAgency = govReleasesData.data.find((a: any) => a.agency_code === 'kca');
-
-                    const ftcItems = ftcAgency?.items?.slice(0, 3) || [];
-                    const kcaItems = kcaAgency?.items?.slice(0, 3) || [];
-
-                    return (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        {/* 공정거래위원회 */}
-                        {ftcItems.length > 0 && (
-                          <div>
-                            <div style={{
-                              fontSize: 13,
-                              fontWeight: 600,
-                              color: '#3b82f6',
-                              marginBottom: 8,
-                            }}>
-                              공정거래위원회
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                              {ftcItems.map((item: any, index: number) => (
-                                <div
-                                  key={`ftc-${item.id}-${index}`}
-                                  style={{
-                                    padding: 10,
-                                    borderRadius: 6,
-                                    border: '1px solid #e5e7eb',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease',
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor = '#3b82f6';
-                                    e.currentTarget.style.backgroundColor = '#f0f9ff';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = '#e5e7eb';
-                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                  }}
-                                  onClick={() => window.open(item.link, '_blank')}
-                                >
-                                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                                    <span style={{
-                                      fontSize: 11,
-                                      color: '#6b7280',
-                                      minWidth: 50,
-                                      flexShrink: 0,
-                                    }}>
-                                      {item.release_date ? new Date(item.release_date).toLocaleDateString('ko-KR', {
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                      }) : ''}
-                                    </span>
-                                    <span style={{
-                                      fontSize: 13,
-                                      color: '#1f2937',
-                                      flex: 1,
-                                      lineHeight: 1.4,
-                                    }}>
-                                      {item.title}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 한국소비자원 */}
-                        {kcaItems.length > 0 && (
-                          <div>
-                            <div style={{
-                              fontSize: 13,
-                              fontWeight: 600,
-                              color: '#3b82f6',
-                              marginBottom: 8,
-                            }}>
-                              한국소비자원
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                              {kcaItems.map((item: any, index: number) => (
-                                <div
-                                  key={`kca-${item.id}-${index}`}
-                                  style={{
-                                    padding: 10,
-                                    borderRadius: 6,
-                                    border: '1px solid #e5e7eb',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease',
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor = '#3b82f6';
-                                    e.currentTarget.style.backgroundColor = '#f0f9ff';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = '#e5e7eb';
-                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                  }}
-                                  onClick={() => window.open(item.link, '_blank')}
-                                >
-                                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                                    <span style={{
-                                      fontSize: 11,
-                                      color: '#6b7280',
-                                      minWidth: 50,
-                                      flexShrink: 0,
-                                    }}>
-                                      {item.release_date ? new Date(item.release_date).toLocaleDateString('ko-KR', {
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                      }) : ''}
-                                    </span>
-                                    <span style={{
-                                      fontSize: 13,
-                                      color: '#1f2937',
-                                      flex: 1,
-                                      lineHeight: 1.4,
-                                    }}>
-                                      {item.title}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })() : (
-                    <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-tertiary)' }}>
-                      보도자료가 없습니다
-                    </div>
-                  )}
-                </div>
-
-                {/* 오른쪽: 금융위 & 금융감독원 */}
-                <div style={{
-                  background: 'var(--gqai-bg-card)',
-                  borderRadius: 'var(--gqai-radius-lg)',
-                  boxShadow: 'var(--gqai-shadow-sm)',
-                  padding: 'var(--gqai-space-lg)',
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: 16,
-                  }}>
-                    <h3 style={{
-                      fontSize: 18,
-                      fontWeight: 700,
-                      color: '#1e40af',
-                      margin: 0,
-                      fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
-                    }}>
-                      🏦 금융위 · 금융감독원
-                    </h3>
-                    <button
-                      style={{
-                        padding: '6px 12px',
-                        fontSize: 12,
-                        color: 'var(--gqai-primary)',
-                        background: 'transparent',
-                        border: '1px solid var(--gqai-border)',
-                        borderRadius: 'var(--gqai-radius-sm)',
-                        cursor: 'pointer',
-                      }}
-                      onClick={() => router.push('/gov-releases')}
-                    >
-                      더보기 →
-                    </button>
-                  </div>
-                  {govReleasesLoading ? (
-                    <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
-                      로딩 중...
-                    </div>
-                  ) : govReleasesData?.data ? (() => {
-                    // FSC와 FSS 찾기
-                    const fscAgency = govReleasesData.data.find((a: any) => a.agency_code === 'fsc');
-                    const fssAgency = govReleasesData.data.find((a: any) => a.agency_code === 'fss');
-
-                    const fscItems = fscAgency?.items?.slice(0, 3) || [];
-                    const fssItems = fssAgency?.items?.slice(0, 3) || [];
-
-                    return (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        {/* 금융위원회 */}
-                        {fscItems.length > 0 && (
-                          <div>
-                            <div style={{
-                              fontSize: 13,
-                              fontWeight: 600,
-                              color: '#3b82f6',
-                              marginBottom: 8,
-                            }}>
-                              금융위원회
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                              {fscItems.map((item: any, index: number) => (
-                                <div
-                                  key={`fsc-${item.id}-${index}`}
-                                  style={{
-                                    padding: 10,
-                                    borderRadius: 6,
-                                    border: '1px solid #e5e7eb',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease',
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor = '#3b82f6';
-                                    e.currentTarget.style.backgroundColor = '#f0f9ff';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = '#e5e7eb';
-                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                  }}
-                                  onClick={() => window.open(item.link, '_blank')}
-                                >
-                                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                                    <span style={{
-                                      fontSize: 11,
-                                      color: '#6b7280',
-                                      minWidth: 50,
-                                      flexShrink: 0,
-                                    }}>
-                                      {item.release_date ? new Date(item.release_date).toLocaleDateString('ko-KR', {
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                      }) : ''}
-                                    </span>
-                                    <span style={{
-                                      fontSize: 13,
-                                      color: '#1f2937',
-                                      flex: 1,
-                                      lineHeight: 1.4,
-                                    }}>
-                                      {item.title}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* 금융감독원 */}
-                        {fssItems.length > 0 && (
-                          <div>
-                            <div style={{
-                              fontSize: 13,
-                              fontWeight: 600,
-                              color: '#3b82f6',
-                              marginBottom: 8,
-                            }}>
-                              금융감독원
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                              {fssItems.map((item: any, index: number) => (
-                                <div
-                                  key={`fss-${item.id}-${index}`}
-                                  style={{
-                                    padding: 10,
-                                    borderRadius: 6,
-                                    border: '1px solid #e5e7eb',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease',
-                                  }}
-                                  onMouseEnter={(e) => {
-                                    e.currentTarget.style.borderColor = '#3b82f6';
-                                    e.currentTarget.style.backgroundColor = '#f0f9ff';
-                                  }}
-                                  onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = '#e5e7eb';
-                                    e.currentTarget.style.backgroundColor = 'transparent';
-                                  }}
-                                  onClick={() => window.open(item.link, '_blank')}
-                                >
-                                  <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                                    <span style={{
-                                      fontSize: 11,
-                                      color: '#6b7280',
-                                      minWidth: 50,
-                                      flexShrink: 0,
-                                    }}>
-                                      {item.release_date ? new Date(item.release_date).toLocaleDateString('ko-KR', {
-                                        month: '2-digit',
-                                        day: '2-digit',
-                                      }) : ''}
-                                    </span>
-                                    <span style={{
-                                      fontSize: 13,
-                                      color: '#1f2937',
-                                      flex: 1,
-                                      lineHeight: 1.4,
-                                    }}>
-                                      {item.title}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })() : (
-                    <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-tertiary)' }}>
-                      보도자료가 없습니다
-                    </div>
-                  )}
-                </div>
-              </div>
             </div>
+
+          {/* 정부기관 보도자료 - 4칼럼 */}
+          <div style={{
+            background: 'var(--gqai-bg-card)',
+            borderRadius: 'var(--gqai-radius-lg)',
+            boxShadow: 'var(--gqai-shadow-sm)',
+            padding: 'var(--gqai-space-lg)',
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 16,
+            }}>
+              <h3 style={{
+                fontSize: 18,
+                fontWeight: 700,
+                color: '#1e40af',
+                margin: 0,
+                fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
+              }}>
+                🏛️ 정부기관 보도자료
+              </h3>
+              <button
+                style={{
+                  padding: '6px 12px',
+                  fontSize: 12,
+                  color: 'var(--gqai-primary)',
+                  background: 'transparent',
+                  border: '1px solid var(--gqai-border)',
+                  borderRadius: 'var(--gqai-radius-sm)',
+                  cursor: 'pointer',
+                }}
+                onClick={() => router.push('/gov-releases')}
+              >
+                더보기 →
+              </button>
+            </div>
+            {govReleasesLoading ? (
+              <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
+                로딩 중...
+              </div>
+            ) : govReleasesData?.data ? (() => {
+              const ftcAgency = govReleasesData.data.find((a: any) => a.agency_code === 'ftc');
+              const kcaAgency = govReleasesData.data.find((a: any) => a.agency_code === 'kca');
+              const fscAgency = govReleasesData.data.find((a: any) => a.agency_code === 'fsc');
+              const fssAgency = govReleasesData.data.find((a: any) => a.agency_code === 'fss');
+
+              const ftcItems = ftcAgency?.items?.slice(0, 5) || [];
+              const kcaItems = kcaAgency?.items?.slice(0, 5) || [];
+              const fscItems = fscAgency?.items?.slice(0, 5) || [];
+              const fssItems = fssAgency?.items?.slice(0, 5) || [];
+
+              const renderAgencySection = (code: string, name: string, items: any[]) => (
+                <div key={code}>
+                  <div style={{
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: '#3b82f6',
+                    marginBottom: 8,
+                    borderBottom: '2px solid #e5e7eb',
+                    paddingBottom: 6,
+                  }}>
+                    {name}
+                  </div>
+                  {items.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {items.map((item: any, index: number) => (
+                        <div
+                          key={`${code}-${item.id}-${index}`}
+                          style={{
+                            padding: 10,
+                            borderRadius: 6,
+                            border: '1px solid #e5e7eb',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = '#3b82f6';
+                            e.currentTarget.style.backgroundColor = '#f0f9ff';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = '#e5e7eb';
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
+                          onClick={() => window.open(item.link, '_blank')}
+                        >
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                            <span style={{
+                              fontSize: 11,
+                              color: '#6b7280',
+                              minWidth: 50,
+                              flexShrink: 0,
+                            }}>
+                              {item.release_date ? new Date(item.release_date).toLocaleDateString('ko-KR', {
+                                month: '2-digit',
+                                day: '2-digit',
+                              }) : ''}
+                            </span>
+                            <span style={{
+                              fontSize: 13,
+                              color: '#1f2937',
+                              flex: 1,
+                              lineHeight: 1.4,
+                            }}>
+                              {item.title}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: 20, color: '#9ca3af', fontSize: 12 }}>
+                      보도자료가 없습니다
+                    </div>
+                  )}
+                </div>
+              );
+
+              return (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+                  {renderAgencySection('ftc', '공정거래위원회', ftcItems)}
+                  {renderAgencySection('kca', '한국소비자원', kcaItems)}
+                  {renderAgencySection('fsc', '금융위원회', fscItems)}
+                  {renderAgencySection('fss', '금융감독원', fssItems)}
+                </div>
+              );
+            })() : (
+              <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-tertiary)' }}>
+                보도자료가 없습니다
+              </div>
+            )}
+          </div>
           </div>
         );
     }
