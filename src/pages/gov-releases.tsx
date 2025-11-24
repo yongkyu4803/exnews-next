@@ -1,88 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from 'react-query';
-import styled from '@emotion/styled';
-import { Spin, Alert, Typography } from 'antd';
+import Head from 'next/head';
+import TopNavBar from '@/components/mobile/TopNavBar';
 import { createLogger } from '@/utils/logger';
 
-const logger = createLogger('GovReleases');
-
-const { Title } = Typography;
-
-const PageContainer = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px;
-
-  @media (max-width: 768px) {
-    padding: 16px;
-  }
-`;
-
-const AgencySection = styled.div`
-  margin-bottom: 32px;
-
-  @media (max-width: 768px) {
-    margin-bottom: 24px;
-  }
-`;
-
-const AgencyTitle = styled(Title)`
-  && {
-    margin-bottom: 16px;
-    color: #1890ff;
-  }
-`;
-
-const ReleaseItem = styled.div`
-  padding: 12px 0;
-  border-bottom: 1px solid #f0f0f0;
-
-  &:last-child {
-    border-bottom: none;
-  }
-`;
-
-const ReleaseTitle = styled.a`
-  font-size: 16px;
-  font-weight: 500;
-  display: block;
-  margin-bottom: 4px;
-  color: #1890ff;
-  text-decoration: none;
-
-  &:hover {
-    color: #40a9ff;
-    text-decoration: underline;
-  }
-
-  @media (max-width: 768px) {
-    font-size: 14px;
-  }
-`;
-
-const SecondaryText = styled.span`
-  color: #8c8c8c;
-`;
-
-const ReleaseInfo = styled.div`
-  font-size: 14px;
-  color: #666;
-
-  @media (max-width: 768px) {
-    font-size: 12px;
-  }
-`;
-
-const CardContainer = styled.div`
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-  @media (max-width: 768px) {
-    padding: 16px;
-  }
-`;
+const logger = createLogger('Pages:GovReleases');
 
 interface PressRelease {
   id: number | string;
@@ -105,7 +27,13 @@ interface AgencyData {
 }
 
 const GovReleasesPage: React.FC = () => {
-  const { data, isLoading, error } = useQuery<{ data: AgencyData[] }>(
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const { data, isLoading, error } = useQuery<{ data: AgencyData[] }, Error>(
     'govReleases',
     async () => {
       const response = await fetch('/api/gov-releases');
@@ -132,101 +60,320 @@ const GovReleasesPage: React.FC = () => {
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
-    return date.toLocaleDateString('ko-KR');
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   };
 
-  if (isLoading) {
-    return (
-      <PageContainer>
-        <div style={{ textAlign: 'center', padding: '100px 0' }}>
-          <Spin size="large" />
-          <div style={{ marginTop: 16 }}>정부기관 보도자료를 불러오는 중...</div>
-        </div>
-      </PageContainer>
-    );
-  }
-
-  if (error) {
-    return (
-      <PageContainer>
-        <Alert
-          message="오류 발생"
-          description="정부기관 보도자료를 불러오는데 실패했습니다."
-          type="error"
-          showIcon
-        />
-      </PageContainer>
-    );
-  }
-
-  if (!data || !data.data || data.data.length === 0) {
-    return (
-      <PageContainer>
-        <Alert
-          message="데이터 없음"
-          description="표시할 보도자료가 없습니다."
-          type="info"
-          showIcon
-        />
-      </PageContainer>
-    );
+  if (!isMounted) {
+    return null;
   }
 
   return (
-    <PageContainer>
-      <Title level={2}>정부기관 보도자료</Title>
+    <>
+      <Head>
+        <title>정부기관 보도자료 | EXNEWS</title>
+        <meta name="description" content="공정거래위원회, 한국소비자원, 금융위원회, 금융감독원의 최신 보도자료" />
+      </Head>
 
-      {data.data.map((agency) => (
-        <AgencySection key={agency.agency_code}>
-          <CardContainer>
-            <AgencyTitle level={3}>
-              {agency.agency_name}
-              {agency.agency_name_en && (
-                <SecondaryText style={{ fontSize: '14px', marginLeft: '8px' }}>
-                  ({agency.agency_name_en})
-                </SecondaryText>
-              )}
-            </AgencyTitle>
+      <TopNavBar />
 
-            {agency.error ? (
-              <Alert
-                message={`${agency.agency_name} 데이터 오류`}
-                description={agency.error}
-                type="warning"
-                showIcon
-              />
-            ) : agency.items.length === 0 ? (
-              <SecondaryText>최근 보도자료가 없습니다.</SecondaryText>
-            ) : (
-              <div>
-                {agency.items.map((item) => (
-                  <ReleaseItem key={item.id}>
-                    <ReleaseTitle href={item.link} target="_blank" rel="noopener noreferrer">
-                      {item.title}
-                    </ReleaseTitle>
-                    <ReleaseInfo>
-                      {item.release_date && <span>{formatDate(item.release_date)}</span>}
-                      {item.department && (
-                        <>
-                          <span style={{ margin: '0 8px' }}>|</span>
-                          <span>{item.department}</span>
-                        </>
-                      )}
-                    </ReleaseInfo>
-                    {item.summary && (
-                      <div style={{ marginTop: '8px', fontSize: '13px', color: '#888' }}>
-                        {item.summary.substring(0, 150)}
-                        {item.summary.length > 150 && '...'}
-                      </div>
+      <div style={{
+        maxWidth: '1400px',
+        margin: '0 auto',
+        padding: 'var(--gqai-space-xl)',
+        minHeight: 'calc(100vh - 64px)',
+        background: 'var(--gqai-bg-main)',
+      }}>
+        {/* 페이지 헤더 */}
+        <div style={{
+          marginBottom: 'var(--gqai-space-xl)',
+        }}>
+          <h1 style={{
+            fontSize: 32,
+            fontWeight: 700,
+            color: 'var(--gqai-text-primary)',
+            marginBottom: 'var(--gqai-space-sm)',
+            fontFamily: 'var(--gqai-font-display)',
+          }}>
+            🏛️ 정부기관 보도자료
+          </h1>
+          <p style={{
+            fontSize: 16,
+            color: 'var(--gqai-text-secondary)',
+            margin: 0,
+          }}>
+            4개 주요 정부기관의 최신 보도자료를 확인하세요
+          </p>
+        </div>
+
+        {isLoading && (
+          <div style={{
+            textAlign: 'center',
+            padding: '100px 0',
+          }}>
+            <div style={{
+              display: 'inline-block',
+              width: 40,
+              height: 40,
+              border: '4px solid var(--gqai-border)',
+              borderTopColor: 'var(--gqai-primary)',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+            }} />
+            <p style={{
+              marginTop: 'var(--gqai-space-md)',
+              color: 'var(--gqai-text-secondary)',
+            }}>
+              정부기관 보도자료를 불러오는 중...
+            </p>
+          </div>
+        )}
+
+        {/* 에러 상태 */}
+        {error && (
+          <div style={{
+            background: '#fee',
+            border: '1px solid #fcc',
+            borderRadius: 'var(--gqai-radius-md)',
+            padding: 'var(--gqai-space-lg)',
+            textAlign: 'center',
+          }}>
+            <p style={{
+              fontSize: 18,
+              fontWeight: 600,
+              color: '#c33',
+              marginBottom: 'var(--gqai-space-sm)',
+            }}>
+              ⚠️ 오류 발생
+            </p>
+            <p style={{
+              fontSize: 14,
+              color: '#666',
+              margin: 0,
+            }}>
+              정부기관 보도자료를 불러오는데 실패했습니다.
+            </p>
+          </div>
+        )}
+
+        {/* 데이터 없음 */}
+        {!isLoading && !error && (!data || !data.data || data.data.length === 0) && (
+          <div style={{
+            background: 'var(--gqai-bg-card)',
+            border: '1px solid var(--gqai-border)',
+            borderRadius: 'var(--gqai-radius-md)',
+            padding: 'var(--gqai-space-lg)',
+            textAlign: 'center',
+          }}>
+            <p style={{
+              fontSize: 16,
+              color: 'var(--gqai-text-secondary)',
+              margin: 0,
+            }}>
+              표시할 보도자료가 없습니다.
+            </p>
+          </div>
+        )}
+
+        {/* 기관별 보도자료 표시 */}
+        {!isLoading && !error && data?.data && data.data.length > 0 && (
+          <div style={{
+            display: 'grid',
+            gap: 'var(--gqai-space-xl)',
+          }}>
+            {data.data.map((agency) => (
+              <div
+                key={agency.agency_code}
+                style={{
+                  background: 'var(--gqai-bg-card)',
+                  borderRadius: 'var(--gqai-radius-lg)',
+                  boxShadow: 'var(--gqai-shadow-sm)',
+                  padding: 'var(--gqai-space-lg)',
+                  border: '1px solid var(--gqai-border-light)',
+                }}
+              >
+                {/* 기관 헤더 */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 'var(--gqai-space-lg)',
+                  paddingBottom: 'var(--gqai-space-md)',
+                  borderBottom: '2px solid var(--gqai-primary)',
+                }}>
+                  <div>
+                    <h2 style={{
+                      fontSize: 24,
+                      fontWeight: 700,
+                      color: 'var(--gqai-primary)',
+                      margin: 0,
+                      marginBottom: 4,
+                      fontFamily: 'var(--gqai-font-display)',
+                    }}>
+                      {agency.agency_name}
+                    </h2>
+                    {agency.agency_name_en && (
+                      <p style={{
+                        fontSize: 13,
+                        color: 'var(--gqai-text-tertiary)',
+                        margin: 0,
+                      }}>
+                        {agency.agency_name_en}
+                      </p>
                     )}
-                  </ReleaseItem>
-                ))}
+                  </div>
+                  {agency.agency_url && (
+                    <a
+                      href={agency.agency_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: 13,
+                        color: 'var(--gqai-primary)',
+                        textDecoration: 'none',
+                        padding: '6px 12px',
+                        border: '1px solid var(--gqai-primary)',
+                        borderRadius: 'var(--gqai-radius-sm)',
+                        transition: 'all var(--gqai-transition-fast)',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--gqai-primary)';
+                        e.currentTarget.style.color = '#fff';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = 'var(--gqai-primary)';
+                      }}
+                    >
+                      공식 홈페이지 →
+                    </a>
+                  )}
+                </div>
+
+                {/* 에러 또는 보도자료 목록 */}
+                {agency.error ? (
+                  <div style={{
+                    background: '#fff9e6',
+                    border: '1px solid #ffe58f',
+                    borderRadius: 'var(--gqai-radius-md)',
+                    padding: 'var(--gqai-space-md)',
+                  }}>
+                    <p style={{
+                      fontSize: 14,
+                      color: '#ad6800',
+                      margin: 0,
+                    }}>
+                      ⚠️ {agency.agency_name} 데이터 오류: {agency.error}
+                    </p>
+                  </div>
+                ) : agency.items.length === 0 ? (
+                  <p style={{
+                    fontSize: 14,
+                    color: 'var(--gqai-text-tertiary)',
+                    textAlign: 'center',
+                    padding: 'var(--gqai-space-lg)',
+                    margin: 0,
+                  }}>
+                    최근 보도자료가 없습니다.
+                  </p>
+                ) : (
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'var(--gqai-space-md)',
+                  }}>
+                    {agency.items.map((item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          padding: 'var(--gqai-space-md)',
+                          borderRadius: 'var(--gqai-radius-md)',
+                          border: '1px solid var(--gqai-border-light)',
+                          transition: 'all var(--gqai-transition-fast)',
+                          cursor: 'pointer',
+                          background: 'var(--gqai-bg-main)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--gqai-primary)';
+                          e.currentTarget.style.boxShadow = 'var(--gqai-shadow-sm)';
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--gqai-border-light)';
+                          e.currentTarget.style.boxShadow = 'none';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                        }}
+                        onClick={() => window.open(item.link, '_blank')}
+                      >
+                        {/* 제목 */}
+                        <h3 style={{
+                          fontSize: 16,
+                          fontWeight: 600,
+                          color: 'var(--gqai-text-primary)',
+                          margin: 0,
+                          marginBottom: 8,
+                          lineHeight: 1.5,
+                        }}>
+                          {item.title}
+                        </h3>
+
+                        {/* 메타 정보 */}
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 12,
+                          fontSize: 13,
+                          color: 'var(--gqai-text-secondary)',
+                          marginBottom: item.summary ? 8 : 0,
+                        }}>
+                          {item.release_date && (
+                            <span>📅 {formatDate(item.release_date)}</span>
+                          )}
+                          {item.department && (
+                            <>
+                              <span style={{ color: 'var(--gqai-border)' }}>|</span>
+                              <span>🏢 {item.department}</span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* 요약 */}
+                        {item.summary && (
+                          <p style={{
+                            fontSize: 14,
+                            color: 'var(--gqai-text-tertiary)',
+                            lineHeight: 1.6,
+                            margin: 0,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                          }}>
+                            {item.summary}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </CardContainer>
-        </AgencySection>
-      ))}
-    </PageContainer>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <style jsx global>{`
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
+    </>
   );
 };
 
