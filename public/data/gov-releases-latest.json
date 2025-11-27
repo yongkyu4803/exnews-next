@@ -1,0 +1,288 @@
+{
+  "metadata": {
+    "skill_version": "1.1.0",
+    "schema_version": "1.0.0",
+    "generated_at": "2025-11-26T05:53:34.068534+09:00",
+    "timezone": "Asia/Seoul",
+    "generator": "govt-press-releases"
+  },
+  "query": {
+    "limit_per_agency": 5,
+    "keywords": null,
+    "date_range_days": 7,
+    "agencies_requested": [
+      "ftc",
+      "kca",
+      "fsc",
+      "fss"
+    ]
+  },
+  "statistics": {
+    "total_items": 19,
+    "agencies_succeeded": 4,
+    "agencies_failed": 0,
+    "collection_duration_seconds": 4.11,
+    "items_by_agency": {
+      "ftc": 5,
+      "kca": 4,
+      "fsc": 5,
+      "fss": 5
+    }
+  },
+  "results": [
+    {
+      "agency_code": "ftc",
+      "name": "공정거래위원회",
+      "name_en": "Fair Trade Commission",
+      "url": "https://ftc.go.kr/",
+      "collection_method": "html_parsing",
+      "collection_time": "2025-11-26T05:53:34.068577+09:00",
+      "collection_status": "success",
+      "items": [
+        {
+          "title": "(주)디엔오토모티브의 기술유용행위 제재",
+          "link": "https://ftc.go.kr/www/selectBbsNttView.do?pageUnit=10&pageIndex=1&searchCnd=all&key=12&bordCd=3&searchCtgry=01,02&nttSn=46666",
+          "date": "2025-11-25",
+          "department": "기술유용조사과",
+          "summary": null,
+          "metadata": {
+            "char_count": 21,
+            "has_summary": false
+          }
+        },
+        {
+          "title": "유통분야 직매입 표준거래계약서 3종 개정",
+          "link": "https://ftc.go.kr/www/selectBbsNttView.do?pageUnit=10&pageIndex=1&searchCnd=all&key=12&bordCd=3&searchCtgry=01,02&nttSn=46665",
+          "date": "2025-11-25",
+          "department": "유통대리점정책과",
+          "summary": null,
+          "metadata": {
+            "char_count": 22,
+            "has_summary": false
+          }
+        },
+        {
+          "title": "(주)푸르밀의 재판매가격유지행위 제재",
+          "link": "https://ftc.go.kr/www/selectBbsNttView.do?pageUnit=10&pageIndex=1&searchCnd=all&key=12&bordCd=3&searchCtgry=01,02&nttSn=46657",
+          "date": "2025-11-24",
+          "department": "경쟁과",
+          "summary": null,
+          "metadata": {
+            "char_count": 20,
+            "has_summary": false
+          }
+        },
+        {
+          "title": "하도급대금 지급 안정성 강화 대책 발표",
+          "link": "https://ftc.go.kr/www/selectBbsNttView.do?pageUnit=10&pageIndex=1&searchCnd=all&key=12&bordCd=3&searchCtgry=01,02&nttSn=46654",
+          "date": "2025-11-21",
+          "department": "기업거래정책과",
+          "summary": null,
+          "metadata": {
+            "char_count": 21,
+            "has_summary": false
+          }
+        },
+        {
+          "title": "공정위-조정원-한국규제학회 공동학술대회 개최",
+          "link": "https://ftc.go.kr/www/selectBbsNttView.do?pageUnit=10&pageIndex=1&searchCnd=all&key=12&bordCd=3&searchCtgry=01,02&nttSn=46653",
+          "date": "2025-11-21",
+          "department": "시장구조개선정책과",
+          "summary": null,
+          "metadata": {
+            "char_count": 24,
+            "has_summary": false
+          }
+        }
+      ]
+    },
+    {
+      "agency_code": "kca",
+      "name": "한국소비자원",
+      "name_en": "Korea Consumer Agency",
+      "url": "https://www.kca.go.kr/",
+      "collection_method": "rss_feed",
+      "collection_time": "2025-11-26T05:53:34.068612+09:00",
+      "collection_status": "success",
+      "items": [
+        {
+          "title": "[피해예방주의보] 중고 스마트폰, 최근 미배송 등 소비자피해 급증",
+          "link": "https://www.kca.go.kr/home/sub.do?menukey=4002&mode=view&no=1003958753",
+          "date": "2025-11-23",
+          "department": "정보통신팀",
+          "summary": null,
+          "metadata": {
+            "char_count": 36,
+            "has_summary": false
+          }
+        },
+        {
+          "title": "[피해예방주의보] 서울시 헬스장 피해 증가...“환불 규정 꼭 확인하세요!”",
+          "link": "https://www.kca.go.kr/home/sub.do?menukey=4002&mode=view&no=1003958054",
+          "date": "2025-11-20",
+          "department": "문화레저팀",
+          "summary": null,
+          "metadata": {
+            "char_count": 42,
+            "has_summary": false
+          }
+        },
+        {
+          "title": "[소비자안전주의보] 온열 기능 다리 마사지기, 저온화상·피부손상에 주의해야",
+          "link": "https://www.kca.go.kr/home/sub.do?menukey=4002&mode=view&no=1003958595",
+          "date": "2025-11-20",
+          "department": "위해관리팀",
+          "summary": null,
+          "metadata": {
+            "char_count": 41,
+            "has_summary": false
+          }
+        },
+        {
+          "title": "[피해예방주의보] 겨울철 보일러 난방 불량·누수 등 하자 관련 소비자 불만 많아",
+          "link": "https://www.kca.go.kr/home/sub.do?menukey=4002&mode=view&no=1003957524",
+          "date": "2025-11-19",
+          "department": "주택공산품팀",
+          "summary": null,
+          "metadata": {
+            "char_count": 44,
+            "has_summary": false
+          }
+        }
+      ]
+    },
+    {
+      "agency_code": "fsc",
+      "name": "금융위원회",
+      "name_en": "Financial Services Commission",
+      "url": "https://www.fsc.go.kr/",
+      "collection_method": "rss_feed",
+      "collection_time": "2025-11-26T05:53:34.068624+09:00",
+      "collection_status": "success",
+      "items": [
+        {
+          "title": "금융위‧검찰‧금감원‧거래소 합동「불공정거래 조사‧심리기관 협의회」 개최",
+          "link": "https://www.fsc.go.kr/no010101/85731",
+          "date": "2025-11-25",
+          "department": null,
+          "summary": "금융위‧검찰‧금감원‧거래소 합동「불공정거래 조사‧심리기관 협의회」 개최 󰋼 △지난 7월 발표한 「자본시장 불공정거래 근절 실천방안」의 이행상황을 점검하고, △“주가조작 근절 합동대응단”의 경과ㆍ조사실적과 △10월말부터 가동 중인 거래소의 개인기반 감시체계 활용 현황을 공유하는 등 자본시장 불공정거래 관련 주요 현안 논의 11월 25일 금융위원회ㆍ검찰ㆍ금융감독원ㆍ한국거래소는 ’25년 제4차* 「불공정거래 조사ㆍ심리기관 협의회」(이하 ‘조심협’)를 개최하여 불공정거래 관련 주요 현안을 논의하였다. * 제2차(6.18) 및 제3차(6.25) 조심협은 ｢자본시장 불공정거래 근절 실천방안｣(7.9, 관계기관 합동) 마련을 위한 논의 진행 조심협은 혐의포착 및 심리(거래소) → 조사(금융위ㆍ금감원) → 수사(검찰) 등 유기적이고 효율적인 불공정거래 대응체계를 갖추고자 기관별 대응현황 및 이슈를 공유하고 협력과제를 발굴ㆍ추진해 나가는 협의체이다. 금번 회의의 주요 논의 사항은 다음과 같다. <",
+          "metadata": {
+            "char_count": 39,
+            "has_summary": true
+          }
+        },
+        {
+          "title": "초국경 범죄 관련 자금세탁방지 대응방향을 논의했습니다. - 이형주 금융정보분석원장, 초국경 범죄 관련「자금세탁방지 유관기관협의회」 개최",
+          "link": "https://www.fsc.go.kr/no010101/85721",
+          "date": "2025-11-24",
+          "department": null,
+          "summary": "초국경 범죄 관련 자금세탁방지 대응방향을 논의했습니다. - 이형주 금융정보분석원장, 초국경 범죄 관련「자금세탁방지 유관기관협의회」 개최 - [ 유관기관협의회 개요 ] 금융정보분석원(이하 ‘FIU’)은 11월 24일(월) 금감원, 16개 유관기관 등과 함께 초국경 범죄 관련 「자금세탁방지(Anti-Money Laundering, 이하 AML) 유관기관협의회」를 개최하였다. 금번 회의는 해외에 거점을 두고 우리 국민을 대상으로 하는 초국경 범죄 관련 자금세탁에 대한 철저한 대응체계 마련을 위하여 개최되었다. ▪ 일시 / 장소 : ’25.11.24(월) 10:00~11:30 / 서울정부청사 16층 대회의실 ▪ 참석 : FIU 원장(주재), 금감원, 은행·금투·생보·손보·여전·핀테크·온투업·대부업·카지노 협회, 저축은행·농협·수협·신협·산림조합·새마을금고 중앙회, DAXA 등 총 16개 유관기관 임원, 은행 및 가상자산사업자 AML 담당자 등 [ 주요",
+          "metadata": {
+            "char_count": 75,
+            "has_summary": true
+          }
+        },
+        {
+          "title": "공인회계사 자격·징계위원회 개최 결과 - 2026년 공인회계사 최소선발예정인원 결정 -",
+          "link": "https://www.fsc.go.kr/no010101/85717",
+          "date": "2025-11-21",
+          "department": null,
+          "summary": "공인회계사 자격·징계위원회 개최 결과 - 2026년 공인회계사 최소선발예정인원 결정 - 2026년 공인회계사 최소선발예정인원은 1,150명으로 결정 금융위원회는 ‘25.11.21(금) 공인회계사 자격·징계위원회(위원장: 권대영 금융위 부위원장)를 개최하여 2026년도 공인회계사 최소선발예정인원을 1,150명으로 결정하였습니다. 또한, 이에 비례하여 2025년도 공인회계사 1차 시험 합격자 수는 2,800명으로 의결하였습니다. ※ 최소선발예정인원은 「공인회계사법 시행령」에 따른 최소한의 합격인원으로 실제 합격인원은 제2차 시험 채점결과에 따라 더 많아질 수 있음 ▪ 구성 : [당연직] 금융위 부위원장(長), 증권선물위원회 상임위원, 금융위 3급 이상 (총11명) 공무원, 금융감독원 회계전문가 (이상 4명)[위촉직] 한국공인회계사회 회장이 지명하는 자, 한국회계기준원/상장회사협의회/대한상공회의소 추천자 각 1인, 회계·감사전문가 3인 (이상 7명)",
+          "metadata": {
+            "char_count": 48,
+            "has_summary": true
+          }
+        },
+        {
+          "title": "생산적 금융 확대, 지식재산(IP) 금융으로 이룬다 - 지식재산처·금융위원회 「제7회 지식재산(IP) 금융포럼」 공동 개최",
+          "link": "https://www.fsc.go.kr/no010101/85711",
+          "date": "2025-11-20",
+          "department": null,
+          "summary": "생산적 금융 확대, 지식재산(IP) 금융으로 이룬다 - 지식재산처·금융위원회 「제7회 지식재산(IP) 금융포럼」 공동 개최 - 지식재산처(처장 김용선)와 금융위원회(위원장 이억원)은 11. 20.(목) 14시 페어몬트 앰배서더(서울 영등포구) 그랜드볼룸에서 「제7회 지식재산(IP) 금융포럼」을 공동 개최했다. ‘생산적 금융으로의 전환 : 지식재산(IP)금융의 역할’을 주제로 진행된 포럼에는 목성호 지식재산처 차장, 신진창 금융위원회 사무처장을 비롯해, 은행, 투자기관, 보증기관, 발명 등의 평가기관 및 지식재산(IP) 금융에 관심 있는 기업 관계자 등 약 140명이 참석했다. 이번 행사는 최근 AI, 양자기술, 바이오 등 첨단기술의 발전 속도가 가속화되면서 첨단 기술 기업에 대한 자금 공급이 중요해지는 상황에서, 대표적인 생산적 금융인 지식재산 금융 활성화 방안을 논의하기 위해 마련되었다. 지식재산처와 금융위원회는 지식재산(IP) 금융 확대를 위해 꾸준히 노력해왔으며, 그 결과 우리",
+          "metadata": {
+            "char_count": 68,
+            "has_summary": true
+          }
+        },
+        {
+          "title": "폴란드 금융감독청(KNF), 기업은행 폴란드법인 인가 완료",
+          "link": "https://www.fsc.go.kr/no010101/85709",
+          "date": "2025-11-20",
+          "department": null,
+          "summary": "폴란드 금융감독청(KNF), 기업은행 폴란드법인 인가 완료 폴란드 금융감독청(KNF; Komisja Nadzoru Finansowego)은 중소기업은행(이하 ‘기은’) 폴란드법인에 대한 2024년 11월 설립인가(예비인가)에 이어 2025년 11월 19일(현지시각) 영업인가(본인가)를 통해 은행업 인가를 완료하였다. 이는 기은이 2023년 5월 브로츠와프 사무소를 설치하여 폴란드 진출을 추진한 지 2년 6개월 만에 거둔 성과이다. 이번 사례는 베트남중앙은행(SBV)의 기은 베트남법인 인가심사 개시(’25.5월)와 더불어 해외 금융당국과의 협력 강화가 우리 금융회사 해외진출을 효과적으로 촉진할 수 있음을 보여준다. * [폴란드 진출 현황(총 5개)] (법인) 기은 / (지점) 우리, 하나 / (사무소) 수은, 신한 ※ “금융위원장, 폴란드 금융감독청(KNF)과 MOU 체결” (’24.11.14. 보도자료)“베트남중앙은행(SBV), 기은(법인)･산은(지점) 인가서류접수증 발급” (’25",
+          "metadata": {
+            "char_count": 32,
+            "has_summary": true
+          }
+        }
+      ]
+    },
+    {
+      "agency_code": "fss",
+      "name": "금융감독원",
+      "name_en": "Financial Supervisory Service",
+      "url": "https://www.fss.or.kr/",
+      "collection_method": "open_api",
+      "collection_time": "2025-11-26T05:53:34.068634+09:00",
+      "collection_status": "success",
+      "items": [
+        {
+          "title": "투자자가 안심하고 거래할 수 있는 자본시장 IT인프라를 만들어 나가겠습니다.",
+          "link": "https://www.fss.or.kr/fss/bbs/B0000188/view.do?nttId=207605&menuNo=200218",
+          "date": "2025-11-25",
+          "department": "금융감독원",
+          "summary": "□ 금융감독원은 ''25.11.25.(화) 금융투자협회와 함께 자본시장 IT 및 정보보안 안전성 제고를 위한 4분기 정례 간담회*를 개최하였음 * 「자본시장 전자금융거래 안전성 제고 방안(이하 ''종합대책'')」(금감원, ''25.8월 발표) 후속조치 ㅇ 금번 간담회에서 금감원은 지속 발생하는 전산사고의 감축 및 예방과 투자자 보호 강화를 위해 증권업계에 보다 각별한 주의를 당부하는 한편, - 종합대책에 따른 엄정 검사,재재 기조를 재차 강조하였음 □ 동 간담회에서 금감원은 증권사 등의 IT,정보보안 임원(CIO, CISO 등)과 반복적 위규사항, 검사,제재 사례 및 유의사항 등을 공유하고, ㅇ 업계(증권사),유관기관(금보원 등)에서는 종합대책 준수현황, 제도개선 필요사항, 사이버 위협 동향 등을 발표하였음 ㅁ (일시) ''25.11.25.(화) 16:00∼18:00 ㅁ (장소) 금융투자협회 22",
+          "metadata": {
+            "char_count": 42,
+            "has_summary": true
+          }
+        },
+        {
+          "title": "금융위, 검찰, 금감원, 거래소 합동 「불공정거래 조사, 심리기관 협의회」 개최",
+          "link": "https://www.fss.or.kr/fss/bbs/B0000188/view.do?nttId=207599&menuNo=200218",
+          "date": "2025-11-25",
+          "department": "금융감독원",
+          "summary": "△ 지난 7월 발표한 「자본시장 불공정거래 근절 실천방안」의 이행상황을 점검하고, △\"주가조작 근절 합동대응단\"의 경과,조사실적과 △10월말부터 가동 중인 거래소의 개인기반 감시체계 활용 현황을 공유하는 등 자본시장 불공정거래 관련 주요 현안 논의 ※ 자세한 내용은 첨부파일을 참고하시기 바랍니다.",
+          "metadata": {
+            "char_count": 44,
+            "has_summary": true
+          }
+        },
+        {
+          "title": "부산 글로벌 해양금융허브 도약을 위한 2025 부산 해양금융위크 및 해양금융컨벤션 개최",
+          "link": "https://www.fss.or.kr/fss/bbs/B0000188/view.do?nttId=207593&menuNo=200218",
+          "date": "2025-11-25",
+          "department": "금융감독원",
+          "summary": "□ ''25.11.25.(화), 금융감독원은 부산의 글로벌 해양금융허브 도약을 위한 ''2025 부산 해양금융위크(11.25.~26.)''의 시작을 알리는 행사로서, ㅇ 개막식 및 ''2025 부산 해양금융컨벤션''을 부산광역시 등 관계기관과 공동으로 부산 롯데호텔에서 개최하였음 □ ''부산 해양금융컨벤션''은 ''13년 최초 개최된 이래 해양 특화 금융중심지로서 부산의 비전 및 글로벌 해양금융 동향을 논의하는 국제행사로 자리매김하였으며, ㅇ ''21년부터 관련 해양금융 행사들과 통합 및 확대 개편을 통해 ''부산 해양금융위크'' 기간 중 개최되고 있음 □ 금번 행사는 다양한 해양금융 관계자가 모여 글로벌 해양도시 부산이 해양금융허브로 자리매김하기 위한 지혜를 나누는 자리였으며, ㅇ 특히, 전통적 모델에 더하여 자본시장 활성화를 통한 해양금융 육성방안을 모색하면서 국내 해양,금융시장에 새로운 활력을 불어넣을 것으로 기대함 ※ 전통적으로 해운,조선기업 등은",
+          "metadata": {
+            "char_count": 48,
+            "has_summary": true
+          }
+        },
+        {
+          "title": "'25.9월말 보험회사 대출채권 현황",
+          "link": "https://www.fss.or.kr/fss/bbs/B0000188/view.do?nttId=207587&menuNo=200218",
+          "date": "2025-11-25",
+          "department": "금융감독원",
+          "summary": "□ ''25.9월말 건전성 지표가 전분기말 대비 소폭 개선*되었지만 경기회복 지연 등으로 대출채권의 건전성 지표가 악화될 우려가 상존 * (연체율,연체잔액) ''25.6월 0.83%, 16,172억원 → ''25.9월 0.81%, 15,527억원 (부실비율,부실잔액) ''25.6월 1.00%, 19,490억원 → ''25.9월 0.98%, 18,690억원 ㅇ 금융감독원은 향후 연체,부실 확대에 대비하여 보험회사의 손실흡수능력 확충 및 건전성(리스크)관리 강화를 지도할 예정 ※ 자세한 내용은 첨부파일을 참고하시기 바랍니다.",
+          "metadata": {
+            "char_count": 20,
+            "has_summary": true
+          }
+        },
+        {
+          "title": "이찬진 금융감독원장, 증권사 현장 방문",
+          "link": "https://www.fss.or.kr/fss/bbs/B0000188/view.do?nttId=207570&menuNo=200218",
+          "date": "2025-11-24",
+          "department": "금융감독원",
+          "summary": "□ 이찬진 금융감독원장은 '25.11.24.(월) 자기자본 4조원 종투사로 지정된 키움증권* 본사를 방문하여 * 11.19.(수) 4조원 이상 종투사 지정 및 단기금융업 인가 → 발행어음 업무 영위 예정 ㅇ 단기금융업(발행어음 업무) 준비 상황을 확인하고, 모험자본 공급계획, 투자자 보호 방안 및 IT 안정성 강화 방안 등 주요 현안을 점검하였음 □ 먼저 키움증권 임직원들과 \"투자자 보호 강화\" 선언을 진행하고, 금융투자자 보호에 대한 각오와 실천 의지를 다짐하였으며 ㅇ 이어 모바일을 통한 비대면 발행어음 가입 절차 시연을 참관하고, 비대면 가입 과정에서 투자자 보호 장치 및 절차가 적정하게 마련되어 있는지 직접 점검하였음 □ 마지막으로 키움증권으로부터 모험자본 투자를 받은 벤처기업 대표와 화상 간담회를 실시하고, 벤처기업이 현장에서 겪는 어려움 및 모험자본 공급 확대 필요성에 대한 의견을 경청하였음 ㅁ 일시 : '25.11.24.(월) 14:30~15:20 ㅁ",
+          "metadata": {
+            "char_count": 21,
+            "has_summary": true
+          }
+        }
+      ]
+    }
+  ],
+  "errors": null
+}

@@ -12,6 +12,7 @@ import {
 import TopNavBar from '@/components/mobile/TopNavBar';
 import StatsCard from '@/components/Dashboard/Widgets/StatsCard';
 import CategoryFilter from '@/components/Dashboard/Widgets/CategoryFilter';
+import FinanceAICasebook from '@/components/Dashboard/Widgets/FinanceAICasebook';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('Pages:Dashboard');
@@ -19,6 +20,7 @@ const logger = createLogger('Pages:Dashboard');
 const DashboardPage = () => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const activeTab: string = 'home'; // 대시보드는 항상 home 탭
   const [activeCategory, setActiveCategory] = useState('all');
   const [randomRankingIndices, setRandomRankingIndices] = useState<number[]>([]);
@@ -27,6 +29,15 @@ const DashboardPage = () => {
 
   useEffect(() => {
     setIsMounted(true);
+
+    // 모바일 감지
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Fetch dashboard statistics
@@ -289,15 +300,15 @@ const DashboardPage = () => {
       background: 'var(--gqai-bg-card)',
       borderRadius: 'var(--gqai-radius-lg)',
       boxShadow: 'var(--gqai-shadow-sm)',
-      padding: 'var(--gqai-space-lg)',
-      minHeight: '600px',
+      padding: isMobile ? '12px' : 'var(--gqai-space-lg)',
+      minHeight: isMobile ? 'auto' : '600px',
     };
 
     const titleStyle = {
-      fontSize: 24,
+      fontSize: isMobile ? 18 : 24,
       fontWeight: 700,
       color: '#1e40af',
-      marginBottom: 'var(--gqai-space-lg)',
+      marginBottom: isMobile ? '12px' : 'var(--gqai-space-lg)',
       fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
     };
 
@@ -425,20 +436,20 @@ const DashboardPage = () => {
       default:
         // home - 종합 대시보드
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            {/* 메인 그리드 - 4/6 레이아웃 */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 20 }}>
+            {/* 메인 그리드 - 4/6 레이아웃 (모바일: 단일 컬럼) */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: '4fr 6fr',
+              gridTemplateColumns: isMobile ? '1fr' : '4fr 6fr',
               gridTemplateRows: 'auto auto',
-              gap: 20,
+              gap: isMobile ? 16 : 20,
             }}>
               {/* 첫 번째 열 - 오늘의 법안 + 배너 버튼 */}
               <div style={{
-                gridRow: '1 / 3',
+                gridRow: isMobile ? 'auto' : '1 / 3',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 12,
+                gap: isMobile ? 12 : 12,
               }}>
                 {/* 오늘의 법안 섹션 */}
                 <div style={{
@@ -453,10 +464,10 @@ const DashboardPage = () => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: 16,
+                  marginBottom: isMobile ? 12 : 16,
                 }}>
                   <h3 style={{
-                    fontSize: 20,
+                    fontSize: isMobile ? 16 : 20,
                     fontWeight: 700,
                     color: '#1e40af',
                     margin: 0,
@@ -466,8 +477,8 @@ const DashboardPage = () => {
                   </h3>
                   <button
                     style={{
-                      padding: '4px 10px',
-                      fontSize: 12,
+                      padding: isMobile ? '8px 12px' : '4px 10px',
+                      fontSize: isMobile ? 13 : 12,
                       fontWeight: 500,
                       color: '#6b7280',
                       background: '#f3f4f6',
@@ -764,21 +775,21 @@ const DashboardPage = () => {
               </div>
 
               {/* 오른쪽 영역 전체를 감싸는 컨테이너 */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 16 : 20 }}>
                 {/* 첫 번째 행 - 오늘의 정치 (최신 1개만 표시) */}
                 <div style={{
                   ...containerStyle,
-                  padding: 'var(--gqai-space-lg)',
+                  padding: isMobile ? '12px' : 'var(--gqai-space-lg)',
                   minHeight: 'auto',
                 }}>
                   <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    marginBottom: 16,
+                    marginBottom: isMobile ? 12 : 16,
                   }}>
                     <h3 style={{
-                      fontSize: 20,
+                      fontSize: isMobile ? 16 : 20,
                       fontWeight: 700,
                       color: '#1e40af',
                       margin: 0,
@@ -788,8 +799,8 @@ const DashboardPage = () => {
                     </h3>
                     <button
                       style={{
-                        padding: '4px 10px',
-                        fontSize: 12,
+                        padding: isMobile ? '8px 12px' : '4px 10px',
+                        fontSize: isMobile ? 13 : 12,
                         fontWeight: 500,
                         color: '#6b7280',
                         background: '#f3f4f6',
@@ -852,41 +863,41 @@ const DashboardPage = () => {
                   />
                 </a>
 
-                {/* 두 번째 행 - 3칼럼 균등 배치 (단독뉴스 | 랭킹뉴스 | 사설) */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
+                {/* 두 번째 행 - 3칼럼 균등 배치 (단독뉴스 | 랭킹뉴스 | 사설) - 모바일: 단일 컬럼 */}
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: isMobile ? 16 : 20 }}>
                   {/* 단독 뉴스 (4개) */}
                   <div style={{
                     ...containerStyle,
-                    padding: 'var(--gqai-space-md)',
+                    padding: isMobile ? '12px' : 'var(--gqai-space-md)',
                     minHeight: 'auto',
                   }}>
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginBottom: 12,
+                      marginBottom: isMobile ? 10 : 12,
                     }}>
                       <h3 style={{
-                        fontSize: 18,
+                        fontSize: isMobile ? 15 : 18,
                         fontWeight: 700,
                         color: '#1e40af',
                         margin: 0,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 8,
+                        gap: isMobile ? 6 : 8,
                         fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
                       }}>
                         <img
                           src="/icons/icon-exnews.png"
                           alt="단독"
-                          style={{ width: 32, height: 32, objectFit: 'contain' }}
+                          style={{ width: isMobile ? 24 : 32, height: isMobile ? 24 : 32, objectFit: 'contain' }}
                         />
                         단독 뉴스
                       </h3>
                       <button
                         style={{
-                          padding: '6px 12px',
-                          fontSize: 12,
+                          padding: isMobile ? '8px 14px' : '6px 12px',
+                          fontSize: isMobile ? 14 : 12,
                           color: 'var(--gqai-primary)',
                           background: 'transparent',
                           border: '1px solid var(--gqai-border)',
@@ -915,36 +926,36 @@ const DashboardPage = () => {
                   {/* 랭킹 뉴스 (4개) */}
                   <div style={{
                     ...containerStyle,
-                    padding: 'var(--gqai-space-md)',
+                    padding: isMobile ? '12px' : 'var(--gqai-space-md)',
                     minHeight: 'auto',
                   }}>
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginBottom: 12,
+                      marginBottom: isMobile ? 10 : 12,
                     }}>
                       <h3 style={{
-                        fontSize: 18,
+                        fontSize: isMobile ? 15 : 18,
                         fontWeight: 700,
                         color: '#1e40af',
                         margin: 0,
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 8,
+                        gap: isMobile ? 6 : 8,
                         fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
                       }}>
                         <img
                           src="/icons/icon-lankingnews.png"
                           alt="랭킹"
-                          style={{ width: 32, height: 32, objectFit: 'contain' }}
+                          style={{ width: isMobile ? 24 : 32, height: isMobile ? 24 : 32, objectFit: 'contain' }}
                         />
                         랭킹 뉴스
                       </h3>
                       <button
                         style={{
-                          padding: '6px 12px',
-                          fontSize: 12,
+                          padding: isMobile ? '8px 14px' : '6px 12px',
+                          fontSize: isMobile ? 14 : 12,
                           color: 'var(--gqai-primary)',
                           background: 'transparent',
                           border: '1px solid var(--gqai-border)',
@@ -974,17 +985,17 @@ const DashboardPage = () => {
                   {/* 오늘의 사설 (최신 1개 주제) */}
                   <div style={{
                     ...containerStyle,
-                    padding: 'var(--gqai-space-md)',
+                    padding: isMobile ? '12px' : 'var(--gqai-space-md)',
                     minHeight: 'auto',
                   }}>
                     <div style={{
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      marginBottom: 12,
+                      marginBottom: isMobile ? 10 : 12,
                     }}>
                       <h3 style={{
-                        fontSize: 18,
+                        fontSize: isMobile ? 15 : 18,
                         fontWeight: 700,
                         color: '#1e40af',
                         margin: 0,
@@ -994,8 +1005,8 @@ const DashboardPage = () => {
                       </h3>
                       <button
                         style={{
-                          padding: '6px 12px',
-                          fontSize: 12,
+                          padding: isMobile ? '8px 14px' : '6px 12px',
+                          fontSize: isMobile ? 14 : 12,
                           color: 'var(--gqai-primary)',
                           background: 'transparent',
                           border: '1px solid var(--gqai-border)',
@@ -1024,25 +1035,25 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            {/* 세 번째 행 - 인사이트 & 트렌딩 토픽 (3/3 레이아웃) */}
+            {/* 세 번째 행 - 인사이트 & 트렌딩 토픽 (3/3 레이아웃) - 모바일: 단일 컬럼 */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: 20,
-              marginTop: 20,
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gap: isMobile ? 16 : 20,
+              marginTop: isMobile ? 16 : 20,
             }}>
               {/* 인사이트 (3칼럼) */}
               <div style={{
                 background: 'var(--gqai-bg-card)',
                 borderRadius: 'var(--gqai-radius-lg)',
                 boxShadow: 'var(--gqai-shadow-sm)',
-                padding: 'var(--gqai-space-lg)',
+                padding: isMobile ? '12px' : 'var(--gqai-space-lg)',
               }}>
                 <h3 style={{
-                  fontSize: 18,
+                  fontSize: isMobile ? 15 : 18,
                   fontWeight: 600,
                   color: 'var(--gqai-text-primary)',
-                  marginBottom: 'var(--gqai-space-md)',
+                  marginBottom: isMobile ? '10px' : 'var(--gqai-space-md)',
                   fontFamily: 'var(--gqai-font-display)',
                 }}>
                   🤖 GQAI 인사이트
@@ -1058,50 +1069,27 @@ const DashboardPage = () => {
                 </div>
               </div>
 
-              {/* 트렌딩 토픽 (3칼럼) */}
-              <div style={{
-                background: 'var(--gqai-bg-card)',
-                borderRadius: 'var(--gqai-radius-lg)',
-                boxShadow: 'var(--gqai-shadow-sm)',
-                padding: 'var(--gqai-space-lg)',
-              }}>
-                <h3 style={{
-                  fontSize: 18,
-                  fontWeight: 600,
-                  color: 'var(--gqai-text-primary)',
-                  marginBottom: 'var(--gqai-space-md)',
-                  fontFamily: 'var(--gqai-font-display)',
-                }}>
-                  🔥 트렌딩 토픽
-                </h3>
-                <div style={{
-                  padding: 'var(--gqai-space-md)',
-                  borderRadius: 'var(--gqai-radius-md)',
-                  backgroundColor: 'var(--gqai-bg-main)',
-                }}>
-                  <p style={{ fontSize: 14, color: 'var(--gqai-text-secondary)', lineHeight: 1.6 }}>
-                    인기 토픽을 집계 중입니다...
-                  </p>
-                </div>
-              </div>
+              {/* 트렌딩 토픽 (3칼럼) - 금융권 생성형 AI 케이스북 */}
+              <FinanceAICasebook />
 
             </div>
 
-          {/* 정부기관 보도자료 - 4칼럼 */}
+          {/* 정부기관 보도자료 - 4칼럼 (모바일: 2칼럼) */}
           <div style={{
             background: 'var(--gqai-bg-card)',
             borderRadius: 'var(--gqai-radius-lg)',
             boxShadow: 'var(--gqai-shadow-sm)',
-            padding: 'var(--gqai-space-lg)',
+            padding: isMobile ? '12px' : 'var(--gqai-space-lg)',
+            marginTop: isMobile ? 16 : 0,
           }}>
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: 16,
+              marginBottom: isMobile ? 12 : 16,
             }}>
               <h3 style={{
-                fontSize: 18,
+                fontSize: isMobile ? 15 : 18,
                 fontWeight: 700,
                 color: '#1e40af',
                 margin: 0,
@@ -1111,8 +1099,8 @@ const DashboardPage = () => {
               </h3>
               <button
                 style={{
-                  padding: '6px 12px',
-                  fontSize: 12,
+                  padding: isMobile ? '8px 14px' : '6px 12px',
+                  fontSize: isMobile ? 13 : 12,
                   color: 'var(--gqai-primary)',
                   background: 'transparent',
                   border: '1px solid var(--gqai-border)',
@@ -1206,7 +1194,7 @@ const DashboardPage = () => {
               );
 
               return (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', gap: isMobile ? 12 : 16 }}>
                   {renderAgencySection('ftc', '공정거래위원회', ftcItems)}
                   {renderAgencySection('kca', '한국소비자원', kcaItems)}
                   {renderAgencySection('fsc', '금융위원회', fscItems)}
@@ -2294,7 +2282,7 @@ const DashboardPage = () => {
         minHeight: '100vh',
         backgroundColor: 'var(--gqai-bg-main)',
         fontFamily: 'var(--gqai-font-sans)',
-        padding: '24px',
+        padding: isMobile ? '12px' : '24px',
         maxWidth: '1600px',
         margin: '0 auto',
       }}>

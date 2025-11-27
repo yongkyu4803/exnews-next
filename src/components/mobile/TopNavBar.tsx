@@ -4,7 +4,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 
-const Menu = dynamic(() => import('antd/lib/menu'), { ssr: false }) as any;
+const Menu = dynamic(
+  () => import('antd').then((mod) => mod.Menu),
+  {
+    ssr: false,
+    loading: () => <div style={{ height: '48px' }} />
+  }
+) as any;
 
 const NavBarContainer = styled.div`
   position: sticky;
