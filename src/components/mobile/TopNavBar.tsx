@@ -249,7 +249,13 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
           {
             key: 'exclusive',
             label: <span style={{ fontFamily: 'Cafe24Anemone, sans-serif', fontWeight: 'normal', fontSize: '14px', textAlign: 'center', lineHeight: '1.2', display: 'inline-block' }}>단독<br/>뉴스</span>,
-            onClick: () => router.push('/'),
+            onClick: () => {
+              if (currentPath === '/') {
+                if (onTabChange) onTabChange('exclusive');
+              } else {
+                router.push('/?tab=exclusive');
+              }
+            },
           },
           {
             key: 'ranking',
