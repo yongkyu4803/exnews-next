@@ -26,6 +26,8 @@ const DashboardPage = () => {
   const [randomRankingIndices, setRandomRankingIndices] = useState<number[]>([]);
   const [randomBillIndex, setRandomBillIndex] = useState<number>(0);
   const [currentNewsPage, setCurrentNewsPage] = useState<number>(0); // 뉴스 기사 페이지 인덱스
+  const [pollModalOpen, setPollModalOpen] = useState(false);
+  const [activePollTab, setActivePollTab] = useState<'realmeter' | 'nbs' | 'ksoi' | 'gallup'>('realmeter');
 
   useEffect(() => {
     setIsMounted(true);
@@ -187,6 +189,19 @@ const DashboardPage = () => {
 
     return () => clearInterval(interval);
   }, [billsData?.latest?.bills]);
+
+  // Fetch weekly poll data (탭별로 source 필터링)
+  const { data: pollData, isLoading: pollLoading } = useQuery(
+    ['dashboard-polls', activePollTab],
+    async () => {
+      const response = await fetch(`/api/polls?landing=true&source=${activePollTab}`);
+      return response.json();
+    },
+    {
+      enabled: isMounted && activeTab === 'home',
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    }
+  );
 
   // 정치 뉴스 기사 자동 슬라이드 (10초마다)
   useEffect(() => {
@@ -1043,31 +1058,188 @@ const DashboardPage = () => {
               gap: isMobile ? 16 : 20,
               marginTop: isMobile ? 16 : 20,
             }}>
-              {/* 인사이트 (3칼럼) */}
+              {/* 여론조사 동향 */}
               <div style={{
                 background: 'var(--gqai-bg-card)',
                 borderRadius: 'var(--gqai-radius-lg)',
                 boxShadow: 'var(--gqai-shadow-sm)',
                 padding: isMobile ? '12px' : 'var(--gqai-space-lg)',
               }}>
-                <h3 style={{
-                  fontSize: isMobile ? 15 : 18,
-                  fontWeight: 600,
-                  color: 'var(--gqai-text-primary)',
-                  marginBottom: isMobile ? '10px' : 'var(--gqai-space-md)',
-                  fontFamily: 'var(--gqai-font-display)',
-                }}>
-                  🤖 GQAI 인사이트
-                </h3>
+                {/* 헤더: 제목 + 4개 탭 */}
                 <div style={{
-                  padding: 'var(--gqai-space-md)',
-                  borderRadius: 'var(--gqai-radius-md)',
-                  backgroundColor: 'var(--gqai-bg-main)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 16,
                 }}>
-                  <p style={{ fontSize: 14, color: 'var(--gqai-text-secondary)', lineHeight: 1.6 }}>
-                    오늘의 주요 정책 트렌드를 분석 중입니다...
-                  </p>
+                  <h3 style={{
+                    fontSize: 18,
+                    fontWeight: 700,
+                    color: '#1e40af',
+                    margin: 0,
+                    fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
+                  }}>
+                    📊 여론조사 동향
+                  </h3>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {[
+                      { key: 'realmeter' as const, label: '리얼미터' },
+                      { key: 'nbs' as const, label: '지표조사' },
+                      { key: 'ksoi' as const, label: 'KSOI' },
+                      { key: 'gallup' as const, label: '갤럽' },
+                    ].map((tab) => (
+                      <button
+                        key={tab.key}
+                        onClick={() => setActivePollTab(tab.key)}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: 14,
+                          fontWeight: activePollTab === tab.key ? 600 : 400,
+                          color: activePollTab === tab.key ? 'white' : '#6b7280',
+                          background: activePollTab === tab.key ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent',
+                          border: activePollTab === tab.key ? 'none' : '1px solid #e5e7eb',
+                          borderRadius: 'var(--gqai-radius-sm)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                        }}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {pollLoading ? (
+                  <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
+                    로딩 중...
+                  </div>
+                ) : pollData?.latest ? (
+                  <div
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => setPollModalOpen(true)}
+                  >
+                    {/* 3열 레이아웃: 조사정보 | 대통령 지지율 | 정당 지지율 */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                      {/* 첫번째 열: 조사 정보 */}
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: 'var(--gqai-radius-md)',
+                        background: 'linear-gradient(135deg, #f3f4ff 0%, #faf5ff 100%)',
+                        color: '#4b5563',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        gap: 8,
+                      }}>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>{pollData.latest.source_name}</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, color: '#3b82f6' }}>
+                            {new Date(pollData.latest.publish_date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11, opacity: 0.85 }}>
+                          <div>조사: {pollData.latest.survey_period}</div>
+                          <div>표본: {Number(pollData.latest.sample_size).toLocaleString()}명</div>
+                          <div>방법: {pollData.latest.method}</div>
+                        </div>
+                      </div>
+
+                      {/* 두번째 열: 대통령 지지율 */}
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: 'var(--gqai-radius-md)',
+                        background: 'linear-gradient(135deg, #f3f4ff 0%, #faf5ff 100%)',
+                        border: '1px solid #e5e7eb',
+                      }}>
+                        <div style={{ fontSize: 14, color: 'var(--gqai-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
+                          대통령 지지율
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: 'var(--gqai-text-tertiary)' }}>긍정</span>
+                            <span style={{ fontSize: 24, fontWeight: 700, color: '#ef4444' }}>{pollData.latest.pres_positive}%</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: 12, color: 'var(--gqai-text-tertiary)' }}>부정</span>
+                            <span style={{ fontSize: 24, fontWeight: 700, color: '#3b82f6' }}>{pollData.latest.pres_negative}%</span>
+                          </div>
+                          <div style={{
+                            marginTop: 4,
+                            paddingTop: 8,
+                            borderTop: '1px solid var(--gqai-border)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}>
+                            <span style={{ fontSize: 11, color: 'var(--gqai-text-tertiary)' }}>전주 대비</span>
+                            <span style={{
+                              fontSize: 14,
+                              fontWeight: 600,
+                              color: pollData.latest.pres_change > 0 ? '#ef4444' : pollData.latest.pres_change < 0 ? '#3b82f6' : '#6b7280'
+                            }}>
+                              {pollData.latest.pres_change > 0 ? '▲' : pollData.latest.pres_change < 0 ? '▼' : '−'} {Math.abs(pollData.latest.pres_change)}%p
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 세번째 열: 정당 지지율 (5개) */}
+                      {(() => {
+                        const parties = [
+                          { name: '민주당', value: pollData.latest.party_democratic, color: '#3b82f6' },
+                          { name: '국민의힘', value: pollData.latest.party_ppp, color: '#ef4444' },
+                          { name: '조국혁신당', value: pollData.latest.party_rebuild, color: '#f59e0b' },
+                          { name: '개혁신당', value: pollData.latest.party_reform, color: '#10b981' },
+                          { name: '지지없음', value: 100 - pollData.latest.party_democratic - pollData.latest.party_ppp - pollData.latest.party_rebuild - pollData.latest.party_reform - pollData.latest.party_progressive, color: '#9ca3af' },
+                        ];
+
+                        return (
+                          <div style={{
+                            padding: '12px',
+                            borderRadius: 'var(--gqai-radius-md)',
+                            background: 'linear-gradient(135deg, #f3f4ff 0%, #faf5ff 100%)',
+                            border: '1px solid #e5e7eb',
+                          }}>
+                            <div style={{ fontSize: 14, color: 'var(--gqai-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
+                              정당 지지율
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                              {parties.map((party) => (
+                                <div key={party.name} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <span style={{ fontSize: 12, color: 'var(--gqai-text-primary)', minWidth: 60, flexShrink: 0 }}>
+                                    {party.name}
+                                  </span>
+                                  <div style={{ flex: 1, height: 18, background: '#e5e7eb', borderRadius: 3, overflow: 'hidden' }}>
+                                    <div style={{
+                                      height: '100%',
+                                      width: `${party.value}%`,
+                                      background: party.color,
+                                      transition: 'width 0.3s ease',
+                                    }} />
+                                  </div>
+                                  <span style={{ fontSize: 13, fontWeight: 600, color: party.color, minWidth: 35, textAlign: 'right', flexShrink: 0 }}>
+                                    {Math.round(party.value)}%
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{
+                    padding: 'var(--gqai-space-md)',
+                    borderRadius: 'var(--gqai-radius-md)',
+                    backgroundColor: 'var(--gqai-bg-main)',
+                    textAlign: 'center',
+                  }}>
+                    <p style={{ fontSize: 14, color: 'var(--gqai-text-secondary)', lineHeight: 1.6 }}>
+                      여론조사 데이터가 없습니다.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* 트렌딩 토픽 (3칼럼) - 금융권 생성형 AI 케이스북 */}
@@ -1131,8 +1303,8 @@ const DashboardPage = () => {
               const renderAgencySection = (code: string, name: string, items: any[]) => (
                 <div key={code}>
                   <div style={{
-                    fontSize: 13,
-                    fontWeight: 600,
+                    fontSize: 15,
+                    fontWeight: 700,
                     color: '#3b82f6',
                     marginBottom: 8,
                     borderBottom: '2px solid #e5e7eb',
@@ -2289,6 +2461,256 @@ const DashboardPage = () => {
       }}>
         {mainPanel}
       </div>
+
+      {/* 여론조사 자세히 보기 모달 */}
+      {pollModalOpen && pollData?.latest && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: isMobile ? '16px' : '24px',
+          }}
+          onClick={() => setPollModalOpen(false)}
+        >
+          <div
+            style={{
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              maxWidth: '800px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* 모달 헤더 */}
+            <div style={{
+              padding: isMobile ? '16px' : '24px',
+              borderBottom: '1px solid #e5e7eb',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              borderRadius: '12px 12px 0 0',
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                <h2 style={{ fontSize: isMobile ? 18 : 22, fontWeight: 700, margin: 0 }}>
+                  {pollData.latest.source_name} 여론조사
+                </h2>
+                <button
+                  onClick={() => setPollModalOpen(false)}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    border: 'none',
+                    borderRadius: '6px',
+                    color: 'white',
+                    fontSize: 20,
+                    width: 32,
+                    height: 32,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  ×
+                </button>
+              </div>
+              <div style={{ fontSize: isMobile ? 12 : 14, opacity: 0.95, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <div>📅 조사기간: {pollData.latest.survey_period}</div>
+                <div>📊 표본: {Number(pollData.latest.sample_size).toLocaleString()}명 (오차범위 ±{pollData.latest.margin_of_error}%p)</div>
+                <div>📞 조사방법: {pollData.latest.method === 'CATI' ? '전화면접조사 (CATI)' : '자동응답조사 (ARS)'}</div>
+                <div>📄 발행일: {new Date(pollData.latest.publish_date).toLocaleDateString('ko-KR')}</div>
+                {pollData.latest.commissioned_by && (
+                  <div>🏢 의뢰처: {pollData.latest.commissioned_by}</div>
+                )}
+              </div>
+            </div>
+
+            {/* 모달 본문 */}
+            <div style={{ padding: isMobile ? '16px' : '24px' }}>
+              {/* 대통령 지지율 */}
+              <div style={{ marginBottom: 32 }}>
+                <h3 style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, marginBottom: 16, color: '#1f2937' }}>
+                  대통령 지지율
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
+                  <div style={{
+                    padding: 20,
+                    borderRadius: 8,
+                    backgroundColor: '#fef2f2',
+                    border: '2px solid #fecaca',
+                  }}>
+                    <div style={{ fontSize: 14, color: '#991b1b', marginBottom: 8, fontWeight: 600 }}>긍정 평가</div>
+                    <div style={{ fontSize: 36, fontWeight: 700, color: '#ef4444' }}>{pollData.latest.pres_positive}%</div>
+                  </div>
+                  <div style={{
+                    padding: 20,
+                    borderRadius: 8,
+                    backgroundColor: '#eff6ff',
+                    border: '2px solid #bfdbfe',
+                  }}>
+                    <div style={{ fontSize: 14, color: '#1e40af', marginBottom: 8, fontWeight: 600 }}>부정 평가</div>
+                    <div style={{ fontSize: 36, fontWeight: 700, color: '#3b82f6' }}>{pollData.latest.pres_negative}%</div>
+                  </div>
+                </div>
+                <div style={{
+                  marginTop: 16,
+                  padding: 16,
+                  borderRadius: 8,
+                  backgroundColor: '#f9fafb',
+                  textAlign: 'center',
+                }}>
+                  <span style={{ fontSize: 14, color: '#6b7280', marginRight: 8 }}>전주 대비</span>
+                  <span style={{
+                    fontSize: 20,
+                    fontWeight: 700,
+                    color: pollData.latest.pres_change > 0 ? '#ef4444' : pollData.latest.pres_change < 0 ? '#3b82f6' : '#6b7280'
+                  }}>
+                    {pollData.latest.pres_change > 0 ? '▲' : pollData.latest.pres_change < 0 ? '▼' : '−'} {Math.abs(pollData.latest.pres_change)}%p
+                  </span>
+                </div>
+              </div>
+
+              {/* 정당 지지율 */}
+              <div>
+                <h3 style={{ fontSize: isMobile ? 16 : 18, fontWeight: 700, marginBottom: 16, color: '#1f2937' }}>
+                  정당 지지율
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {(() => {
+                    const parties = [
+                      { name: '더불어민주당', value: pollData.latest.party_democratic, color: '#3b82f6' },
+                      { name: '국민의힘', value: pollData.latest.party_ppp, color: '#ef4444' },
+                      { name: '조국혁신당', value: pollData.latest.party_rebuild, color: '#f59e0b' },
+                      { name: '개혁신당', value: pollData.latest.party_reform, color: '#10b981' },
+                      { name: '진보당', value: pollData.latest.party_progressive, color: '#8b5cf6' },
+                      { name: '지지 정당 없음', value: 100 - pollData.latest.party_democratic - pollData.latest.party_ppp - pollData.latest.party_rebuild - pollData.latest.party_reform - pollData.latest.party_progressive, color: '#9ca3af' },
+                    ];
+
+                    return parties.map((party) => (
+                      <div key={party.name} style={{
+                        padding: 16,
+                        borderRadius: 8,
+                        backgroundColor: '#f9fafb',
+                        border: '1px solid #e5e7eb',
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                          <span style={{ fontSize: 16, fontWeight: 600, color: '#1f2937' }}>{party.name}</span>
+                          <span style={{ fontSize: 24, fontWeight: 700, color: party.color }}>
+                            {Math.round(party.value * 10) / 10}%
+                          </span>
+                        </div>
+                        <div style={{ height: 8, backgroundColor: '#e5e7eb', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{
+                            height: '100%',
+                            width: `${party.value}%`,
+                            backgroundColor: party.color,
+                            transition: 'width 0.3s ease',
+                          }} />
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+
+              {/* 원문 링크 */}
+              {(pollData.latest.source_url || pollData.latest.pdf_url) && (
+                <div style={{ marginTop: 32, paddingTop: 24, borderTop: '1px solid #e5e7eb' }}>
+                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                    {pollData.latest.source_url && (
+                      <a
+                        href={pollData.latest.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          padding: '10px 16px',
+                          backgroundColor: '#3b82f6',
+                          color: 'white',
+                          borderRadius: 6,
+                          textDecoration: 'none',
+                          fontSize: 14,
+                          fontWeight: 600,
+                        }}
+                      >
+                        🔗 원문 보기
+                      </a>
+                    )}
+                    {pollData.latest.pdf_url && (
+                      <a
+                        href={pollData.latest.pdf_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          padding: '10px 16px',
+                          backgroundColor: '#ef4444',
+                          color: 'white',
+                          borderRadius: 6,
+                          textDecoration: 'none',
+                          fontSize: 14,
+                          fontWeight: 600,
+                        }}
+                      >
+                        📄 PDF 다운로드
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 푸터 추가 */}
+      <footer style={{
+        width: '100%',
+        padding: '16px',
+        textAlign: 'center',
+        borderTop: '1px solid #eaeaea',
+        marginTop: '32px',
+        color: '#666',
+        fontSize: isMobile ? '12px' : '16px',
+        backgroundColor: '#f9f9f9',
+        fontFamily: "'Inter', 'Roboto', 'Helvetica Neue', sans-serif"
+      }}>
+        <div style={{ marginBottom: '8px' }}>
+          <a
+            href="https://gqai.kr"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: '#1a4b8c',
+              textDecoration: 'none',
+              fontWeight: '600',
+              letterSpacing: '0.5px'
+            }}
+          >
+            GQAI.kr
+          </a>
+        </div>
+        <div>
+          <a href="mailto:gq.newslens@gmail.com" style={{
+            color: '#1a4b8c',
+            textDecoration: 'none',
+            fontWeight: '500'
+          }}>
+            gq.newslens@gmail.com
+          </a>
+        </div>
+      </footer>
     </>
   );
 };

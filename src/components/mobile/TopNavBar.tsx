@@ -41,22 +41,27 @@ const NavWrapper = styled.div`
 `;
 
 const BrandLogo = styled.div`
-  font-family: var(--gqai-font-display, 'Pretendard', sans-serif);
-  font-size: 28px;
-  font-weight: 700;
+  font-family: 'Arial', 'Helvetica', sans-serif;
+  font-size: 24px;
   color: white;
-  letter-spacing: -0.5px;
+  letter-spacing: 1px;
   cursor: pointer;
   transition: transform 0.2s ease;
   flex-shrink: 0;
   position: absolute;
   left: 24px;
+  text-transform: uppercase;
 
   &:hover {
     transform: scale(1.05);
   }
 
-  span {
+  .bold {
+    font-weight: 700;
+  }
+
+  .light {
+    font-weight: 300;
     color: #fbbf24;
   }
 
@@ -236,7 +241,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ activeTab = 'exclusive', onTabCha
     <NavBarContainer>
       <NavWrapper>
         <BrandLogo onClick={() => router.push('/dashboard')}>
-          GQ<span>AI</span>
+          <span className="bold">GQAI</span> <span className="light">NEWSLENS</span>
         </BrandLogo>
         <NavMenu 
         mode="horizontal" 

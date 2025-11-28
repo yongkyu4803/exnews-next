@@ -157,36 +157,77 @@ const FinanceAICasebook: React.FC = () => {
           2024-2025 기준 | 금융위원회 로드맵 기반
         </div>
 
-        {/* 전체보기 버튼 */}
-        <button
-          onClick={() => router.push('/casebook/finance-ai')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '10px 20px',
-            fontSize: 14,
-            fontWeight: 600,
-            color: '#1e40af',
-            background: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'translateY(-2px)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'translateY(0)';
-            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
-          }}
-        >
-          전체보기
-          <span style={{ fontSize: 16 }}>→</span>
-        </button>
+        {/* 버튼 영역 */}
+        <div style={{
+          display: 'flex',
+          gap: 10,
+          flexWrap: 'wrap',
+        }}>
+          {/* 전체보기 버튼 */}
+          <button
+            onClick={() => router.push('/casebook/finance-ai')}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '10px 20px',
+              fontSize: 14,
+              fontWeight: 600,
+              color: '#1e40af',
+              background: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+            }}
+          >
+            전체보기
+            <span style={{ fontSize: 16 }}>→</span>
+          </button>
+
+          {/* 금융위원회 로드맵 링크 */}
+          <a
+            href="https://www.fsc.go.kr/no010101/82885?srchCtgry&curPage&srchKey&srchText&srchBeginDt&srchEndDt"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '10px 20px',
+              fontSize: 13,
+              fontWeight: 500,
+              color: 'white',
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              textDecoration: 'none',
+              backdropFilter: 'blur(4px)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            ｢금융분야 망분리 개선 로드맵｣ (2024-08-13)
+            <span style={{ fontSize: 12 }}>↗</span>
+          </a>
+        </div>
       </div>
 
       {/* 탭 네비게이션 - 주석처리 */}
