@@ -129,11 +129,11 @@ const DashboardPage = () => {
     return () => clearInterval(interval);
   }, [rankingData?.items]);
 
-  // Fetch editorials
+  // Fetch editorials (landing mode: 최신 1개만)
   const { data: editorialData, isLoading: editorialLoading } = useQuery(
-    'dashboard-editorials',
+    'dashboard-editorials-landing',
     async () => {
-      const response = await fetch('/api/editorials?page=1&pageSize=20');
+      const response = await fetch('/api/editorials?landing=true');
       return response.json();
     },
     {
@@ -379,7 +379,8 @@ const DashboardPage = () => {
               </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gqai-space-md)' }}>
-                {editorialData?.items?.map((item: any, index: number) => renderEditorialCard(item, index))}
+                {editorialData?.latest && renderEditorialCard(editorialData.latest, 0)}
+                {editorialData?.previous?.map((item: any, index: number) => renderEditorialCard(item, index + 1))}
               </div>
             )}
           </div>
@@ -1023,8 +1024,8 @@ const DashboardPage = () => {
                       <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
                         로딩 중...
                       </div>
-                    ) : editorialData?.items?.[0] ? (
-                      renderEditorialTopicCard(editorialData.items[0])
+                    ) : editorialData?.latest ? (
+                      renderEditorialTopicCard(editorialData.latest)
                     ) : (
                       <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-tertiary)' }}>
                         사설이 없습니다

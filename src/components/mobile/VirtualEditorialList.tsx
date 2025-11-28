@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { EditorialAnalysis } from '@/types';
 import EditorialDetail from './EditorialDetail';
@@ -284,11 +284,72 @@ const VirtualEditorialList: React.FC<VirtualEditorialListProps> = React.memo(({
   const [expandedTopics, setExpandedTopics] = useState<Record<string, boolean>>({});
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [internalSelectedId, setInternalSelectedId] = useState<string | null>(null);
+  const [fetchedEditorial, setFetchedEditorial] = useState<EditorialAnalysis | null>(null);
+  const [isFetchingEditorial, setIsFetchingEditorial] = useState(false);
 
   // 외부에서 제어하거나 내부 상태 사용
   const selectedEditorialId = externalSelectedId !== undefined ? externalSelectedId : internalSelectedId;
   const setSelectedEditorialId = onEditorialClick || setInternalSelectedId;
   const handleBack = externalOnBack || (() => setInternalSelectedId(null));
+
+  // 선택된 editorial이 items에 없으면 API에서 가져오기
+  useEffect(() => {
+    if (!selectedEditorialId) {
+      setFetchedEditorial(null);
+      return;
+    }
+
+    const existingEditorial = items.find(item => item.id === selectedEditorialId);
+    if (existingEditorial) {
+      return;
+    }
+
+    // 이미 fetch한 editorial이면 다시 호출하지 않음
+    if (fetchedEditorial?.id === selectedEditorialId) {
+      return;
+    }
+
+    setIsFetchingEditorial(true);
+    fetch(`/api/editorials/${selectedEditorialId}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to fetch');
+        return res.json();
+      })
+      .then(data => {
+        // API 응답을 EditorialAnalysis 형식으로 변환
+        const editorial: EditorialAnalysis = {
+          id: data.id,
+          query: data.title || `${new Date(data.analyzed_at).toLocaleDateString('ko-KR')} 사설 분석`,
+          analysis_type: data.analysis_type || 'editorial',
+          analyzed_at: data.analyzed_at,
+          llm_model: data.llm_model || 'unknown',
+          topics: (data.topics || []).map((topic: any) => ({
+            id: topic.id || `topic-${topic.topic_number}`,
+            topic_number: topic.topic_number,
+            topic_title: topic.title,
+            topic_summary: topic.summary,
+            articles: (topic.articles || []).map((article: any) => ({
+              id: article.id || `article-${article.article_number}`,
+              article_number: article.article_number,
+              title: article.title,
+              media: article.newspaper,
+              pubdate: article.published_date,
+              summary: article.summary,
+              link: article.link
+            }))
+          }))
+        };
+        setFetchedEditorial(editorial);
+      })
+      .catch(err => {
+        console.error('Failed to fetch editorial:', err);
+        setFetchedEditorial(null);
+      })
+      .finally(() => {
+        setIsFetchingEditorial(false);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEditorialId]);
 
   const toggleTopic = (topicId: string, event: React.MouseEvent) => {
     event.stopPropagation();
@@ -395,11 +456,17 @@ const VirtualEditorialList: React.FC<VirtualEditorialListProps> = React.memo(({
 
   // 선택된 사설 분석이 있으면 상세 화면 표시
   if (selectedEditorialId) {
-    const selectedEditorial = items.find(item => item.id === selectedEditorialId);
+    const selectedEditorial = items.find(item => item.id === selectedEditorialId) || fetchedEditorial;
+
+    // API에서 가져오는 중이면 로딩 표시
+    if (isFetchingEditorial) {
+      return <LoadingState>사설 분석을 불러오는 중...</LoadingState>;
+    }
+
     return (
       <EditorialDetail
         editorialId={selectedEditorialId}
-        editorial={selectedEditorial}
+        editorial={selectedEditorial || undefined}
         onBack={handleBack}
       />
     );
