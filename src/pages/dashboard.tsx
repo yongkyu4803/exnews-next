@@ -12,7 +12,7 @@ import {
 import TopNavBar from '@/components/mobile/TopNavBar';
 import StatsCard from '@/components/Dashboard/Widgets/StatsCard';
 import CategoryFilter from '@/components/Dashboard/Widgets/CategoryFilter';
-import FinanceAICasebook from '@/components/Dashboard/Widgets/FinanceAICasebook';
+import CasebookWidget from '@/components/Dashboard/Widgets/CasebookWidget';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('Pages:Dashboard');
@@ -1242,8 +1242,8 @@ const DashboardPage = () => {
                 )}
               </div>
 
-              {/* 트렌딩 토픽 (3칼럼) - 금융권 생성형 AI 케이스북 */}
-              <FinanceAICasebook />
+              {/* 트렌딩 토픽 (3칼럼) - 케이스북 */}
+              <CasebookWidget />
 
             </div>
 
