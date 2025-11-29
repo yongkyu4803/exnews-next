@@ -63,7 +63,7 @@ const CasebookIndexPage: React.FC = () => {
           </div>
         )}
 
-        {error && (
+        {error ? (
           <div style={{
             textAlign: 'center',
             padding: 60,
@@ -89,7 +89,7 @@ const CasebookIndexPage: React.FC = () => {
               다시 시도
             </button>
           </div>
-        )}
+        ) : null}
 
         {data && data.casebooks.length === 0 && (
           <div style={{ textAlign: 'center', padding: 60, color: '#6b7280' }}>
