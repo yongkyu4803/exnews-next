@@ -87,8 +87,10 @@ export default async function handler(
 
     // 정렬: order 오름차순 → 날짜 내림차순
     casebooks.sort((a, b) => {
-      if (a.order !== b.order) {
-        return a.order - b.order
+      const orderA = a.order ?? 999
+      const orderB = b.order ?? 999
+      if (orderA !== orderB) {
+        return orderA - orderB
       }
       return new Date(b.date).getTime() - new Date(a.date).getTime()
     })
