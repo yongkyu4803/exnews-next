@@ -43,18 +43,6 @@ const CasebookIndexPage: React.FC = () => {
         </button>
       </div>
 
-      {/* 히어로 섹션 */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)',
-        padding: '60px 20px',
-        marginBottom: 40,
-      }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', color: 'white' }}>
-          <h1 style={{ fontSize: 36, fontWeight: 700, marginBottom: 12 }}>케이스북</h1>
-          <p style={{ fontSize: 16, opacity: 0.9 }}>금융 규제 및 정책 동향 심층 분석</p>
-        </div>
-      </div>
-
       {/* 콘텐츠 영역 */}
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 20px 60px' }}>
         {isLoading && (
@@ -100,111 +88,97 @@ const CasebookIndexPage: React.FC = () => {
         {data && data.casebooks.length > 0 && (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-            gap: 24,
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: 20,
           }}>
             {data.casebooks.map((casebook) => (
               <div
                 key={casebook.slug}
                 onClick={() => router.push(`/casebook/${casebook.slug}`)}
                 style={{
-                  background: 'white',
-                  borderRadius: 12,
-                  overflow: 'hidden',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  border: '1px solid #e5e7eb',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-4px)'
-                  e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.1)'
+                  e.currentTarget.style.filter = 'brightness(1.05)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.filter = 'brightness(1)'
                 }}
               >
-                {/* 헤더 */}
+                {/* 이슈페이퍼 표지 이미지 */}
                 <div style={{
-                  background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)',
-                  padding: '20px',
-                  color: 'white',
+                  position: 'relative',
+                  width: '100%',
+                  paddingBottom: '141.4%', // A4 비율 (1:1.414)
+                  borderRadius: 8,
+                  overflow: 'hidden',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                 }}>
-                  {casebook.category && (
-                    <div style={{
-                      display: 'inline-block',
-                      padding: '4px 12px',
-                      fontSize: 12,
-                      fontWeight: 600,
-                      background: 'rgba(255,255,255,0.2)',
-                      borderRadius: 4,
-                      marginBottom: 12,
-                    }}>
-                      {casebook.category}
-                    </div>
-                  )}
-                  <h3 style={{
-                    fontSize: 18,
-                    fontWeight: 700,
-                    lineHeight: 1.4,
-                    margin: 0,
-                  }}>
-                    {casebook.title}
-                  </h3>
-                </div>
-
-                {/* 본문 */}
-                <div style={{ padding: 20 }}>
                   <div style={{
-                    fontSize: 14,
-                    color: '#374151',
-                    lineHeight: 1.6,
-                    marginBottom: 16,
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100%',
                   }}>
-                    {casebook.description}
-                  </div>
-
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}>
-                    <div style={{ fontSize: 13, color: '#6b7280' }}>
-                      {formatDate(casebook.date)}
-                    </div>
+                    <img
+                      src="/ispaperbak.png"
+                      alt={casebook.title}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                      }}
+                    />
+                    {/* 제목 오버레이 */}
                     <div style={{
-                      fontSize: 13,
-                      color: '#3b82f6',
-                      fontWeight: 600,
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      padding: '16px',
+                      background: 'linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 60%, transparent 100%)',
                     }}>
-                      자세히 보기 →
+                      {casebook.category && (
+                        <div style={{
+                          display: 'inline-block',
+                          padding: '4px 10px',
+                          fontSize: 11,
+                          fontWeight: 600,
+                          background: 'rgba(255,255,255,0.2)',
+                          backdropFilter: 'blur(4px)',
+                          borderRadius: 4,
+                          marginBottom: 8,
+                          color: 'white',
+                        }}>
+                          {casebook.category}
+                        </div>
+                      )}
+                      <h3 style={{
+                        fontSize: 15,
+                        fontWeight: 700,
+                        lineHeight: 1.4,
+                        margin: '0 0 6px 0',
+                        color: 'white',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                      }}>
+                        {casebook.title}
+                      </h3>
+                      <div style={{
+                        fontSize: 12,
+                        color: 'rgba(255,255,255,0.8)',
+                      }}>
+                        {formatDate(casebook.date)}
+                      </div>
                     </div>
                   </div>
-
-                  {/* 태그 */}
-                  {casebook.tags && casebook.tags.length > 0 && (
-                    <div style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: 8,
-                      marginTop: 16,
-                    }}>
-                      {casebook.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          style={{
-                            padding: '4px 8px',
-                            fontSize: 11,
-                            color: '#6b7280',
-                            background: '#f3f4f6',
-                            borderRadius: 4,
-                          }}
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             ))}

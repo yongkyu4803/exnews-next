@@ -401,7 +401,29 @@ const CasebookDetailPage: React.FC = () => {
     )
   }
 
-  const { metadata, content } = data
+  const { metadata, content } = data || {}
+
+  // 첫 번째 H1 헤딩 제거 (이미 metadata.title로 렌더링되므로)
+  const processedContent = content ? content.replace(/^#\s+.+\n/, '') : ''
+
+  // metadata가 없으면 로딩 상태로 표시
+  if (!metadata) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
+        <TopNavBar />
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '50vh'
+        }}>
+          <div style={{ textAlign: 'center', padding: 60, color: '#6b7280' }}>
+            로딩 중...
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
@@ -428,45 +450,6 @@ const CasebookDetailPage: React.FC = () => {
         </button>
       </div>
 
-      {/* 헤더 섹션 */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)',
-        padding: '60px 20px',
-        marginBottom: 40,
-      }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', color: 'white' }}>
-          {/* 카테고리 */}
-          {metadata.category && (
-            <div style={{
-              display: 'inline-block',
-              padding: '6px 16px',
-              fontSize: 13,
-              fontWeight: 600,
-              background: 'rgba(255,255,255,0.2)',
-              borderRadius: 6,
-              marginBottom: 16,
-            }}>
-              {metadata.category}
-            </div>
-          )}
-
-          {/* 제목 */}
-          <h1 style={{
-            fontSize: 36,
-            fontWeight: 700,
-            lineHeight: 1.3,
-            marginBottom: 16,
-          }}>
-            {metadata.title}
-          </h1>
-
-          {/* 날짜 */}
-          <div style={{ fontSize: 14, opacity: 0.9 }}>
-            {formatDate(metadata.date)}
-          </div>
-        </div>
-      </div>
-
       {/* 본문 콘텐츠 */}
       <div style={{
         maxWidth: 900,
@@ -479,19 +462,125 @@ const CasebookDetailPage: React.FC = () => {
           boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
           padding: '40px',
         }}>
-          {/* 설명 */}
-          {metadata.description && (
-            <div style={{
-              fontSize: 16,
-              lineHeight: 1.7,
+          {/* 제목 */}
+          <h1 style={{
+            fontSize: 36,
+            fontWeight: 700,
+            marginBottom: 16,
+            color: '#1e40af',
+            lineHeight: 1.3,
+          }}>
+            {metadata.title}
+          </h1>
+
+          {/* 메타 정보 */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+            marginBottom: 32,
+            paddingBottom: 24,
+            borderBottom: '2px solid #e5e7eb',
+          }}>
+            {metadata.category && (
+              <span style={{
+                padding: '4px 12px',
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#3b82f6',
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                borderRadius: 6,
+              }}>
+                {metadata.category}
+              </span>
+            )}
+            <span style={{
+              fontSize: 14,
               color: '#6b7280',
-              marginBottom: 32,
-              paddingBottom: 24,
-              borderBottom: '1px solid #e5e7eb',
             }}>
-              {metadata.description}
+              {formatDate(metadata.date)}
+            </span>
+          </div>
+
+          {/* 일러두기: 팩트/계획/전망 */}
+          <div style={{
+            background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)',
+            border: '2px solid #e5e7eb',
+            borderRadius: 12,
+            padding: '24px',
+            marginBottom: 40,
+          }}>
+            <div style={{
+              fontSize: 14,
+              fontWeight: 700,
+              color: '#1f2937',
+              marginBottom: 16,
+            }}>
+              📌 일러두기
             </div>
-          )}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <span style={{
+                  display: 'inline-block',
+                  background: '#1e40af',
+                  color: 'white',
+                  padding: '4px 10px',
+                  borderRadius: 4,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  minWidth: 50,
+                  textAlign: 'center',
+                }}>
+                  팩트
+                </span>
+                <span style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
+                  정부·감독당국·언론에 공식적으로 확인된 사실
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <span style={{
+                  display: 'inline-block',
+                  background: '#15803d',
+                  color: 'white',
+                  padding: '4px 10px',
+                  borderRadius: 4,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  minWidth: 50,
+                  textAlign: 'center',
+                }}>
+                  계획
+                </span>
+                <span style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
+                  정부가 로드맵·설명자료 등으로 제시한 정책 방향·목표
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <span style={{
+                  display: 'inline-block',
+                  background: '#d97706',
+                  color: 'white',
+                  padding: '4px 10px',
+                  borderRadius: 4,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  minWidth: 50,
+                  textAlign: 'center',
+                }}>
+                  전망
+                </span>
+                <span style={{ fontSize: 13, color: '#374151', lineHeight: 1.6 }}>
+                  보고서 작성자의 시나리오·실무적 판단
+                </span>
+              </div>
+            </div>
+          </div>
+
 
           {/* 마크다운 콘텐츠 */}
           <ReactMarkdown
@@ -499,7 +588,7 @@ const CasebookDetailPage: React.FC = () => {
             rehypePlugins={[rehypeRaw]}
             components={customComponents}
           >
-            {content}
+            {processedContent}
           </ReactMarkdown>
 
           {/* 태그 */}

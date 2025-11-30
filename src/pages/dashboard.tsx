@@ -1060,7 +1060,11 @@ const DashboardPage = () => {
             }}>
               {/* 여론조사 동향 */}
               <div style={{
-                background: 'var(--gqai-bg-card)',
+                background: '#fef9e7',
+                backgroundImage: `
+                  repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(252, 211, 77, 0.03) 10px, rgba(252, 211, 77, 0.03) 20px),
+                  repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(254, 230, 138, 0.03) 10px, rgba(254, 230, 138, 0.03) 20px)
+                `,
                 borderRadius: 'var(--gqai-radius-lg)',
                 boxShadow: 'var(--gqai-shadow-sm)',
                 padding: isMobile ? '12px' : 'var(--gqai-space-lg)',
@@ -1075,7 +1079,7 @@ const DashboardPage = () => {
                   <h3 style={{
                     fontSize: 18,
                     fontWeight: 700,
-                    color: '#1e40af',
+                    color: '#92400e',
                     margin: 0,
                     fontFamily: 'KimjungchulGothic, var(--gqai-font-display)',
                   }}>
@@ -1130,9 +1134,10 @@ const DashboardPage = () => {
                         flexDirection: 'column',
                         justifyContent: 'space-between',
                         gap: 8,
+                        border: '1px solid #f2a54cff',
                       }}>
                         <div>
-                          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>{pollData.latest.source_name}</div>
+                          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 6 }}>📍 {pollData.latest.source_name}</div>
                           <div style={{ fontSize: 14, fontWeight: 700, color: '#3b82f6' }}>
                             {new Date(pollData.latest.publish_date).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
                           </div>
@@ -1149,10 +1154,10 @@ const DashboardPage = () => {
                         padding: '12px',
                         borderRadius: 'var(--gqai-radius-md)',
                         background: 'linear-gradient(135deg, #f3f4ff 0%, #faf5ff 100%)',
-                        border: '1px solid #e5e7eb',
+                        border: '1px solid #f2a54cff',
                       }}>
                         <div style={{ fontSize: 14, color: 'var(--gqai-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
-                          대통령 지지율
+                          📍 대통령 지지율
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1198,10 +1203,10 @@ const DashboardPage = () => {
                             padding: '12px',
                             borderRadius: 'var(--gqai-radius-md)',
                             background: 'linear-gradient(135deg, #f3f4ff 0%, #faf5ff 100%)',
-                            border: '1px solid #e5e7eb',
+                            border: '1px solid #f2a54cff',
                           }}>
                             <div style={{ fontSize: 14, color: 'var(--gqai-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
-                              정당 지지율
+                              📍 정당 지지율
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                               {parties.map((party) => (
@@ -2048,16 +2053,15 @@ const DashboardPage = () => {
           padding: '12px',
           borderRadius: 'var(--gqai-radius-md)',
           border: '1px solid var(--gqai-border-light)',
+          backgroundColor: 'var(--gqai-bg-hover)',
           transition: 'all var(--gqai-transition-fast)',
           cursor: 'pointer',
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.borderColor = 'var(--gqai-primary)';
-          e.currentTarget.style.backgroundColor = 'var(--gqai-bg-hover)';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.borderColor = 'var(--gqai-border-light)';
-          e.currentTarget.style.backgroundColor = 'transparent';
         }}
         onClick={() => router.push(`/?tab=political&id=${slug}`)}
       >

@@ -70,7 +70,11 @@ const CasebookWidget: React.FC = () => {
   return (
     <div
       style={{
-        background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)',
+        background: '#fef9e7',
+        backgroundImage: `
+          repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(252, 211, 77, 0.03) 10px, rgba(252, 211, 77, 0.03) 20px),
+          repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(254, 230, 138, 0.03) 10px, rgba(254, 230, 138, 0.03) 20px)
+        `,
         borderRadius: 'var(--gqai-radius-lg)',
         boxShadow: 'var(--gqai-shadow-sm)',
         padding: '20px',
@@ -85,7 +89,7 @@ const CasebookWidget: React.FC = () => {
         alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: 20,
-        color: 'white',
+        color: '#92400e',
       }}>
         <div style={{
           fontSize: 18,
@@ -132,21 +136,18 @@ const CasebookWidget: React.FC = () => {
           {/* 캐러셀 컨테이너 */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: 12,
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 10,
             marginBottom: 16,
           }}>
-            {allCasebooks.slice(currentIndex, currentIndex + 2).map((casebook) => (
+            {allCasebooks.slice(currentIndex, currentIndex + 3).map((casebook) => (
               <div
                 key={casebook.slug}
                 onClick={() => router.push(`/casebook/${casebook.slug}`)}
                 style={{
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(239,246,255,0.95) 100%)',
                   borderRadius: 'var(--gqai-radius-md)',
-                  padding: '8px',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  border: '1px solid rgba(255,255,255,0.3)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -155,16 +156,14 @@ const CasebookWidget: React.FC = () => {
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-4px)'
                   e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.15)'
-                  e.currentTarget.style.background = 'rgba(255,255,255,1)'
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)'
                   e.currentTarget.style.boxShadow = 'none'
-                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(239,246,255,0.95) 100%)'
                 }}
               >
                 {/* 이슈페이퍼 표지 */}
-                <div style={{ position: 'relative', width: '100%', height: 200 }}>
+                <div style={{ position: 'relative', width: '100%', height: 160 }}>
                   <Image
                     src="/ispaperbak.png"
                     alt={casebook.title}
@@ -177,14 +176,14 @@ const CasebookWidget: React.FC = () => {
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    padding: '12px',
-                    background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 70%, transparent 100%)',
+                    padding: '10px',
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 70%, transparent 100%)',
                     borderRadius: '0 0 8px 8px',
                   }}>
                     <div style={{
                       color: 'white',
-                      fontSize: 14,
-                      fontWeight: 600,
+                      fontSize: 13,
+                      fontWeight: 700,
                       lineHeight: 1.4,
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -195,11 +194,12 @@ const CasebookWidget: React.FC = () => {
                       {casebook.title}
                     </div>
                     <div style={{
-                      color: 'rgba(255,255,255,0.8)',
+                      color: 'rgba(255,255,255,0.85)',
                       fontSize: 11,
                       marginTop: 4,
+                      fontWeight: 500,
                     }}>
-                      {casebook.category} · {formatDate(casebook.date)}
+                      {formatDate(casebook.date)}
                     </div>
                   </div>
                 </div>
@@ -208,7 +208,7 @@ const CasebookWidget: React.FC = () => {
           </div>
 
           {/* 네비게이션 버튼 */}
-          {allCasebooks.length > 2 && (
+          {allCasebooks.length > 3 && (
             <div style={{
               display: 'flex',
               justifyContent: 'center',
@@ -244,15 +244,15 @@ const CasebookWidget: React.FC = () => {
 
               {/* 인디케이터 */}
               <div style={{ display: 'flex', gap: 6 }}>
-                {Array.from({ length: Math.ceil(allCasebooks.length / 2) }).map((_, index) => (
+                {Array.from({ length: Math.ceil(allCasebooks.length / 3) }).map((_, index) => (
                   <div
                     key={index}
-                    onClick={() => setCurrentIndex(index * 2)}
+                    onClick={() => setCurrentIndex(index * 3)}
                     style={{
-                      width: currentIndex === index * 2 ? 20 : 8,
+                      width: currentIndex === index * 3 ? 20 : 8,
                       height: 8,
                       borderRadius: 4,
-                      background: currentIndex === index * 2
+                      background: currentIndex === index * 3
                         ? 'rgba(255,255,255,0.9)'
                         : 'rgba(255,255,255,0.4)',
                       cursor: 'pointer',

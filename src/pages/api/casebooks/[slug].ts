@@ -66,7 +66,8 @@ export default async function handler(
     // 설명 추출
     let description = data.description || ''
     if (!description) {
-      const afterH1 = content.replace(/^#\s+.+$/m, '').trim()
+      // H1 또는 H2 제거 후 첫 문단 추출
+      const afterH1 = content.replace(/^#{1,2}\s+.+$/m, '').trim()
       const firstParagraph = afterH1.split('\n\n')[0]
       description = extractPlainText(firstParagraph, 150)
     }
