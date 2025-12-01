@@ -102,4 +102,5 @@ const StatsCard: React.FC<StatsCardProps> = ({
   );
 };
 
-export default StatsCard;
+// 🚀 Phase 2.3: React.memo로 불필요한 재렌더링 방지
+export default React.memo(StatsCard);

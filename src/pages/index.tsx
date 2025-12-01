@@ -72,13 +72,6 @@ const BillsReportsList = dynamic(() => import('@/components/mobile/BillsReportsL
 // 전체 컴포넌트를 클라이언트 사이드에서만 렌더링
 const HomePage = () => {
   const router = useRouter();
-
-  // 랜딩페이지를 대시보드로 리다이렉트 (tab 파라미터가 없는 경우에만)
-  useEffect(() => {
-    if (!router.query.tab) {
-      router.replace('/dashboard');
-    }
-  }, [router.query.tab]);
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);

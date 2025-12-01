@@ -1,9 +1,26 @@
 import React, { useState } from 'react'
 import { useRouter } from 'next/router'
 import { useQuery } from 'react-query'
+import styled from '@emotion/styled'
 import { CasebooksListResponse } from '@/types/casebook'
 import { formatDate } from '@/utils/casebookHelpers'
 import Image from 'next/image'
+
+// 🚀 Phase 2.3: CSS hover로 성능 개선 (인라인 이벤트 핸들러 제거)
+const CasebookCard = styled.div`
+  border-radius: var(--gqai-radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  }
+`
 
 const CasebookWidget: React.FC = () => {
   const router = useRouter()
@@ -141,26 +158,9 @@ const CasebookWidget: React.FC = () => {
             marginBottom: 16,
           }}>
             {allCasebooks.slice(currentIndex, currentIndex + 3).map((casebook) => (
-              <div
+              <CasebookCard
                 key={casebook.slug}
                 onClick={() => router.push(`/casebook/${casebook.slug}`)}
-                style={{
-                  borderRadius: 'var(--gqai-radius-md)',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: 6,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-4px)'
-                  e.currentTarget.style.boxShadow = '0 8px 16px rgba(0, 0, 0, 0.15)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = 'none'
-                }}
               >
                 {/* 이슈페이퍼 표지 */}
                 <div style={{ position: 'relative', width: '100%', height: 160 }}>
@@ -203,7 +203,7 @@ const CasebookWidget: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </div>
+              </CasebookCard>
             ))}
           </div>
 
