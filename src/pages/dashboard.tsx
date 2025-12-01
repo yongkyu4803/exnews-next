@@ -13,6 +13,7 @@ import TopNavBar from '@/components/mobile/TopNavBar';
 import StatsCard from '@/components/Dashboard/Widgets/StatsCard';
 import CategoryFilter from '@/components/Dashboard/Widgets/CategoryFilter';
 import CasebookWidget from '@/components/Dashboard/Widgets/CasebookWidget';
+import PageFooter from '@/components/common/PageFooter';
 import { createLogger } from '@/utils/logger';
 
 const logger = createLogger('Pages:Dashboard');
@@ -2598,43 +2599,7 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {/* 푸터 추가 */}
-      <footer style={{
-        width: '100%',
-        padding: '16px',
-        textAlign: 'center',
-        borderTop: '1px solid #eaeaea',
-        marginTop: '32px',
-        color: '#666',
-        fontSize: isMobile ? '12px' : '16px',
-        backgroundColor: '#f9f9f9',
-        fontFamily: "'Inter', 'Roboto', 'Helvetica Neue', sans-serif"
-      }}>
-        <div style={{ marginBottom: '8px' }}>
-          <a
-            href="https://gqai.kr"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              color: '#1a4b8c',
-              textDecoration: 'none',
-              fontWeight: '600',
-              letterSpacing: '0.5px'
-            }}
-          >
-            GQAI.kr
-          </a>
-        </div>
-        <div>
-          <a href="mailto:gq.newslens@gmail.com" style={{
-            color: '#1a4b8c',
-            textDecoration: 'none',
-            fontWeight: '500'
-          }}>
-            gq.newslens@gmail.com
-          </a>
-        </div>
-      </footer>
+      <PageFooter isMobile={isMobile} />
     </>
   );
 };

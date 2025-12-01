@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PageFooter from '@/components/common/PageFooter';
 import { useRouter } from 'next/router';
 import { useQuery } from 'react-query';
 import dynamic from 'next/dynamic';
@@ -457,6 +458,7 @@ const DashboardWarmPage = () => {
       }}>
         {renderMainContent()}
       </div>
+      <PageFooter isMobile={isMounted && window.matchMedia('(max-width: 768px)').matches} />
     </>
   );
 };

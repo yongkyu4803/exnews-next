@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import styled from '@emotion/styled';
 import Head from 'next/head';
 import PasswordProtection from '@/components/PasswordProtection';
+import PageFooter from '@/components/common/PageFooter';
 
 const BusinessContainer = styled.div`
   min-height: 100vh;
@@ -655,6 +656,7 @@ const BusinessPage: React.FC = () => {
               GQAI 문의하기 →
             </CTAButton>
           </CTASection>
+          <PageFooter />
         </MainContent>
       </BusinessContainer>
     </PasswordProtection>
