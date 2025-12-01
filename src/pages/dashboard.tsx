@@ -2567,7 +2567,7 @@ const DashboardPage = () => {
                           fontWeight: 600,
                         }}
                       >
-                        🔗 원문 보기
+                        🔗 관련 기사 보기
                       </a>
                     )}
                     {pollData.latest.pdf_url && (
