@@ -1,0 +1,21 @@
+# robots.txt for news.gqai.kr
+
+# Allow all web crawlers
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://news.gqai.kr/sitemap.xml
+
+# Disallow admin pages
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+
+# Allow Google AdSense crawler
+User-agent: Mediapartners-Google
+Allow: /
+
+# Allow Google AdSense bot
+User-agent: AdsBot-Google
+Allow: /
