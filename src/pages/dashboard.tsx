@@ -42,63 +42,61 @@ const DashboardPage = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch dashboard statistics
-  const { data: stats, isLoading: statsLoading } = useQuery(
-    'dashboard-stats',
+  // 🚀 Phase 1.1: 통합 병렬 API 호출 - 모든 대시보드 데이터를 한 번에 병렬로 가져옴
+  // 11개 HTTP 요청 → 8개 병렬 요청으로 감소, 중복 제거
+  const { data: allData, isLoading } = useQuery(
+    ['dashboard-all', activeCategory, activeTab, activePollTab],
     async () => {
-      const [newsRes, rankingRes, editorialRes, billsRes] = await Promise.all([
-        fetch('/api/news?page=1&pageSize=1'),
-        fetch('/api/ranking-news?page=1&pageSize=1'),
-        fetch('/api/editorials?landing=true'),
-        fetch('/api/bills?landing=true'),
-      ]);
+      const categoryParam = activeCategory !== 'all' ? `&category=${activeCategory}` : '';
 
-      const [newsData, rankingData, editorialData, billsData] = await Promise.all([
-        newsRes.json(),
-        rankingRes.json(),
-        editorialRes.json(),
-        billsRes.json(),
-      ]);
+      // Promise.all로 모든 API를 병렬 호출 (HTTP/2 멀티플렉싱 활용)
+      const [news, ranking, editorial, political, bills, restaurants, govReleases, polls] =
+        await Promise.all([
+          fetch(`/api/news?page=1&pageSize=20${categoryParam}`).then(r => r.json()),
+          fetch('/api/ranking-news?page=1&pageSize=20').then(r => r.json()),
+          fetch('/api/editorials?landing=true').then(r => r.json()),
+          fetch('/api/political-reports?landing=true').then(r => r.json()),
+          fetch('/api/bills?landing=true').then(r => r.json()),
+          fetch('/api/restaurants?page=1&pageSize=20').then(r => r.json()),
+          fetch('/api/gov-releases').then(r => r.json()),
+          fetch(`/api/polls?landing=true&source=${activePollTab}`).then(r => r.json()),
+        ]);
 
+      // Stats 계산 (기존 stats API 호출 제거, 데이터에서 직접 추출)
       return {
-        news: newsData.totalCount || 0,
-        ranking: rankingData.totalCount || 0,
-        editorial: editorialData.totalCount || 0,
-        bills: billsData.totalCount || 0,
+        stats: {
+          news: news.totalCount || 0,
+          ranking: ranking.totalCount || 0,
+          editorial: editorial.totalCount || 0,
+          bills: bills.totalCount || 0,
+        },
+        news,
+        ranking,
+        editorial,
+        political,
+        bills,
+        restaurants,
+        govReleases,
+        polls,
       };
     },
     {
       enabled: isMounted,
-      staleTime: 2 * 60 * 1000, // 2 minutes
+      staleTime: 2 * 60 * 1000, // 2분 캐시
+      cacheTime: 10 * 60 * 1000, // 10분 메모리 보관
     }
   );
 
-  // Fetch news by category (for home and exclusive tabs)
-  const { data: newsData, isLoading: newsLoading } = useQuery(
-    ['dashboard-news', activeCategory, activeTab],
-    async () => {
-      const categoryParam = activeCategory !== 'all' ? `&category=${activeCategory}` : '';
-      const response = await fetch(`/api/news?page=1&pageSize=20${categoryParam}`);
-      return response.json();
-    },
-    {
-      enabled: isMounted && (activeTab === 'home' || activeTab === 'exclusive'),
-      staleTime: 1 * 60 * 1000,
-    }
-  );
-
-  // Fetch ranking news
-  const { data: rankingData, isLoading: rankingLoading } = useQuery(
-    'dashboard-ranking',
-    async () => {
-      const response = await fetch('/api/ranking-news?page=1&pageSize=20');
-      return response.json();
-    },
-    {
-      enabled: isMounted && (activeTab === 'home' || activeTab === 'ranking'),
-      staleTime: 1 * 60 * 1000,
-    }
-  );
+  // 통합 데이터에서 개별 데이터 추출
+  const stats = allData?.stats;
+  const newsData = allData?.news;
+  const rankingData = allData?.ranking;
+  const editorialData = allData?.editorial;
+  const politicalData = allData?.political;
+  const billsData = allData?.bills;
+  const restaurantData = allData?.restaurants;
+  const govReleasesData = allData?.govReleases;
+  const pollData = allData?.polls;
 
   // 랭킹뉴스 랜덤 로테이션 (5초마다)
   useEffect(() => {
@@ -131,45 +129,6 @@ const DashboardPage = () => {
     return () => clearInterval(interval);
   }, [rankingData?.items]);
 
-  // Fetch editorials (landing mode: 최신 1개만)
-  const { data: editorialData, isLoading: editorialLoading } = useQuery(
-    'dashboard-editorials-landing',
-    async () => {
-      const response = await fetch('/api/editorials?landing=true');
-      return response.json();
-    },
-    {
-      enabled: isMounted && (activeTab === 'home' || activeTab === 'editorial'),
-      staleTime: 1 * 60 * 1000,
-    }
-  );
-
-  // Fetch political reports (landing mode)
-  const { data: politicalData, isLoading: politicalLoading } = useQuery(
-    'dashboard-political',
-    async () => {
-      const response = await fetch('/api/political-reports?landing=true');
-      return response.json();
-    },
-    {
-      enabled: isMounted && (activeTab === 'home' || activeTab === 'political'),
-      staleTime: 1 * 60 * 1000,
-    }
-  );
-
-  // Fetch bills (landing mode for dashboard)
-  const { data: billsData, isLoading: billsLoading } = useQuery(
-    'dashboard-bills',
-    async () => {
-      const response = await fetch('/api/bills?landing=true');
-      return response.json();
-    },
-    {
-      enabled: isMounted && (activeTab === 'home' || activeTab === 'bills'),
-      staleTime: 1 * 60 * 1000,
-    }
-  );
-
   // 법안 랜덤 로테이션 (5초마다)
   useEffect(() => {
     const bills = billsData?.latest?.bills;
@@ -189,19 +148,6 @@ const DashboardPage = () => {
 
     return () => clearInterval(interval);
   }, [billsData?.latest?.bills]);
-
-  // Fetch weekly poll data (탭별로 source 필터링)
-  const { data: pollData, isLoading: pollLoading } = useQuery(
-    ['dashboard-polls', activePollTab],
-    async () => {
-      const response = await fetch(`/api/polls?landing=true&source=${activePollTab}`);
-      return response.json();
-    },
-    {
-      enabled: isMounted && activeTab === 'home',
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }
-  );
 
   // 정치 뉴스 기사 자동 슬라이드 (10초마다)
   useEffect(() => {
@@ -227,32 +173,6 @@ const DashboardPage = () => {
 
     return () => clearInterval(interval);
   }, [politicalData?.latest]);
-
-  // Fetch restaurants
-  const { data: restaurantData, isLoading: restaurantLoading } = useQuery(
-    'dashboard-restaurants',
-    async () => {
-      const response = await fetch('/api/restaurants?page=1&pageSize=20');
-      return response.json();
-    },
-    {
-      enabled: isMounted && (activeTab === 'home' || activeTab === 'restaurant'),
-      staleTime: 1 * 60 * 1000,
-    }
-  );
-
-  // Fetch government press releases
-  const { data: govReleasesData, isLoading: govReleasesLoading } = useQuery(
-    'dashboard-gov-releases',
-    async () => {
-      const response = await fetch('/api/gov-releases');
-      return response.json();
-    },
-    {
-      enabled: isMounted && activeTab === 'home',
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }
-  );
 
   const categories = [
     { key: 'all', label: '전체', count: stats?.news || 0 },
@@ -344,7 +264,7 @@ const DashboardPage = () => {
               />
               단독 뉴스
             </h2>
-            {newsLoading ? (
+            {isLoading ? (
               <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-secondary)' }}>
                 로딩 중...
               </div>
@@ -372,7 +292,7 @@ const DashboardPage = () => {
               />
               랭킹 뉴스
             </h2>
-            {rankingLoading ? (
+            {isLoading ? (
               <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-secondary)' }}>
                 로딩 중...
               </div>
@@ -388,7 +308,7 @@ const DashboardPage = () => {
         return (
           <div style={containerStyle}>
             <h2 style={titleStyle}>📰 사설 분석</h2>
-            {editorialLoading ? (
+            {isLoading ? (
               <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-secondary)' }}>
                 로딩 중...
               </div>
@@ -405,7 +325,7 @@ const DashboardPage = () => {
         return (
           <div style={containerStyle}>
             <h2 style={titleStyle}>🏛️ 정치 브리핑</h2>
-            {politicalLoading ? (
+            {isLoading ? (
               <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-secondary)' }}>
                 로딩 중...
               </div>
@@ -421,7 +341,7 @@ const DashboardPage = () => {
         return (
           <div style={containerStyle}>
             <h2 style={titleStyle}>⚖️ 법안 모니터링</h2>
-            {billsLoading ? (
+            {isLoading ? (
               <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-secondary)' }}>
                 로딩 중...
               </div>
@@ -437,7 +357,7 @@ const DashboardPage = () => {
         return (
           <div style={containerStyle}>
             <h2 style={titleStyle}>🍽️ 레스토랑 정보</h2>
-            {restaurantLoading ? (
+            {isLoading ? (
               <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-secondary)' }}>
                 로딩 중...
               </div>
@@ -516,7 +436,7 @@ const DashboardPage = () => {
                     이전 리포트 →
                   </button>
                 </div>
-                {billsLoading ? (
+                {isLoading ? (
                   <div style={{ textAlign: 'center', padding: 40, color: 'var(--gqai-text-tertiary)' }}>
                     로딩 중...
                   </div>
@@ -838,7 +758,7 @@ const DashboardPage = () => {
                       이전 리포트 →
                     </button>
                   </div>
-                  {politicalLoading ? (
+                  {isLoading ? (
                     <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
                       로딩 중...
                     </div>
@@ -926,7 +846,7 @@ const DashboardPage = () => {
                         ▶
                       </button>
                     </div>
-                    {newsLoading ? (
+                    {isLoading ? (
                       <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
                         로딩 중...
                       </div>
@@ -984,7 +904,7 @@ const DashboardPage = () => {
                         ▶
                       </button>
                     </div>
-                    {rankingLoading ? (
+                    {isLoading ? (
                       <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
                         로딩 중...
                       </div>
@@ -1035,7 +955,7 @@ const DashboardPage = () => {
                         ▶
                       </button>
                     </div>
-                    {editorialLoading ? (
+                    {isLoading ? (
                       <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
                         로딩 중...
                       </div>
@@ -1113,7 +1033,7 @@ const DashboardPage = () => {
                   </div>
                 </div>
 
-                {pollLoading ? (
+                {isLoading ? (
                   <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
                     로딩 중...
                   </div>
@@ -1290,7 +1210,7 @@ const DashboardPage = () => {
                 더보기 →
               </button>
             </div>
-            {govReleasesLoading ? (
+            {isLoading ? (
               <div style={{ textAlign: 'center', padding: 20, color: 'var(--gqai-text-tertiary)' }}>
                 로딩 중...
               </div>

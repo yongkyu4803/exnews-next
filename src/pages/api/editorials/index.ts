@@ -29,13 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (landing === 'true') {
       logger.info('사설 분석 랜딩 모드 조회 시작');
 
-      // 전체 개수 먼저 조회
-      const { count: totalCountResult } = await editorialSupabase
-        .from('news_analysis')
-        .select('*', { count: 'exact', head: true });
-
-      // 최신 분석 1개 (전체 데이터 with topics & articles)
-      const { data: latestData, error: latestError } = await editorialSupabase
+      // 🚀 Phase 1.2: 3번의 DB 쿼리 → 1번으로 통합 (count + latest + previous)
+      // 최신 5개를 한 번에 조회 후 메모리에서 분리
+      const { data: allData, error: queryError, count: totalCountResult } = await editorialSupabase
         .from('news_analysis')
         .select(`
           *,
@@ -43,31 +39,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             *,
             articles:analysis_article(*)
           )
-        `)
+        `, { count: 'exact' })
         .order('analyzed_at', { ascending: false })
-        .limit(1);
+        .limit(5);
 
-      if (latestError) {
-        logger.error('최신 사설 분석 조회 실패', latestError);
-        throw latestError;
+      if (queryError) {
+        logger.error('사설 분석 조회 실패', queryError);
+        throw queryError;
       }
 
-      // 이전 4개 (id, analyzed_at만)
-      const { data: previousData, error: previousError } = await editorialSupabase
-        .from('news_analysis')
-        .select('id, analyzed_at')
-        .order('analyzed_at', { ascending: false })
-        .range(1, 4); // 2번째~5번째
-
-      if (previousError) {
-        logger.error('이전 사설 분석 조회 실패', previousError);
-        throw previousError;
-      }
-
-      // 최신 데이터 정렬
-      const latest = latestData?.[0] ? {
-        ...latestData[0],
-        topics: (latestData[0].topics || [])
+      // 메모리에서 최신 1개와 이전 4개로 분리
+      const latest = allData?.[0] ? {
+        ...allData[0],
+        topics: (allData[0].topics || [])
           .sort((a: any, b: any) => (a.topic_number || 0) - (b.topic_number || 0))
           .map((topic: any) => ({
             ...topic,
@@ -75,15 +59,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }))
       } : null;
 
-      logger.info('사설 분석 랜딩 모드 조회 완료', {
-        latestCount: latestData?.length || 0,
-        previousCount: previousData?.length || 0,
+      // 이전 4개는 id, analyzed_at만 추출
+      const previous = (allData?.slice(1, 5) || []).map(({ id, analyzed_at }) => ({ id, analyzed_at }));
+
+      logger.info('사설 분석 랜딩 모드 조회 완료 (1 query)', {
+        latestCount: latest ? 1 : 0,
+        previousCount: previous.length,
         totalCount: totalCountResult || 0
       });
 
       return res.status(200).json({
         latest,
-        previous: previousData || [],
+        previous,
         totalCount: totalCountResult || 0
       });
     }

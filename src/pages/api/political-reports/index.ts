@@ -30,59 +30,48 @@ export default async function handler(
     if (landing === 'true') {
       logger.info('정치 리포트 랜딩 모드 조회 시작');
 
-      // 전체 개수 먼저 조회
-      const { count: totalCountResult } = await politicalSupabase
+      // 🚀 Phase 1.2: 3번의 DB 쿼리 → 1번으로 통합 (count + latest + previous)
+      // 최신 5개를 한 번에 조회 후 메모리에서 분리
+      const { data: allData, error: queryError, count: totalCountResult } = await politicalSupabase
         .from(TABLES.NEWS_REPORTS)
-        .select('*', { count: 'exact', head: true });
-
-      // 최신 리포트 1개 (전체 데이터)
-      const { data: latestData, error: latestError } = await politicalSupabase
-        .from(TABLES.NEWS_REPORTS)
-        .select('id, slug, topic, created_at, duration_ms, cost_usd, report_data')
+        .select('id, slug, topic, created_at, duration_ms, cost_usd, report_data', { count: 'exact' })
         .order('created_at', { ascending: false })
-        .limit(1);
+        .limit(5);
 
-      if (latestError) {
-        logger.error('최신 리포트 조회 실패', latestError);
-        throw latestError;
+      if (queryError) {
+        logger.error('리포트 조회 실패', queryError);
+        throw queryError;
       }
 
-      // 이전 4개 (id, created_at, slug만)
-      const { data: previousData, error: previousError } = await politicalSupabase
-        .from(TABLES.NEWS_REPORTS)
-        .select('id, created_at, slug, topic')
-        .order('created_at', { ascending: false })
-        .range(1, 4); // 2번째~5번째
-
-      if (previousError) {
-        logger.error('이전 리포트 조회 실패', previousError);
-        throw previousError;
-      }
-
-      // 최신 리포트 데이터 변환
-      const latest = latestData?.[0] ? {
-        id: latestData[0].id,
-        slug: latestData[0].slug,
-        topic: latestData[0].topic,
-        created_at: latestData[0].created_at,
-        duration_ms: latestData[0].duration_ms,
-        cost_usd: latestData[0].cost_usd ? parseFloat(latestData[0].cost_usd).toFixed(4) : undefined,
-        summary: latestData[0].report_data?.summary,
-        keywords: latestData[0].report_data?.keywords?.map((k: any) => k.term) || [],
-        report_data: latestData[0].report_data,
+      // 메모리에서 최신 1개와 이전 4개로 분리
+      const latest = allData?.[0] ? {
+        id: allData[0].id,
+        slug: allData[0].slug,
+        topic: allData[0].topic,
+        created_at: allData[0].created_at,
+        duration_ms: allData[0].duration_ms,
+        cost_usd: allData[0].cost_usd ? parseFloat(allData[0].cost_usd).toFixed(4) : undefined,
+        summary: allData[0].report_data?.summary,
+        keywords: allData[0].report_data?.keywords?.map((k: any) => k.term) || [],
+        report_data: allData[0].report_data,
         source: 'supabase' as const
       } : null;
 
-      logger.info('정치 리포트 랜딩 모드 조회 완료', {
-        latestCount: latestData?.length || 0,
-        previousCount: previousData?.length || 0,
+      // 이전 4개는 필요한 필드만 추출
+      const previous = (allData?.slice(1, 5) || []).map(({ id, created_at, slug, topic }) =>
+        ({ id, created_at, slug, topic })
+      );
+
+      logger.info('정치 리포트 랜딩 모드 조회 완료 (1 query)', {
+        latestCount: latest ? 1 : 0,
+        previousCount: previous.length,
         totalCount: totalCountResult || 0
       });
 
       return res.status(200).json({
         success: true,
         latest,
-        previous: previousData || [],
+        previous,
         totalCount: totalCountResult || 0
       });
     }
