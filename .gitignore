@@ -70,8 +70,6 @@ ENV/
 
 # Generated files
 .firebase/
-public/sitemap*.xml
-public/robots.txt
 
 # Jest
 .jest-cache/
