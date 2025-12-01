@@ -80,7 +80,7 @@ const HeaderMenu = styled(Menu)`
 
 const MobileNav = styled.div`
   display: none;
-  
+
   @media (max-width: 768px) {
     display: block;
     position: fixed;
@@ -89,13 +89,34 @@ const MobileNav = styled.div`
     right: 0;
     background-color: #fff;
     border-top: 1px solid #eee;
-    height: 30px;
-    
+
+    .footer-links {
+      padding: 8px 0;
+      text-align: center;
+      font-size: 10px;
+      color: #999;
+      border-bottom: 1px solid #f0f0f0;
+
+      a {
+        color: #666;
+        text-decoration: none;
+        padding: 0 4px;
+
+        &:hover {
+          color: var(--primary-color, #1a4b8c);
+        }
+      }
+
+      span {
+        color: #ddd;
+      }
+    }
+
     nav {
       display: flex;
       justify-content: space-around;
-      height: 100%;
-      
+      height: 30px;
+
       a {
         display: flex;
         flex-direction: column;
@@ -106,12 +127,12 @@ const MobileNav = styled.div`
         height: 100%;
         font-size: 12px;
         flex: 1;
-        
+
         svg {
           margin-bottom: 4px;
           font-size: 18px;
         }
-        
+
         &.active {
           color: var(--primary-color, #1a4b8c);
         }
@@ -171,6 +192,13 @@ export default function Layout({ children }: LayoutProps) {
       <Footer className="site-footer">
         {isMobile && (
           <MobileNav>
+            <div className="footer-links">
+              <Link href="/privacy">개인정보</Link>
+              <span> | </span>
+              <Link href="/terms">약관</Link>
+              <span> | </span>
+              <Link href="/about">소개</Link>
+            </div>
             <nav>
               <Link href="/" className="active">홈</Link>
               <Link href="/offline">저장됨</Link>
