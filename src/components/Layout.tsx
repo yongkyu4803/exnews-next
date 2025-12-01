@@ -178,7 +178,18 @@ export default function Layout({ children }: LayoutProps) {
             </nav>
           </MobileNav>
         )}
-        {!isMobile && <div>© 2025 NewsLens. All rights reserved.</div>}
+        {!isMobile && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center' }}>
+            <div>
+              <Link href="/privacy" style={{ color: '#666', textDecoration: 'none' }}>개인정보 처리방침</Link>
+              {' | '}
+              <Link href="/terms" style={{ color: '#666', textDecoration: 'none' }}>이용약관</Link>
+              {' | '}
+              <Link href="/about" style={{ color: '#666', textDecoration: 'none' }}>소개</Link>
+            </div>
+            <div>© 2025 GQ AI. All rights reserved.</div>
+          </div>
+        )}
       </Footer>
     </LayoutContainer>
   );

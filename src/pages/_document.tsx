@@ -17,6 +17,13 @@ export default function Document() {
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
 
+        {/* Google AdSense */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9515499283942866"
+          crossOrigin="anonymous"
+        />
+
         {/* Google Tag Manager */}
         <script
           dangerouslySetInnerHTML={{
