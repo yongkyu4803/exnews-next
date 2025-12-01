@@ -21,16 +21,17 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
-  // 🚀 서버 사이드 리다이렉트: / → /dashboard (깜빡임 없는 리다이렉트)
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/dashboard',
-        permanent: false, // 308 대신 307 사용 (임시 리다이렉트)
-      },
-    ]
-  },
+  // 🚀 Redirect disabled for Google AdSense approval
+  // After AdSense approval, you can re-enable this redirect
+  // async redirects() {
+  //   return [
+  //     {
+  //       source: '/',
+  //       destination: '/dashboard',
+  //       permanent: false,
+  //     },
+  //   ]
+  // },
 }
 
 module.exports = nextConfig
