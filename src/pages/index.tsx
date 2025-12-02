@@ -558,11 +558,12 @@ const HomePage = ({ initialNewsData }: { initialNewsData?: NewsResponse }) => {
     }
   }, [activeTab, rankingData, rankingIsLoading, rankingError]);
 
-  // SSR 시에도 initialNewsData가 있으면 콘텐츠 렌더링 (AdSense 크롤러 대응)
-  // isMounted가 false일 때(SSR)도 initialNewsData가 있으면 뉴스 목록 렌더링
-  const shouldRenderContent = isMounted || (initialNewsData && initialNewsData.items && initialNewsData.items.length > 0);
+  // SSR 시에도 initialNewsData가 있으면 SSR 뉴스 리스트 렌더링 (AdSense 크롤러 대응)
+  // 클라이언트에서 hydration 후에는 전체 UI 렌더링
+  // 데이터가 없고 클라이언트도 아니면 로딩 표시
+  const hasData = initialNewsData && initialNewsData.items && initialNewsData.items.length > 0;
 
-  if (!shouldRenderContent) {
+  if (!hasData && !isMounted) {
     return (
       <div style={{ padding: '20px' }}>
         <div style={{ height: '600px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -642,7 +643,7 @@ const HomePage = ({ initialNewsData }: { initialNewsData?: NewsResponse }) => {
         </div>
       )}
 
-      {shouldRenderContent && (
+      {isMounted && (
         <>
           {/* 모바일에 최적화된 상단 네비게이션 바 */}
           <TopNavBar
