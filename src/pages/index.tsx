@@ -29,22 +29,22 @@ import { Typography, Space, Alert, Button, Tabs } from 'antd';
 
 const { Title } = Typography;
 
-// 테이블 컴포넌트를 동적으로 불러옴
+// 테이블 컴포넌트를 동적으로 불러옴 (SSR 중에는 빈 div만 렌더링)
 const NewsTable = dynamic(() => import('@/components/NewsTable'), {
   ssr: false,
-  loading: () => <div style={{ height: '600px', width: '100%' }}>테이블 로딩 중...</div>
+  loading: () => <div style={{ height: '600px', width: '100%' }}></div>
 });
 
-// 랭킹 뉴스 테이블 컴포넌트를 동적으로 불러옴
+// 랭킹 뉴스 테이블 컴포넌트를 동적으로 불러옴 (SSR 중에는 빈 div만 렌더링)
 const RankingNewsTable = dynamic(() => import('@/components/RankingNewsTable'), {
   ssr: false,
-  loading: () => <div style={{ height: '600px', width: '100%' }}>테이블 로딩 중...</div>
+  loading: () => <div style={{ height: '600px', width: '100%' }}></div>
 });
 
-// 사설 분석 테이블 컴포넌트를 동적으로 불러옴
+// 사설 분석 테이블 컴포넌트를 동적으로 불러옴 (SSR 중에는 빈 div만 렌더링)
 const EditorialTable = dynamic(() => import('@/components/EditorialTable'), {
   ssr: false,
-  loading: () => <div style={{ height: '600px', width: '100%' }}>테이블 로딩 중...</div>
+  loading: () => <div style={{ height: '600px', width: '100%' }}></div>
 });
 
 // 사설 분석 모바일 컴포넌트를 동적으로 불러옴
