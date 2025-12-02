@@ -558,8 +558,11 @@ const HomePage = ({ initialNewsData }: { initialNewsData?: NewsResponse }) => {
     }
   }, [activeTab, rankingData, rankingIsLoading, rankingError]);
 
-  // 서버 사이드 렌더링 시 로딩 UI 표시
-  if (!isMounted) {
+  // SSR 시에도 initialNewsData가 있으면 콘텐츠 렌더링 (AdSense 크롤러 대응)
+  // isMounted가 false일 때(SSR)도 initialNewsData가 있으면 뉴스 목록 렌더링
+  const shouldRenderContent = isMounted || (initialNewsData && initialNewsData.items && initialNewsData.items.length > 0);
+
+  if (!shouldRenderContent) {
     return (
       <div style={{ padding: '20px' }}>
         <div style={{ height: '600px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -576,8 +579,8 @@ const HomePage = ({ initialNewsData }: { initialNewsData?: NewsResponse }) => {
         <meta name="description" content="GQAI- 뉴스 플랫폼" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
       </Head>
-      
-      {isMounted && (
+
+      {shouldRenderContent && (
         <>
           {/* 모바일에 최적화된 상단 네비게이션 바 */}
           <TopNavBar
