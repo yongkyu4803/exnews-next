@@ -572,13 +572,33 @@ const HomePage = ({ initialNewsData }: { initialNewsData?: NewsResponse }) => {
     );
   }
 
+  // SEO를 위한 뉴스 제목 추출 (AdSense 크롤러용)
+  const newsHeadlines = initialNewsData?.items?.slice(0, 5).map(item => item.title).join(' | ') || '최신 단독 뉴스';
+  const metaDescription = initialNewsData?.items?.[0]?.description || 'GQAI 뉴스 - 실시간 단독 뉴스와 랭킹 뉴스를 제공하는 플랫폼';
+
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: '#ffffff' }}>
       <Head>
-        <title>NEWS-GQAI</title>
-        <meta name="description" content="GQAI- 뉴스 플랫폼" />
+        <title>NEWS-GQAI - 단독 뉴스</title>
+        <meta name="description" content={metaDescription.substring(0, 160)} />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="keywords" content="단독뉴스, 랭킹뉴스, 실시간뉴스, 정치, 경제, 사회" />
       </Head>
+
+      {/* SEO를 위한 숨겨진 콘텐츠 - AdSense 크롤러가 볼 수 있도록 */}
+      {initialNewsData?.items && initialNewsData.items.length > 0 && (
+        <div style={{ position: 'absolute', left: '-9999px', top: '0' }} aria-hidden="true">
+          <h1>단독 뉴스 - NEWS GQAI</h1>
+          <ul>
+            {initialNewsData.items.slice(0, 10).map((item, index) => (
+              <li key={index}>
+                <h2>{item.title}</h2>
+                <p>{item.description?.substring(0, 100)}</p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {shouldRenderContent && (
         <>
