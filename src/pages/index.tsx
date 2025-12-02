@@ -585,18 +585,60 @@ const HomePage = ({ initialNewsData }: { initialNewsData?: NewsResponse }) => {
         <meta name="keywords" content="단독뉴스, 랭킹뉴스, 실시간뉴스, 정치, 경제, 사회" />
       </Head>
 
-      {/* SEO를 위한 숨겨진 콘텐츠 - AdSense 크롤러가 볼 수 있도록 */}
-      {initialNewsData?.items && initialNewsData.items.length > 0 && (
-        <div style={{ position: 'absolute', left: '-9999px', top: '0' }} aria-hidden="true">
-          <h1>단독 뉴스 - NEWS GQAI</h1>
-          <ul>
+      {/* SSR 시 간단한 뉴스 리스트 표시 (AdSense 크롤러용) - JavaScript 없이도 콘텐츠 확인 가능 */}
+      {!isMounted && initialNewsData?.items && initialNewsData.items.length > 0 && (
+        <div style={{
+          padding: '20px',
+          maxWidth: '1000px',
+          margin: '0 auto',
+          fontFamily: 'Arial, sans-serif'
+        }}>
+          <h1 style={{ fontSize: '24px', marginBottom: '20px', color: '#1a4b8c' }}>
+            🚨 단독 뉴스 - NEWS GQAI
+          </h1>
+          <p style={{ marginBottom: '30px', color: '#666' }}>
+            실시간 단독 뉴스와 랭킹 뉴스를 제공하는 플랫폼입니다.
+          </p>
+          <div style={{ marginBottom: '20px' }}>
             {initialNewsData.items.slice(0, 10).map((item, index) => (
-              <li key={index}>
-                <h2>{item.title}</h2>
-                <p>{item.description?.substring(0, 100)}</p>
-              </li>
+              <div key={index} style={{
+                marginBottom: '20px',
+                paddingBottom: '20px',
+                borderBottom: '1px solid #eee'
+              }}>
+                <h2 style={{
+                  fontSize: '18px',
+                  marginBottom: '8px',
+                  color: '#333',
+                  lineHeight: '1.5'
+                }}>
+                  {item.title}
+                </h2>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#666',
+                  lineHeight: '1.6',
+                  marginBottom: '8px'
+                }}>
+                  {item.description?.substring(0, 150)}...
+                </p>
+                <div style={{ fontSize: '12px', color: '#999' }}>
+                  <span>{item.category}</span> · <span>{item.media_name}</span>
+                </div>
+              </div>
             ))}
-          </ul>
+          </div>
+          <noscript>
+            <p style={{
+              padding: '20px',
+              background: '#fff3cd',
+              border: '1px solid #ffc107',
+              borderRadius: '4px',
+              color: '#856404'
+            }}>
+              JavaScript를 활성화하면 더 나은 사용자 경험을 제공받으실 수 있습니다.
+            </p>
+          </noscript>
         </div>
       )}
 
