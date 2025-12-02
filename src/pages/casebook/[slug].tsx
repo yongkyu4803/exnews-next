@@ -80,128 +80,16 @@ const CasebookDetailPage: React.FC = () => {
     ),
 
     // 문단 스타일
-    p: ({ children }: any) => {
-      // [팩트], [계획], [전망] 태그 감지 및 커스텀 렌더링
-      const childText = typeof children === 'string' ? children : children?.[0]
-
-      if (typeof childText === 'string') {
-        // [팩트] 태그 처리
-        if (childText.includes('[팩트]')) {
-          return (
-            <div style={{
-              background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
-              border: '2px solid #3b82f6',
-              borderRadius: 8,
-              padding: '16px 20px',
-              marginBottom: 20,
-              marginTop: 20,
-            }}>
-              <span style={{
-                display: 'inline-block',
-                background: '#1e40af',
-                color: 'white',
-                padding: '4px 12px',
-                borderRadius: 4,
-                fontSize: 13,
-                fontWeight: 700,
-                marginRight: 12,
-              }}>
-                팩트
-              </span>
-              <span style={{
-                fontSize: 15,
-                lineHeight: 1.7,
-                color: '#1e40af',
-                fontWeight: 500,
-              }}>
-                {childText.replace('[팩트]', '').trim()}
-              </span>
-            </div>
-          )
-        }
-
-        // [계획] 태그 처리
-        if (childText.includes('[계획]')) {
-          return (
-            <div style={{
-              background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)',
-              border: '2px solid #22c55e',
-              borderRadius: 8,
-              padding: '16px 20px',
-              marginBottom: 20,
-              marginTop: 20,
-            }}>
-              <span style={{
-                display: 'inline-block',
-                background: '#15803d',
-                color: 'white',
-                padding: '4px 12px',
-                borderRadius: 4,
-                fontSize: 13,
-                fontWeight: 700,
-                marginRight: 12,
-              }}>
-                계획
-              </span>
-              <span style={{
-                fontSize: 15,
-                lineHeight: 1.7,
-                color: '#15803d',
-                fontWeight: 500,
-              }}>
-                {childText.replace('[계획]', '').trim()}
-              </span>
-            </div>
-          )
-        }
-
-        // [전망] 태그 처리
-        if (childText.includes('[전망]')) {
-          return (
-            <div style={{
-              background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
-              border: '2px solid #f59e0b',
-              borderRadius: 8,
-              padding: '16px 20px',
-              marginBottom: 20,
-              marginTop: 20,
-            }}>
-              <span style={{
-                display: 'inline-block',
-                background: '#d97706',
-                color: 'white',
-                padding: '4px 12px',
-                borderRadius: 4,
-                fontSize: 13,
-                fontWeight: 700,
-                marginRight: 12,
-              }}>
-                전망
-              </span>
-              <span style={{
-                fontSize: 15,
-                lineHeight: 1.7,
-                color: '#d97706',
-                fontWeight: 500,
-              }}>
-                {childText.replace('[전망]', '').trim()}
-              </span>
-            </div>
-          )
-        }
-      }
-
-      return (
-        <p style={{
-          fontSize: 15,
-          lineHeight: 1.8,
-          color: '#374151',
-          marginBottom: 16,
-        }}>
-          {children}
-        </p>
-      )
-    },
+    p: ({ children }: any) => (
+      <p style={{
+        fontSize: 15,
+        lineHeight: 1.8,
+        color: '#374151',
+        marginBottom: 16,
+      }}>
+        {children}
+      </p>
+    ),
 
     // 리스트 스타일
     ul: ({ children }: any) => (

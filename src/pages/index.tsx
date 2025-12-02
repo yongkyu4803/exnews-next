@@ -70,8 +70,8 @@ const BillsReportsList = dynamic(() => import('@/components/mobile/BillsReportsL
   loading: () => <div style={{ padding: '20px', textAlign: 'center' }}>로딩 중...</div>
 });
 
-// 전체 컴포넌트를 클라이언트 사이드에서만 렌더링
-const HomePage = () => {
+// 전체 컴포넌트 - SSR 지원으로 AdSense 크롤러 호환성 개선
+const HomePage = ({ initialNewsData }: { initialNewsData?: NewsResponse }) => {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -213,6 +213,7 @@ const HomePage = () => {
       return result;
     },
     {
+      initialData: initialNewsData, // SSR에서 전달받은 초기 데이터 사용
       keepPreviousData: true,
       enabled: isMounted && activeTab === 'exclusive', // Only load when exclusive tab is active
       staleTime: 1 * 60 * 1000, // 1 minute - 뉴스는 실시간성이 중요
@@ -1223,5 +1224,43 @@ const HomePage = () => {
   );
 };
 
-// SSR 비활성화
-export default dynamic(() => Promise.resolve(HomePage), { ssr: false });
+// SSR 지원 - AdSense 크롤러가 실제 콘텐츠를 볼 수 있도록 초기 데이터 제공
+export async function getServerSideProps() {
+  try {
+    // 서버에서 초기 뉴스 데이터 가져오기
+    const baseUrl = process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : process.env.NEXT_PUBLIC_SITE_URL || 'https://news.gqai.kr';
+
+    const response = await fetch(`${baseUrl}/api/news?page=1&pageSize=12`, {
+      headers: {
+        'User-Agent': 'Next.js SSR',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch news: ${response.status}`);
+    }
+
+    const newsData = await response.json();
+
+    return {
+      props: {
+        initialNewsData: newsData,
+      },
+    };
+  } catch (error) {
+    console.error('SSR 데이터 로딩 실패:', error);
+    // 에러 시 빈 데이터 반환하여 클라이언트에서 재시도
+    return {
+      props: {
+        initialNewsData: {
+          items: [],
+          totalCount: 0,
+        },
+      },
+    };
+  }
+}
+
+export default HomePage;

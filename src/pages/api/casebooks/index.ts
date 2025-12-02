@@ -8,6 +8,7 @@ import { generateSlug, extractPlainText, extractTitleFromFilename, parseDate } f
 /**
  * 전체 케이스북 목록 API
  * GET /api/casebooks
+ * Updated: 2025-12-02
  */
 export default async function handler(
   req: NextApiRequest,
@@ -31,6 +32,7 @@ export default async function handler(
 
     // 각 파일의 메타데이터 추출
     const casebooks: CasebookMetadata[] = files.map(filename => {
+      console.log(`[API] Processing file: ${filename}`)
       const filepath = path.join(casebookDir, filename)
       const fileContent = fs.readFileSync(filepath, 'utf-8')
 
@@ -38,7 +40,9 @@ export default async function handler(
       const { data, content } = matter(fileContent)
 
       // slug 생성
+      console.log(`[API] Calling generateSlug for: ${filename}`)
       const slug = generateSlug(filename)
+      console.log(`[API] Generated slug: "${slug}"`)
 
       // 제목 추출: 프론트매터 > 첫 H1 > 파일명
       let title = data.title || ''

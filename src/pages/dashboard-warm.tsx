@@ -65,6 +65,21 @@ const DashboardWarmPage = () => {
     { enabled: isMounted, staleTime: 1 * 60 * 1000 }
   );
 
+  // 법안 랜덤 로테이션 (5초마다)
+  useEffect(() => {
+    const bills = billsData?.latest?.bills;
+    if (!bills || bills.length === 0) return;
+
+    const getRandomIndex = () => Math.floor(Math.random() * bills.length);
+    setRandomBillIndex(getRandomIndex());
+
+    const interval = setInterval(() => {
+      setRandomBillIndex(getRandomIndex());
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [billsData?.latest?.bills]);
+
   const renderMainContent = () => {
     const containerStyle = {
       background: 'linear-gradient(135deg, #fefcfb 0%, #fff5eb 100%)',
@@ -217,6 +232,127 @@ const DashboardWarmPage = () => {
                       ))}
                     </div>
                   )}
+
+                  {/* 랜덤 법안 표시 */}
+                  {billsData.latest.bills && billsData.latest.bills.length > 0 && (() => {
+                    const randomBill = billsData.latest.bills[randomBillIndex];
+                    if (!randomBill) return null;
+
+                    return (
+                      <div style={{
+                        marginTop: 14,
+                        padding: 18,
+                        background: 'linear-gradient(135deg, #f0ebe6 0%, #fef3ed 100%)',
+                        borderRadius: '24px',
+                        border: '2px solid #d4c5b9',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        minHeight: '180px',
+                        maxHeight: '180px',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        flexDirection: 'column',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-3px)';
+                        e.currentTarget.style.boxShadow = '0 12px 32px rgba(210, 105, 70, 0.25)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                      onClick={() => {
+                        if (randomBill.link_url) {
+                          window.open(randomBill.link_url, '_blank');
+                        }
+                      }}
+                      >
+                        {/* 법안명과 규제 배지 */}
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 8,
+                          marginBottom: 10,
+                        }}>
+                          <span style={{
+                            fontSize: 17,
+                            fontWeight: 700,
+                            color: '#8b6f47',
+                            flex: 1,
+                            lineHeight: 1.5,
+                            fontFamily: 'Poppins, sans-serif',
+                          }}>
+                            {randomBill.bill_name}
+                          </span>
+                          {randomBill.regulation_type && (
+                            <span style={{
+                              padding: '6px 14px',
+                              borderRadius: '16px',
+                              fontSize: 12,
+                              fontWeight: 700,
+                              whiteSpace: 'nowrap',
+                              background: randomBill.regulation_type === '신설' ? '#fef2f2' :
+                                          randomBill.regulation_type === '강화' ? '#fffbeb' :
+                                          randomBill.regulation_type === '완화' ? '#eff6ff' : '#f9fafb',
+                              color: randomBill.regulation_type === '신설' ? '#dc2626' :
+                                     randomBill.regulation_type === '강화' ? '#d97706' :
+                                     randomBill.regulation_type === '완화' ? '#3b82f6' : '#6b7280',
+                              border: `1px solid ${
+                                randomBill.regulation_type === '신설' ? '#fecaca' :
+                                randomBill.regulation_type === '강화' ? '#fde68a' :
+                                randomBill.regulation_type === '완화' ? '#bfdbfe' : '#e5e7eb'
+                              }`,
+                              fontFamily: 'Nunito, sans-serif',
+                            }}>
+                              {randomBill.regulation_type}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* 메타 정보 */}
+                        <div style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          gap: 8,
+                          marginBottom: 10,
+                          fontSize: 11,
+                          color: '#a0826d',
+                          fontFamily: 'Nunito, sans-serif',
+                        }}>
+                          {randomBill.committee && (
+                            <span>🏛️ {randomBill.committee}</span>
+                          )}
+                          {randomBill.proposer && (
+                            <span>👤 {randomBill.proposer}</span>
+                          )}
+                          {randomBill.proposal_date && (
+                            <span>📅 {randomBill.proposal_date}</span>
+                          )}
+                        </div>
+
+                        {/* 한줄 요약 */}
+                        {randomBill.summary_one_sentence && (
+                          <div style={{
+                            fontSize: 14,
+                            color: '#5d4a3a',
+                            lineHeight: 1.6,
+                            background: '#fefcfb',
+                            padding: 12,
+                            borderRadius: '18px',
+                            overflow: 'hidden',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 3,
+                            WebkitBoxOrient: 'vertical',
+                            flex: 1,
+                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+                            fontFamily: 'Nunito, sans-serif',
+                          }}>
+                            📝 {randomBill.summary_one_sentence}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div style={{

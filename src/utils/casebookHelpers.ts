@@ -8,8 +8,10 @@
  * @returns URL-safe slug (예: "finance-ai-regulation")
  */
 export function generateSlug(filename: string): string {
+  console.log('[generateSlug] Input filename:', filename)
   // .md 확장자 제거
   const nameWithoutExt = filename.replace(/\.md$/i, '')
+  console.log('[generateSlug] After removing .md:', nameWithoutExt)
 
   // 한글을 영어로 변환하는 간단한 맵핑
   const koreanToEnglish: Record<string, string> = {
@@ -25,21 +27,39 @@ export function generateSlug(filename: string): string {
     '통합': 'integrated',
     '계좌': 'account',
     '가이드라인': 'guideline',
+    '해외': 'overseas',
+    '해외주식': 'overseas-stock',
+    '양도소득세': 'capital-gains-tax',
+    '양도': 'transfer',
+    '소득세': 'income-tax',
+    '역외투자': 'offshore-investment',
+    '역외': 'offshore',
+    '투자': 'investment',
+    '환율': 'exchange-rate',
+    '세제': 'tax-system',
   }
 
-  // 파일명을 소문자로 변환하고 단어로 분리
-  const words = nameWithoutExt.toLowerCase().split(/[_\s-]+/)
+  // 파일명을 단어로 먼저 분리 (대소문자 유지)
+  const words = nameWithoutExt.split(/[_\s-]+/)
+  console.log('[generateSlug] Split words:', words)
 
-  // 각 단어를 영어로 변환 (맵핑에 있으면 사용, 없으면 원본 유지)
-  const translatedWords = words.map(word => koreanToEnglish[word] || word)
+  // 각 단어를 소문자로 변환한 후 영어로 변환 (맵핑에 있으면 사용, 없으면 소문자 유지)
+  const translatedWords = words.map(word => {
+    const lowerWord = word.toLowerCase()
+    return koreanToEnglish[lowerWord] || lowerWord
+  })
+  console.log('[generateSlug] Translated words:', translatedWords)
 
   // URL-safe하게 변환: 영숫자와 하이픈만 허용
-  const slug = translatedWords
-    .join('-')
+  const joined = translatedWords.join('-')
+  console.log('[generateSlug] After join:', joined)
+
+  const slug = joined
     .replace(/[^a-z0-9-]/g, '')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
 
+  console.log('[generateSlug] Final slug:', slug)
   return slug
 }
 
