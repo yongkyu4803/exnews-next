@@ -584,6 +584,32 @@ const HomePage = ({ initialNewsData }: { initialNewsData?: NewsResponse }) => {
         <meta name="description" content={metaDescription.substring(0, 160)} />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="keywords" content="단독뉴스, 랭킹뉴스, 실시간뉴스, 정치, 경제, 사회" />
+
+        {/* Canonical URL - 구글 색인 생성 개선 */}
+        <link rel="canonical" href="https://news.gqai.kr/" />
+
+        {/* Open Graph 메타 태그 - 소셜 미디어 최적화 */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="NEWS-GQAI - 단독 뉴스" />
+        <meta property="og:description" content={metaDescription.substring(0, 160)} />
+        <meta property="og:url" content="https://news.gqai.kr/" />
+        <meta property="og:site_name" content="NEWS-GQAI" />
+
+        {/* 구조화된 데이터 - Google Search Console 색인 개선 */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "NewsMediaOrganization",
+              "name": "NEWS-GQAI",
+              "url": "https://news.gqai.kr",
+              "logo": "https://news.gqai.kr/icons/icon-192x192.png",
+              "description": "실시간 단독 뉴스와 랭킹 뉴스를 제공하는 플랫폼",
+              "sameAs": []
+            })
+          }}
+        />
       </Head>
 
       {/* SSR 시 간단한 뉴스 리스트 표시 (AdSense 크롤러용) - JavaScript 없이도 콘텐츠 확인 가능 */}
@@ -1291,7 +1317,14 @@ const HomePage = ({ initialNewsData }: { initialNewsData?: NewsResponse }) => {
 };
 
 // SSR 지원 - AdSense 크롤러가 실제 콘텐츠를 볼 수 있도록 초기 데이터 제공
-export async function getServerSideProps() {
+export async function getServerSideProps(context: any) {
+  // 구글 크롤러가 페이지를 캐시하고 색인할 수 있도록 Cache-Control 헤더 설정
+  // 5분간 캐시 허용 (Google Search Console 색인 생성 문제 해결)
+  context.res.setHeader(
+    'Cache-Control',
+    'public, s-maxage=300, stale-while-revalidate=600'
+  );
+
   try {
     // 서버에서 Supabase로 직접 초기 뉴스 데이터 가져오기
     const { createClient } = await import('@supabase/supabase-js');
