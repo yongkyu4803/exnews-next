@@ -1227,26 +1227,47 @@ const HomePage = ({ initialNewsData }: { initialNewsData?: NewsResponse }) => {
 // SSR 지원 - AdSense 크롤러가 실제 콘텐츠를 볼 수 있도록 초기 데이터 제공
 export async function getServerSideProps() {
   try {
-    // 서버에서 초기 뉴스 데이터 가져오기
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : process.env.NEXT_PUBLIC_SITE_URL || 'https://news.gqai.kr';
+    // 서버에서 Supabase로 직접 초기 뉴스 데이터 가져오기
+    const { createClient } = await import('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
-    const response = await fetch(`${baseUrl}/api/news?page=1&pageSize=12`, {
-      headers: {
-        'User-Agent': 'Next.js SSR',
-      },
-    });
+    const { data, error, count } = await supabase
+      .from('news')
+      .select('*', { count: 'exact' })
+      .order('pub_date', { ascending: false })
+      .range(0, 11); // 첫 12개 항목
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch news: ${response.status}`);
+    if (error) {
+      console.error('Supabase 쿼리 실패:', error);
+      throw error;
     }
 
-    const newsData = await response.json();
+    // Media name 추출 함수 간단 버전
+    const extractMediaName = (link: string): string => {
+      try {
+        const url = new URL(link);
+        const hostname = url.hostname.replace('www.', '');
+        const parts = hostname.split('.');
+        return parts[0];
+      } catch {
+        return '';
+      }
+    };
+
+    const itemsWithMedia = (data || []).map(item => ({
+      ...item,
+      media_name: extractMediaName(item.original_link)
+    }));
 
     return {
       props: {
-        initialNewsData: newsData,
+        initialNewsData: {
+          items: itemsWithMedia,
+          totalCount: count || 0,
+        },
       },
     };
   } catch (error) {
